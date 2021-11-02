@@ -5,13 +5,13 @@ Since February 2020 the PPI Data &amp; Analytics team has been cleaning, analyzi
 Overview
 
 The charts on the FIND page include the following (in sequential order):
-Methodology Slides [Flourish Link: https://app.flourish.studio/story/921884/]
-Overview of Data Sources and Classification Methods
-Diagnostic Testing Capacity
-Next-generation Sequencing Capacity
-SARS-CoV-2 Sequencing
-Map of NGS capacity for SARS-CoV-2 genomic surveillance in LMICs [Flourish Link: https://app.flourish.studio/visualisation/6684101/edit]
-Next-generation Sequencing Capacity Table [Flourish Link: https://app.flourish.studio/story/951937/edit]
+1) Methodology Slides [Flourish Link: https://app.flourish.studio/story/921884/], 
+  1a)Overview of Data Sources and Classification Methods
+  1b) Diagnostic Testing Capacity
+  1c) Next-generation Sequencing Capacity
+  1d) SARS-CoV-2 Sequencing
+2) Map of NGS capacity for SARS-CoV-2 genomic surveillance in LMICs [Flourish Link: https://app.flourish.studio/visualisation/6684101/edit]
+3) Next-generation Sequencing Capacity Table [Flourish Link: https://app.flourish.studio/story/951937/edit]
 
 The unembedded story:
 FIND Support Map [Flourish Link: https://app.flourish.studio/story/951937/edit]
