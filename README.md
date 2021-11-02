@@ -10,11 +10,11 @@ Overview of Data Sources and Classification Methods
 Diagnostic Testing Capacity
 Next-generation Sequencing Capacity
 SARS-CoV-2 Sequencing
-Map of NGS capacity for SARS-CoV-2 genomic surveillance in LMICs [Flourish Link]
-Next-generation Sequencing Capacity Table [Flourish Link]
+Map of NGS capacity for SARS-CoV-2 genomic surveillance in LMICs [Flourish Link: https://app.flourish.studio/visualisation/6684101/edit]
+Next-generation Sequencing Capacity Table [Flourish Link: https://app.flourish.studio/story/951937/edit]
 
 The unembedded story:
-FIND Support Map [Flourish Link]
+FIND Support Map [Flourish Link: https://app.flourish.studio/story/951937/edit]
 Map of NGS capacity for SARS-CoV-2 genomic surveillance in LMICs (with number of projects)
 Country Support Map
 Country Support Map - Improving Access to Tools
