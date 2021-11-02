@@ -5,7 +5,7 @@ Since February 2020 the PPI Data &amp; Analytics team has been cleaning, analyzi
 Overview
 
 The charts on the FIND page include the following (in sequential order):
-Methodology Slides [Flourish Link]
+Methodology Slides [Flourish Link: https://app.flourish.studio/story/921884/]
 Overview of Data Sources and Classification Methods
 Diagnostic Testing Capacity
 Next-generation Sequencing Capacity
