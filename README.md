@@ -1,4 +1,4 @@
-# FIND-map
+# NGS Capacity-map
 Since February 2020 the PPI Data &amp; Analytics team has been cleaning, analyzing, and visualizing data from GISAID, FIND, WHO, and Our World In Data. In collaboration with the team at FIND we have developed a series of maps that describe next-generation sequencing capacity. The main outputs were code, data repositories, and visualizations (owned by Leo’s Flourish account) that appear on the FIND page here along with an in-depth explanation of the methodology. There is another Flourish story (owned by Nathan’s Flourish account) that FIND has circulated but has not yet been embedded into a webpage here. This story offers a mapping of countries receiving support for developing their NGS capacity under the ACT-A Accelerator.
 
 
