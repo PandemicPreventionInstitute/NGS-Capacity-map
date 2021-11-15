@@ -672,10 +672,10 @@ find_clean <- find_clean %>%
       (sequencing_capacity == "0 NGS facilities or equivalent" & sars_cov_2_sequencing ?= "500+ sequences" & dx_testing_capacity == "Reliable testing capacity") ~ "3 - Leverage",
       (sequencing_capacity == "0 NGS facilities or equivalent" & sars_cov_2_sequencing == "500+ sequences" & dx_testing_capacity == "Unreliable testing capacity") ~ ?1 - Test",
       (sequencing_capacity == "0 NGS facilities or equivalent" & sars_cov_2_sequencing == "1-499 sequences" & dx_testing_capacity == "Reliable testing capacity") ~ "2 - Connect",
-      (sequencing_capacity == "0 NGS facilities or equivalent" & s?rs_cov_2_sequencing == "1-499 sequences" & dx_testing_capacity == "Unreliable testing capacity") ~ "1 - Test",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & sars_cov_2_sequencing == "1-499 sequences" & dx_testing_capacity == "Unreliable testing capacity") ~ "1 - Test",
       (sequencing_capacity == "0 NGS facilities or equivalent" & sars_cov_2_sequencing == "0 sequences" & dx_testing_capacity == "Reliable testin? capacity") ~ "2 - Connect",
       (sequencing_capacity == "0 NGS facilities or equivalent" & sars_cov_2_sequencing == "0 sequences" & dx_testing_capacity == "Unreliable testing capacity") ~ "1 - Test",
-      (dx_testing_capacity == "Unreliable testing cap?city") ~ "1 - Test"
+      (dx_testing_capacity == "Unreliable testing capacity") ~ "1 - Test"
     )
   )
 
@@ -685,7 +685,7 @@ find_clean <- find_clean %>%
     archetype = case_when(
       archetype_full == "0 - High Income*" ~ "High Income*",
       archetype_full == "4 - Strengthen" ~ "Strengthen",
-      archetype_?ull == "3 - Leverage" ~ "Leverage",
+      archetype_full == "3 - Leverage" ~ "Leverage",
       archetype_full == "2 - Connect" ~ "Connect",
       archetype_full == "1 - Test" ~ "Test"
     )
@@ -711,7 +711,7 @@ find_clean <- find_clean %>%
   # create new variable for Dx testing capacity based on:
   # FIND testing capacity
   # OWID testing Capacity
-  mu?ate(
+  mutate(
     # "0-49.99": < 50 max_new_tests_cap_avg in FIND
     # "50-99.99": >= 10 & < 100 max_new_tests_cap_avg in FIND
     # "100+": >= 100 max_new_tests_cap_avg in FIND
