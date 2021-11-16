@@ -380,15 +380,15 @@ gisaid_metadata_raw$code <- countrycode(gisaid_metadata_raw$country, origin = 'c
 # create variable for 30 day rolling average of new tests per capita
 gisaid_metadata_t <- gisaid_metadata_raw %>%
   # group rows by country code
-  group_by(code, submission_date) %>%
+  group_by(code, collection_date) %>%
   # create column for 30 day rolling average
   summarise(n_new_sequences = n())
 
 # set start date
-first_date<-min(gisaid_metadata_t$submission_date, na.rm = TRUE)
+first_date<-min(gisaid_metadata_t$collection_date, na.rm = TRUE)
 
 # fill in all dates that no submissions occur
-gisaid_metadata_t<-gisaid_metadata_t %>% complete(submission_date = seq.Date(first_date, LAST_DATA_PULL_DATE, by = "day"))
+gisaid_metadata_t<-gisaid_metadata_t %>% complete(collection_date = seq.Date(first_date, LAST_DATA_PULL_DATE, by = "day"))
 
 # replace NAs with 0s
 gisaid_metadata_t$n_new_sequences[is.na(gisaid_metadata_t$n_new_sequences)]<-0
@@ -397,7 +397,7 @@ gisaid_metadata_t$n_new_sequences[is.na(gisaid_metadata_t$n_new_sequences)]<-0
 gisaid_metadata_t <- gisaid_metadata_t %>%
   # group rows by country code
   group_by(code) %>%
-  # create column for 30 day rolling average
+  # create column for 90 day rolling average
   mutate(
     seq_cap_avg = round(zoo::rollmean(n_new_sequences, TIME_WINDOW, fill = NA),2)
   )
@@ -409,7 +409,7 @@ gisaid_max_seq<-gisaid_metadata_t%>%
 
 
 # find number of sequences in past X days
-gisaid_metadata_recent<-gisaid_metadata_t%>%filter(submission_date>=(LAST_DATA_PULL_DATE- TIME_WINDOW) & submission_date<= LAST_DATA_PULL_DATE)%>%
+gisaid_metadata_recent<-gisaid_metadata_t%>%filter(collection_date>=(LAST_DATA_PULL_DATE- TIME_WINDOW) & collection_date<= LAST_DATA_PULL_DATE)%>%
   group_by(code)%>%
   summarise(recent_sequences = sum(n_new_sequences))
 
