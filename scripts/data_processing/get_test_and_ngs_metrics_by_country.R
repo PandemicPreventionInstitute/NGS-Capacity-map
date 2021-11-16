@@ -435,8 +435,8 @@ find_clean$total_sequences <- ifelse(is.na(find_clean$total_sequences) == T, 0, 
 
 # make new metrics using the cases in the past X days, sequences in the past X days, and max X day average of new sequences
 find_clean<- find_clean%>%mutate(
+  max_new_seq_cap_avg = max_average_new_seq/pop_100k,
   percent_of_recent_cases_sequenced = 100*recent_sequences/recent_cases,
-  per_capita_seq_availability = max_average_new_seq/pop_100k,
   per_capita_seq_rate = recent_sequences/pop_100k
 )
  
@@ -927,13 +927,13 @@ find_clean <- find_clean %>%
 write.csv(find_clean %>%
             select(country, region, who_testing_capacity, max_new_tests_cap_avg, sequencing_capacity, total_sequences, recent_sequences,
                    cases_newly_reported_in_last_7_days_per_100000_population,
-                   max_average_new_seq, percent_of_recent_cases_sequenced, per_capita_seq_availability, per_capita_seq_rate,
+                   max_average_new_seq, max_new_seq_cap_avg, percent_of_recent_cases_sequenced, per_capita_seq_rate,
                    reporting_lag_diff, archetype_full) %>%
             rename(., "Country" = country, "Region" = region, 'WHO testing Capacity' = who_testing_capacity, 
                    'Max 30-day average of new tests per capita' = max_new_tests_cap_avg, 'Sequencing capacity' = sequencing_capacity, 
                    'Cumulative GISAID sequences' = total_sequences, 
                    'Number of sequences in the last 90 days'= recent_sequences,
-                   'Max 90-day average of new sequences per capita' = per_capita_seq_availability,
+                   'Max 90-day average of new sequences per capita' = max_new_seq_cap_avg,
                    'Percent of cases in the last 90 days sequences' = percent_of_recent_cases_sequenced,
                    'Number of recent sequences per capita' = per_capita_seq_rate,
                    'New cases per capita in the last 7 days per 100k' = cases_newly_reported_in_last_7_days_per_100000_population, 
@@ -945,13 +945,13 @@ write.csv(find_clean %>%
             filter(region == "Africa") %>%
             select(country, region, who_testing_capacity, max_new_tests_cap_avg, sequencing_capacity, total_sequences, recent_sequences,
                    cases_newly_reported_in_last_7_days_per_100000_population,
-                   max_average_new_seq, percent_of_recent_cases_sequenced, per_capita_seq_availability, per_capita_seq_rate,
+                   max_average_new_seq, max_new_seq_cap_avg, percent_of_recent_cases_sequenced, per_capita_seq_rate,
                    reporting_lag_diff, archetype_full) %>%
             rename(., "Country" = country, "Region" = region, 'WHO testing Capacity' = who_testing_capacity, 
                    'Max 30-day average of new tests per capita' = max_new_tests_cap_avg, 'Sequencing capacity' = sequencing_capacity, 
                    'Cumulative GISAID sequences' = total_sequences, 
                    'Number of sequences in the last 90 days'= recent_sequences,
-                   'Max 90-day average of new sequences per capita' = per_capita_seq_availability,
+                   'Max 90-day average of new sequences per capita' = max_new_seq_cap_avg,
                    'Percent of cases in the last 90 days sequences' = percent_of_recent_cases_sequenced,
                    'Number of recent sequences per capita' = per_capita_seq_rate,
                    'New cases per capita in the last 7 days per 100k' = cases_newly_reported_in_last_7_days_per_100000_population, 
@@ -963,13 +963,13 @@ write.csv(find_clean %>%
             filter(region == "Americas") %>%
             select(country, region, who_testing_capacity, max_new_tests_cap_avg, sequencing_capacity, total_sequences, recent_sequences,
                    cases_newly_reported_in_last_7_days_per_100000_population,
-                   max_average_new_seq, percent_of_recent_cases_sequenced, per_capita_seq_availability, per_capita_seq_rate,
+                   max_average_new_seq, max_new_seq_cap_avg, percent_of_recent_cases_sequenced, per_capita_seq_rate,
                    reporting_lag_diff, archetype_full) %>%
             rename(., "Country" = country, "Region" = region, 'WHO testing Capacity' = who_testing_capacity, 
                    'Max 30-day average of new tests per capita' = max_new_tests_cap_avg, 'Sequencing capacity' = sequencing_capacity, 
                    'Cumulative GISAID sequences' = total_sequences, 
                    'Number of sequences in the last 90 days'= recent_sequences,
-                   'Max 90-day average of new sequences per capita' = per_capita_seq_availability,
+                   'Max 90-day average of new sequences per capita' = max_new_seq_cap_avg,
                    'Percent of cases in the last 90 days sequences' = percent_of_recent_cases_sequenced,
                    'Number of recent sequences per capita' = per_capita_seq_rate,
                    'New cases per capita in the last 7 days per 100k' = cases_newly_reported_in_last_7_days_per_100000_population, 
@@ -981,13 +981,13 @@ write.csv(find_clean %>%
             filter(region == "Eastern Mediterranean") %>%
             select(country, region, who_testing_capacity, max_new_tests_cap_avg, sequencing_capacity, total_sequences, recent_sequences,
                    cases_newly_reported_in_last_7_days_per_100000_population,
-                   max_average_new_seq, percent_of_recent_cases_sequenced, per_capita_seq_availability, per_capita_seq_rate,
+                   max_average_new_seq, max_new_seq_cap_avg, percent_of_recent_cases_sequenced, per_capita_seq_rate,
                    reporting_lag_diff, archetype_full) %>%
             rename(., "Country" = country, "Region" = region, 'WHO testing Capacity' = who_testing_capacity, 
                    'Max 30-day average of new tests per capita' = max_new_tests_cap_avg, 'Sequencing capacity' = sequencing_capacity, 
                    'Cumulative GISAID sequences' = total_sequences, 
                    'Number of sequences in the last 90 days'= recent_sequences,
-                   'Max 90-day average of new sequences per capita' = per_capita_seq_availability,
+                   'Max 90-day average of new sequences per capita' = max_new_seq_cap_avg,
                    'Percent of cases in the last 90 days sequences' = percent_of_recent_cases_sequenced,
                    'Number of recent sequences per capita' = per_capita_seq_rate,
                    'New cases per capita in the last 7 days per 100k' = cases_newly_reported_in_last_7_days_per_100000_population, 
@@ -999,13 +999,13 @@ write.csv(find_clean %>%
             filter(region == "Europe") %>%
             select(country, region, who_testing_capacity, max_new_tests_cap_avg, sequencing_capacity, total_sequences, recent_sequences,
                    cases_newly_reported_in_last_7_days_per_100000_population,
-                   max_average_new_seq, percent_of_recent_cases_sequenced, per_capita_seq_availability, per_capita_seq_rate,
+                   max_average_new_seq, max_new_seq_cap_avg, percent_of_recent_cases_sequenced, per_capita_seq_rate,
                    reporting_lag_diff, archetype_full) %>%
             rename(., "Country" = country, "Region" = region, 'WHO testing Capacity' = who_testing_capacity, 
                    'Max 30-day average of new tests per capita' = max_new_tests_cap_avg, 'Sequencing capacity' = sequencing_capacity, 
                    'Cumulative GISAID sequences' = total_sequences, 
                    'Number of sequences in the last 90 days'= recent_sequences,
-                   'Max 90-day average of new sequences per capita' = per_capita_seq_availability,
+                   'Max 90-day average of new sequences per capita' = max_new_seq_cap_avg,
                    'Percent of cases in the last 90 days sequences' = percent_of_recent_cases_sequenced,
                    'Number of recent sequences per capita' = per_capita_seq_rate,
                    'New cases per capita in the last 7 days per 100k' = cases_newly_reported_in_last_7_days_per_100000_population, 
@@ -1017,13 +1017,13 @@ write.csv(find_clean %>%
             filter(region == "South-East Asia") %>%
             select(country, region, who_testing_capacity, max_new_tests_cap_avg, sequencing_capacity, total_sequences, recent_sequences,
                    cases_newly_reported_in_last_7_days_per_100000_population,
-                   max_average_new_seq, percent_of_recent_cases_sequenced, per_capita_seq_availability, per_capita_seq_rate,
+                   max_average_new_seq, max_new_seq_cap_avg, percent_of_recent_cases_sequenced, per_capita_seq_rate,
                    reporting_lag_diff, archetype_full) %>%
             rename(., "Country" = country, "Region" = region, 'WHO testing Capacity' = who_testing_capacity, 
                    'Max 30-day average of new tests per capita' = max_new_tests_cap_avg, 'Sequencing capacity' = sequencing_capacity, 
                    'Cumulative GISAID sequences' = total_sequences, 
                    'Number of sequences in the last 90 days'= recent_sequences,
-                   'Max 90-day average of new sequences per capita' = per_capita_seq_availability,
+                   'Max 90-day average of new sequences per capita' = max_new_seq_cap_avg,
                    'Percent of cases in the last 90 days sequences' = percent_of_recent_cases_sequenced,
                    'Number of recent sequences per capita' = per_capita_seq_rate,
                    'New cases per capita in the last 7 days per 100k' = cases_newly_reported_in_last_7_days_per_100000_population, 
@@ -1035,13 +1035,13 @@ write.csv(find_clean %>%
             filter(region == "Western Pacific") %>%
             select(country, region, who_testing_capacity, max_new_tests_cap_avg, sequencing_capacity, total_sequences, recent_sequences,
                    cases_newly_reported_in_last_7_days_per_100000_population,
-                   max_average_new_seq, percent_of_recent_cases_sequenced, per_capita_seq_availability, per_capita_seq_rate,
+                   max_average_new_seq, max_new_seq_cap_avg, percent_of_recent_cases_sequenced, per_capita_seq_rate,
                    reporting_lag_diff, archetype_full) %>%
             rename(., "Country" = country, "Region" = region, 'WHO testing Capacity' = who_testing_capacity, 
                    'Max 30-day average of new tests per capita' = max_new_tests_cap_avg, 'Sequencing capacity' = sequencing_capacity, 
                    'Cumulative GISAID sequences' = total_sequences, 
                    'Number of sequences in the last 90 days'= recent_sequences,
-                   'Max 90-day average of new sequences per capita' = per_capita_seq_availability,
+                   'Max 90-day average of new sequences per capita' = max_new_seq_cap_avg,
                    'Percent of cases in the last 90 days sequences' = percent_of_recent_cases_sequenced,
                    'Number of recent sequences per capita' = per_capita_seq_rate,
                    'New cases per capita in the last 7 days per 100k' = cases_newly_reported_in_last_7_days_per_100000_population, 
