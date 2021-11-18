@@ -36,7 +36,7 @@ PROVISION_PATH<-'../data/provision.csv'
 VARIANT_CALL_PATH<-'../data/GISAID_update_10_29_weekly_file.csv'
 ECONOMY_PATH<-'../data/CLASS.xls'
 
-LAST_DATA_PULL_DATE<-as.Date("2021-10-18")
+LAST_DATA_PULL_DATE<-as.Date("2021-10-18") # enter here "YYYY-10-18"
 TIME_WINDOW <- 90
 
 # adjust script so that _clean refers to data sets that are in the format country and the metric (i.e. do not contain time series)
@@ -163,6 +163,8 @@ find_testing_t <- find_testing_t %>%
 # inserts missing country codes manually -- HOW DID WE KNOW THESE WERE MISSING?
 find_testing_t$code[find_testing_t$country == "Kosovo"] <- "XKX"
 find_testing_t$code[find_testing_t$country == "Namibia"] <- "NAM"
+
+# CHECK THAT DATA SET HAS COMPLETED DATE TIME SERIES
 
 
 # Find metrics for cases in the past TIME WINDOW days 
@@ -901,8 +903,6 @@ find_clean <- find_clean[order(find_clean$country),]
 # add geometry variable as first column
 find_clean <- cbind(geometry=NA, find_clean)
  
-# export find_clean to csv
-write.csv(find_clean, "../data/find_map.csv", na = "NaN", row.names = FALSE)
  
 # add padding to who_testing_capacity
 find_clean <- find_clean %>%
@@ -923,6 +923,11 @@ find_clean <- find_clean %>%
     )
   )
  
+# export find_clean to csv
+write.csv(find_clean, "../data/find_map.csv", na = "NaN", row.names = FALSE)
+
+
+
 # export find_clean Global to csv
 write.csv(find_clean %>%
             select(country, region, who_testing_capacity, max_new_tests_cap_avg, sequencing_capacity, total_sequences, recent_sequences,
