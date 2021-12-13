@@ -1,0 +1,1022 @@
+---
+title: "ngs_archetype_exploration"
+output: html_document
+author: Kaitlyn Johnson
+date: 11-17-2021
+description: takes ngs capacity mapping metrics and does exploratory data analysis on the new metrics and computes summary statistics on the archetypes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list = ls())
+library(tidyverse) # data wrangling
+library(tibble) # data wrangling
+library(janitor) # column naming
+library(countrycode) # country codes
+library(lubridate) # date times
+library(readxl) # excel import
+library(zoo) # calculate rolling averages
+library(R.utils) # R utilities
+library(stringr) # to parse strings in R
+library(tsoutliers) # remove outliers
+library(dplyr) # data wrangling
+library(cowplot)
+library(car)
+library(rgdal)
+ 
+theme_set(theme_cowplot())
+ggplot + background_grid(major = "xy", minor = "xy")
+FIND_MAP_PATH<-'../data/find_map.csv'
+GEOMETRY_PATH<- '/Users/kj22643/Documents/Documents/NGS_capacity_mapping/data/world_shape_file'
+
+```
+Read in data
+```{r}
+find_df<-read.csv(FIND_MAP_PATH) 
+my_spdf <- readOGR( 
+  dsn= GEOMETRY_PATH, 
+  layer="TM_WORLD_BORDERS_SIMPL-0.3",
+  verbose=FALSE
+)
+
+# convert to a dataframe
+my_df<-fortify(my_spdf)
+
+
+map_df<-merge(fortify(my_spdf), as.data.frame(my_spdf), by.x = "id", by.y=0)
+map_df <- map_df %>%
+  rename(code= ISO3)
+# order the archetypes
+find_df$archetype_clean<-factor(find_df$archetype_clean, ordered = TRUE, stringr::str_wrap(c("Test", "Connect", "Leverage", "Strengthen")))
+
+# add LMIC category
+find_df<-find_df%>%
+    mutate(
+        LMIC_status = case_when(
+            ((world_bank_economies == "High income" | world_bank_economies == "Upper middle income") ~ "non-LMIC"),
+            ((world_bank_economies == "Lower middle income" |  world_bank_economies == "Low income" | world_bank_economies == "NaN") ~ "LMIC")
+        )
+    )
+
+max_test_cap_all_countries<-max(find_df$max_new_tests_cap_avg, na.rm = TRUE)
+find_df<-find_df%>%filter(LMIC_status == "LMIC")
+full_map_df<-full_join(map_df, find_df, by = "code")
+```
+Make maps of metrics 
+```{r}
+find_df<-find_df%>%filter(LMIC_status == "LMIC")
+# Percent of recent cases sequences
+my_breaks <-c(0.0001, 0.001, 0.01, 0.1, 1, 10)
+map1<- ggplot(data = full_map_df, aes(x = long, y = lat)) + 
+    geom_polygon(aes(group = group, fill = percent_of_recent_cases_sequenced)) +
+    theme(legend.position = "bottom", legend.key.width = unit(2.1, "cm")) + 
+    scale_x_discrete(labels = NULL, breaks = NULL) +
+    scale_y_discrete(labels = NULL, breaks = NULL) +
+    labs(x = "", y = "", fill = "% cases sequenced")+
+    scale_fill_gradient2(low = "deeppink4",
+                        mid = "white",
+                        high = "chartreuse4",
+                        space = "Lab",
+                        name = "% recent cases sequenced", trans = "log", 
+                        breaks = my_breaks,
+                        labels = my_breaks,
+                        guide = "colourbar",
+                        aesthetics = "fill")
+map1
+# Per capita sequencing
+my_breaks <-c(0, 0.1, 1, 10, 100)
+map2<- ggplot(data = full_map_df, aes(x = long, y = lat)) + 
+    geom_polygon(aes(group = group, fill = per_capita_seq_rate)) +
+    theme(legend.position = "bottom", legend.key.width = unit(2.1, "cm")) + 
+    scale_x_discrete(labels = NULL, breaks = NULL) +
+    scale_y_discrete(labels = NULL, breaks = NULL) +
+    labs(x = "", y = "", fill = "Recent sequencing per 100k")+
+    scale_fill_gradient2(low = "darkred",
+                        mid = "white",
+                        high = "deepskyblue4",
+                        space = "Lab",
+                        name = "Recent sequencing per 100k", trans = "log", 
+                        breaks = my_breaks,
+                        labels = my_breaks,
+                        guide = "colourbar",
+                        aesthetics = "fill")
+
+map2
+# Maximum sequencing capacity per 100k
+my_breaks <-c(0, 0.1, 1, 10, 100)
+map3<- ggplot(data = full_map_df, aes(x = long, y = lat)) + 
+    geom_polygon(aes(group = group, fill = max_new_seq_cap_avg)) +
+    theme(legend.position = "bottom", legend.key.width = unit(2.1, "cm")) + 
+    scale_x_discrete(labels = NULL, breaks = NULL) +
+    scale_y_discrete(labels = NULL, breaks = NULL) +
+    labs(x = "", y = "", fill = "Max sequencing capacity per 100k")+
+    scale_fill_gradient2(low = "tomato3",
+                        mid = "white",
+                        high = "lightseagreen",
+                        space = "Lab",
+                        name = "Maximum sequencing capacity per 100k", trans = "log", 
+                        breaks = my_breaks,
+                        labels = my_breaks,
+                        guide = "colourbar",
+                        aesthetics = "fill")
+
+map3
+# Max variant prevalence at detection
+my_breaks <-100*c(1, 1/10, 1/100, 1/1000,1/10000, 0)
+map4<- ggplot(data = full_map_df, aes(x = long, y = lat)) + 
+    geom_polygon(aes(group = group, fill = max_prevalence_variant_pct)) +
+    theme(legend.position = "bottom", legend.key.width = unit(2.0, "cm")) + 
+    scale_x_discrete(labels = NULL, breaks = NULL) +
+    scale_y_discrete(labels = NULL, breaks = NULL) +
+    labs(x = "", y = "", fill = "Max variant prevalence at detection")+
+    scale_fill_gradient2(low = "#D6E8F6",
+                        mid = "#318AD0",
+                        high = "#184569",
+                        space = "Lab",
+                        name = "Max variant prevalence (%) at detection", trans = "log", 
+                        breaks = my_breaks,
+                        labels = my_breaks,
+                        guide = "colourbar",
+                        aesthetics = "fill")
+
+map4
+my_breaks <-c(0, 5, 50, 100, 1000)
+map5<- ggplot(data = full_map_df, aes(x = long, y = lat)) + 
+    geom_polygon(aes(group = group, fill = cases_in_the_last_7_days_per_100k)) +
+    theme(legend.position = "bottom", legend.key.width = unit(1.5, "cm")) + 
+    scale_x_discrete(labels = NULL, breaks = NULL) +
+    scale_y_discrete(labels = NULL, breaks = NULL) +
+    labs(x = "", y = "", fill = "Cases in last 7 days")+
+    scale_fill_gradient2(low = "blue",
+                        mid = "yellow",
+                        high = "red",
+                        space = "Lab",
+                        name = "New cases in the past 7 days per 100k", trans = "log", 
+                        breaks = my_breaks,
+                        labels = my_breaks,
+                        guide = "colourbar",
+                        aesthetics = "fill")
+
+map5
+my_breaks <-c( 0.01, 0.05, 0.1)
+map6<- ggplot(data = full_map_df, aes(x = long, y = lat)) + 
+    geom_polygon(aes(group = group, fill = tpr_90_days)) +
+    theme(legend.position = "bottom", legend.key.width = unit(1.5, "cm")) + 
+    scale_x_discrete(labels = NULL, breaks = NULL) +
+    scale_y_discrete(labels = NULL, breaks = NULL) +
+    labs(x = "", y = "", fill = "Test positivity over 90 days")+
+    scale_fill_gradient2(low = "blue",
+                        mid = "yellow",
+                        high = "red",
+                        space = "Lab",
+                        name = "Test positivity over 90 days", trans = "log", 
+                        breaks = my_breaks,
+                        labels = my_breaks,
+                        guide = "colourbar",
+                        aesthetics = "fill")
+
+map6
+```
+
+Run this chunk to restrict only to the LMICS !
+```{r}
+find_df<-find_df%>%filter(LMIC_status == "LMIC")
+
+countries_w_no_cases<-find_df%>%filter(recent_cases ==0 | is.na(recent_cases))
+write.csv(countries_w_no_cases, "../data/countries_w_no_cases.csv")
+
+countries_w_0_pct_cases_sequenced<-find_df%>%filter(percent_of_recent_cases_sequenced==0 | is.na(percent_of_recent_cases_sequenced))
+write.csv(countries_w_0_pct_cases_sequenced, "../data/countries_w_0_pct_cases_sequenced.csv")
+```
+
+
+
+
+```{r}
+pct_seq_density_violin_archetype<-ggplot(find_df) + geom_violin(aes(x = factor(archetype_clean), y = percent_of_recent_cases_sequenced), fill = "orange") +
+    scale_y_log10()+
+    geom_jitter(aes(x = factor(archetype_clean), y = percent_of_recent_cases_sequenced), height = 0, width = 0.4)+
+    ylab('% of cases sequenced in the past 90 days') + xlab('Original Archetype')
+pct_seq_density_violin_archetype
+
+max_variant_prevalence_at_detection<-ggplot(find_df) +
+  geom_violin(aes(x = factor(archetype_clean), y = max_prevalence_variant_pct), fill = "purple")+
+  geom_jitter(aes(x = factor(archetype_clean), y = max_prevalence_variant_pct), height = 0, width = 0.4) +
+  scale_y_log10()+
+  ylab('Maximum variant prevalence at detection (%)') + xlab('Original Archetype')
+max_variant_prevalence_at_detection
+
+per_cap_seq_rate_archetype<-ggplot(find_df) + geom_violin(aes(x = factor(archetype_clean), y = per_capita_seq_rate), fill = "green") +
+    scale_y_log10()+
+    geom_jitter(aes(x = factor(archetype_clean), y = per_capita_seq_rate), height = 0, width = 0.4)+
+    ylab('Sequences in the past 90 days per 100k') + xlab('Original Archetype')
+per_cap_seq_rate_archetype
+
+max_seq_cap_arch<-ggplot(find_df) + geom_violin(aes(x = factor(archetype_clean), y = max_new_seq_cap_avg), fill = "navy") +
+    scale_y_log10()+
+    geom_jitter(aes(x = factor(archetype_clean), y = max_new_seq_cap_avg), height = 0, width = 0.4)+
+    ylab('Maximum 90-day avg of per capita seq rate') + xlab('Original Archetype')
+max_seq_cap_arch
+
+
+test_arch<-ggplot(find_df) + geom_violin(aes(x = factor(archetype_clean), y = tpr_90_days), fill = "cornflowerblue") +
+    scale_y_log10()+
+    geom_jitter(aes(x = factor(archetype_clean), y = tpr_90_days), height = 0, width = 0.4)+
+    ylab('Test positivity past 90 days') + xlab('Original Archetype')
+test_arch
+test_arch2<-ggplot(find_df) + geom_violin(aes(x = factor(archetype_clean), y = max_new_tests_cap_avg), fill = "magenta4") +
+  scale_y_log10()+
+    geom_jitter(aes(x = factor(archetype_clean), y =max_new_tests_cap_avg), height = 0, width = 0.4)+
+    ylab('Maximum of 7-day average testing capacity') + xlab('Original Archetype')
+test_arch2
+
+```
+How do the metrics compare with one another?
+```{r}
+#Per capita seq rate vs number of sequences 
+n_v_rate<-ggplot(find_df) + geom_point(aes(x = total_sequences, y = per_capita_seq_rate, color = archetype))+
+    scale_x_log10()+ scale_y_log10()+
+    xlab('Total number of sequences') + ylab('Number of sequences in past 90 days per 100k')
+n_v_rate
+
+# Max 90 day avg of per capita seq vs per capita seq
+max_v_rate<-ggplot(find_df) + geom_point(aes(x = max_new_seq_cap_avg, y = per_capita_seq_rate, color = archetype))+
+    scale_x_log10()+ scale_y_log10()+
+    xlab('Max 90-day avg per capita seq rate') + ylab('Number of sequences in past 90 days per 100k')
+max_v_rate
+
+# percent of cases sequenced vs per capita seq
+pct_seq_v_rate<-ggplot(find_df) + geom_point(aes(x = percent_of_recent_cases_sequenced, y = per_capita_seq_rate, color = factor(archetype_clean)))+
+                                                 scale_color_brewer(palette = "Set2")+
+                                                    scale_x_log10()+ scale_y_log10()+
+     geom_vline(xintercept = 0.5, linetype = "dashed")+
+    geom_hline(yintercept = 0.75, linetype = "dashed") +
+    xlab('Percent of recent cases sequenced') + ylab('Sequences in past 90 days per 100k')+labs(size = "cases in 90 days", color = "Original Archetype")
+pct_seq_v_rate
+
+# #recent sequences vs recent vases
+# seq_v_cases<-ggplot(find_df) + geom_point(aes(y = per_capita_seq_rate, x = recent_cases_per_100k, color = factor(archetype_clean), 
+#                                                  size = population_size))+
+#                                                  scale_color_brewer(palette = "Set2")+
+#                                                     scale_x_log10()+ scale_y_log10()+
+#      #geom_vline(xintercept = 0.5, linetype = "dashed")+
+#     #geom_hline(yintercept = 0.75, linetype = "dashed") +
+#     xlab('Cases per 100k in 90 days') + ylab('Sequences per 100k in 90 days')+labs(size = "Population size (100k)", color = "Original Archetype")
+# seq_v_cases
+
+# percent of cases sequenced vs max 90 day avg seq rate
+pct_seq_v_max<-ggplot(find_df) + geom_point(aes(y = max_new_seq_cap_avg, x = percent_of_recent_cases_sequenced, color = factor(archetype_clean)))+
+    scale_x_log10()+ scale_y_log10()+
+    geom_vline(xintercept = 0.5, linetype = "dashed")+
+    geom_hline(yintercept = 0.1, linetype = "dashed") +
+    xlab('Percent of recent cases sequenced') + ylab('Max 90-day avg per capita seq rate')+ labs(size = "cases in 90 days", color = "Original Archetype")+
+    scale_color_brewer(palette = "Set2")
+pct_seq_v_max
+
+# percent of cases sequenced vs max variant prevalence at detection
+pct_seq_v_max_detect<-ggplot(find_df) + geom_point(aes(y = max_prevalence_variant_pct, x = percent_of_recent_cases_sequenced, color = factor(archetype_clean)))+
+    scale_x_log10()+
+    geom_vline(xintercept = 0.5, linetype = "dashed")+
+    geom_hline(yintercept = 5, linetype = "dashed") +
+    xlab('Percent of recent cases sequenced') + ylab('Max prevalence of variant at detection (%)')+ labs(size = "cases in 90 days", color = "Original Archetype")+
+    scale_color_brewer(palette = "Set2")
+pct_seq_v_max_detect
+
+
+# Testing vs sequencing
+# percent of cases sequenced vs max variant prevalence at detection
+pct_seq_v_tpr<-ggplot(find_df) + geom_point(aes(y = tpr_90_days, x = max_new_tests_cap_avg, color = factor(archetype_clean), 
+                                                shape = who_testing_capacity))+
+    scale_x_log10()+
+    geom_vline(xintercept = 50, linetype = "dashed")+
+    geom_hline(yintercept = 0.05, linetype = "dashed") +
+    xlab('Maximum of 7-day average testing capacity') + ylab('Test positivity past 90 days')+ labs(shape = "WHO testing capacity", color = "Original Archetype")+
+    scale_color_brewer(palette = "Set2")
+pct_seq_v_tpr
+
+```
+Density plots
+```{r}
+max_variant_prev<-ggplot(data = find_df, aes(x= max_prevalence_variant_pct)) + geom_density(fill = "purple") +
+xlab('Maximum variant prevalence at detection')+
+  ylab('Density')
+max_variant_prev
+max_variant_prev2<-ggplot(data = find_df, aes(x= max_prevalence_variant_pct)) + geom_histogram(fill = "purple") +
+xlab('Maximum variant prevalence at detection (%)')+
+  geom_vline(xintercept = 5, linetype = "dashed")+
+  ylab('Frequency')
+max_variant_prev2
+pct_cases_sequenced<-ggplot(data = find_df, aes(x= percent_of_recent_cases_sequenced)) + geom_density(fill = "orange") +
+xlab('Percent of recent cases sequenced')+
+  scale_x_log10()+
+  ylab('Density')
+pct_cases_sequenced
+path = "../out/pct_cases_seq_hist.png"
+pct_cases_sequenced2<-ggplot(data = find_df, aes(x= percent_of_recent_cases_sequenced)) + geom_histogram(fill = "orange") +
+xlab('Percent of recent cases sequenced')+
+  geom_vline(xintercept = 0.5, linetype = "dashed")+
+  scale_x_log10()+
+  ylab('Frequency')
+pct_cases_sequenced2
+ggsave(filename = path,  device = png, dpi = 700)
+
+max_seq_cap<-ggplot(data = find_df, aes(x= max_new_seq_cap_avg)) + geom_histogram(fill = "navy") +
+xlab('Maximum 90-day average of daily sequencing per 100k')+
+  geom_vline(xintercept = 0.05, linetype = "dashed", color = "gray")+
+  scale_x_log10()+
+  ylab('Frequency')
+max_seq_cap
+
+
+tpr_hist<-ggplot(data = find_df, aes(x= tpr_90_days)) + geom_histogram(fill = "cornflowerblue") +
+xlab('Test positivity past 90 days')+
+  geom_vline(xintercept = 0.05, linetype = "dashed")+
+  scale_x_log10()+
+  ylab('Frequency')
+tpr_hist
+
+max_test_hist<-ggplot(data = find_df, aes(x= max_new_tests_cap_avg)) + geom_histogram(fill = "magenta4") +
+xlab('Maximum of 7-day average test capacity')+
+  geom_vline(xintercept = 50, linetype = "dashed")+
+  scale_x_log10()+
+  ylab('Frequency')
+max_test_hist
+
+# sanity check
+median_max_test_cap<-median(find_df$max_new_tests_cap_avg, na.rm = TRUE)
+median_max_seq_cap<-median(find_df$max_new_seq_cap_avg, na.rm = TRUE)
+
+```
+QQ plots
+```{r}
+# Percent of recent cases sequenced
+pct_seq_qq<-ggplot(data= find_df, aes(sample = log10(percent_of_recent_cases_sequenced))) + stat_qq() + stat_qq_line()+
+ylab('Log of percent of recent cases sequenced') 
+pct_seq_qq 
+
+# Max variant prevalence at detection
+max_detect_qq<-ggplot(data= find_df, aes(sample = max_prevalence_variant_pct)) + stat_qq() + stat_qq_line()+
+ylab('Maximum variant prevalence at detection') 
+max_detect_qq 
+
+
+qqnorm(find_df$percent_of_recent_cases_sequenced, pch = 1, frame = FALSE)
+qqline(find_df$percent_of_recent_cases_sequenced, col = "orange", lwd = 2)
+
+# Number of sequences in past 90 days per capita
+qqnorm(find_df$per_capita_seq_rate, pch = 1, frame = FALSE)
+qqline(find_df$per_capita_seq_rate, col = "green", lwd = 2)
+
+# Maximum 90 day avg of per capita seq rate
+qqnorm(find_df$max_new_seq_cap_avg, pch = 1, frame = FALSE)
+qqline(find_df$max_new_seq_cap_avg, col = "navy", lwd = 2)
+
+```
+Find some quartiles on the metrics
+```{r}
+# Find some quartiles on the metrics
+
+quartiles_pct_cases_seq<-quantile(find_df$percent_of_recent_cases_sequenced, probs = c(0.25, 0.5, 0.75), na.rm = TRUE)
+print(quartiles_pct_cases_seq)
+quartiles_per_cap_seq<-quantile(find_df$per_capita_seq_rate, probs = c(0.25, 0.5, 0.75), na.rm = TRUE)
+print(quartiles_per_cap_seq)
+quartiles_max_avg_seq_rate<-quantile(find_df$max_new_seq_cap_avg, probs = c(0.25, 0.5, 0.75), na.rm = TRUE)
+print(quartiles_max_avg_seq_rate)
+# 
+thirds_pct_cases_seq<-quantile(find_df$percent_of_recent_cases_sequenced, probs = c(0.33, 0.67), na.rm = TRUE)
+print(thirds_pct_cases_seq)
+thirds_per_cap_seq<-quantile(find_df$per_capita_seq_rate, probs = c(0.33, 0.67), na.rm = TRUE)
+print(thirds_per_cap_seq)
+thirds_max_avg_seq_rate<-quantile(find_df$max_new_seq_cap_avg, probs = c(0.33, 0.67), na.rm = TRUE)
+print(thirds_max_avg_seq_rate)
+```
+
+Make categories based on the cut-offs 
+```{r}
+
+# Percent of cases sequenced
+find_df<-find_df %>%
+    mutate(
+        pct_seq_cat = case_when(
+            percent_of_recent_cases_sequenced == 0 ~ "0%",
+            (percent_of_recent_cases_sequenced < 0.5 & percent_of_recent_cases_sequenced > 0)  ~ "<0.5%",
+            percent_of_recent_cases_sequenced >= 0.5 ~ "0.5%+",
+            is.na(percent_of_recent_cases_sequenced) == T ~ "0%"
+        ),
+      max_seq_cap_cat = case_when(
+            max_new_seq_cap_avg == 0 ~ "0",
+            max_new_seq_cap_avg > 0.05  ~ ">0.05",
+            max_new_seq_cap_avg <= 0.05 & max_new_seq_cap_avg >1 ~ "0-0.05",
+            is.na(max_new_seq_cap_avg) == T ~ "0"
+        ),
+      
+      max_test_cap_cat = case_when(
+        max_new_tests_cap_avg == 0 ~"0",
+        max_new_tests_cap_avg >1 ~ ">1",
+        max_new_tests_cap_avg <=1 & max_new_tests_cap_avg >0 ~ "0-1"
+        
+      ),
+      max_variant_prev_cat = case_when(
+          max_prevalence_variant_pct > 5  ~ "5%+",
+          max_prevalence_variant_pct <= 5 ~ "<5%",
+          is.na(max_prevalence_variant_pct) == T ~ "5%+"
+        )
+    )
+```
+
+Make new arcehtypes: First based on 
+```{r}
+
+find_df<-find_df %>%
+  mutate(
+    sequencing_data_level = case_when(
+      (pct_seq_cat == "0.5%+") ~ "high",
+      (pct_seq_cat == "<0.5%" ) ~ "medium",
+      (pct_seq_cat == "0%") ~ "low"
+    )
+  )
+find_df <- find_df %>%
+  mutate(
+    archetype_pct_cases_seq = case_when(
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & sequencing_data_level == "high" & dx_testing_capacity == "Reliable testing capacity") ~ "Strengthen",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & sequencing_data_level == "high" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & sequencing_data_level == "medium" & dx_testing_capacity == "Reliable testing capacity") ~ "Leverage",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & sequencing_data_level == "medium" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & sequencing_data_level == "low" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & sequencing_data_level == "low" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sequencing_data_level == "high" & dx_testing_capacity == "Reliable testing capacity") ~ "Strengthen",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sequencing_data_level == "high" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sequencing_data_level == "medium" & dx_testing_capacity == "Reliable testing capacity") ~ "Leverage",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sequencing_data_level == "medium" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sequencing_data_level == "low" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sequencing_data_level == "low" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & sequencing_data_level == "high" & dx_testing_capacity == "Reliable testing capacity") ~ "Leverage",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & sequencing_data_level == "high" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & sequencing_data_level == "medium" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & sequencing_data_level == "medium"  & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & sequencing_data_level == "low" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & sequencing_data_level == "low" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (dx_testing_capacity == "Unreliable testing capacity") ~ "Test"
+    )
+  )
+```
+
+
+
+
+
+
+
+```{r}
+
+
+arch_pct_seq_df<-find_df%>%
+    group_by(pct_seq_cat)%>%
+    summarise(
+        n_countries = n(),
+        n_LMIC = sum(LMIC_status == "LMIC"),
+        avg_n_sequences = mean(total_sequences, na.rm = TRUE),
+        avg_sequences_per_100k = mean(per_capita_seq_rate, na.rm = TRUE),
+        avg_percent_cases_seq = mean(percent_of_recent_cases_sequenced, na.rm = TRUE),
+        avg_max_daily_seq_cap = mean(max_new_seq_cap_avg, na.rm = TRUE))%>%
+    mutate(
+        pct_of_LMICs = n_LMIC/sum(n_LMIC),
+        pct_of_countries = 100*n_countries/sum(n_countries)
+    )
+
+# order the archetypes
+find_df$pct_seq_cat<-factor(find_df$pct_seq_cat, ordered = TRUE, stringr::str_wrap(c("<0.5%", "0.5%+")))
+
+bar_pct_seq<-ggplot(arch_pct_seq_df) + geom_bar(aes(x = factor(pct_seq_cat), y = pct_of_countries), stat = "identity", position = "dodge", fill = "orange") +
+    theme(axis.text.x = element_text(angle=45, hjust =1),
+          aspect.ratio =1)+
+    xlab('Percent of cases sequenced')+ ylab('Percent of countries')
+bar_pct_seq
+
+
+# Second grouping
+arch_pct_seq_df2<-find_df%>%
+    group_by(pct_seq_cat2)%>%
+    summarise(
+        n_countries = n(),
+        n_LMIC = sum(LMIC_status == "LMIC"),
+        avg_n_sequences = mean(total_sequences, na.rm = TRUE),
+        avg_sequences_per_100k = mean(per_capita_seq_rate, na.rm = TRUE),
+        avg_percent_cases_seq = mean(percent_of_recent_cases_sequenced, na.rm = TRUE),
+        avg_max_daily_seq_cap = mean(max_new_seq_cap_avg, na.rm = TRUE))%>%
+    mutate(
+        pct_of_LMICs = n_LMIC/sum(n_LMIC),
+        pct_of_countries = 100*n_countries/sum(n_countries)
+    )
+
+# order the archetypes
+find_df$pct_seq_cat2<-factor(find_df$pct_seq_cat2, ordered = TRUE, stringr::str_wrap(c("0%", "<0.5%", "0.5%+")))
+arch_pct_seq_df2$pct_seq_cat2<-factor(arch_pct_seq_df2$pct_seq_cat2, ordered = TRUE, stringr::str_wrap(c("0%", "<0.5%", "0.5%+")))
+
+bar_pct_seq2<-ggplot(arch_pct_seq_df2) + geom_bar(aes(x = factor(pct_seq_cat2), y = pct_of_countries), stat = "identity", position = "dodge", fill = "orange") +
+    theme(axis.text.x = element_text(angle=45, hjust =1),
+          aspect.ratio =1)+
+    xlab('Percent of cases sequenced')+ ylab('Percent of countries')
+bar_pct_seq2
+
+# group by max variant prevalence at detection
+arch_max_prev_detect_df<-find_df%>%
+    group_by(max_variant_prev_cat)%>%
+    summarise(
+        n_countries = n(),
+        n_LMIC = sum(LMIC_status == "LMIC"),
+        avg_n_sequences = mean(total_sequences, na.rm = TRUE),
+        avg_sequences_per_100k = mean(per_capita_seq_rate, na.rm = TRUE),
+        avg_percent_cases_seq = mean(percent_of_recent_cases_sequenced, na.rm = TRUE),
+        avg_max_daily_seq_cap = mean(max_new_seq_cap_avg, na.rm = TRUE))%>%
+    mutate(
+        pct_of_LMICs = n_LMIC/sum(n_LMIC),
+        pct_of_countries = 100*n_countries/sum(n_countries)
+    )
+
+# order the archetypes
+arch_max_prev_detect_df$max_variant_prev_cat<-factor(arch_max_prev_detect_df$max_variant_prev_cat, ordered = TRUE, stringr::str_wrap(c("5%+", "<5%")))
+
+bar_max_prev<-ggplot(arch_max_prev_detect_df) + geom_bar(aes(x = factor(max_variant_prev_cat), y = pct_of_countries), stat = "identity", position = "dodge", fill = "purple") +
+    theme(axis.text.x = element_text(angle=45, hjust =1),
+          aspect.ratio =1)+
+    xlab('Max variant prevalence at detection')+ ylab('Percent of countries')
+bar_max_prev
+
+```
+Make new archetypes
+```{r}
+# Percent of recent cases sequenced & max variant prevalence at detection 
+# high sequencing data availability: >0.5% cases sequenced, max variant prevalence at detection <5%
+# medium sequencing data availability: <0.5% cases sequenced, max variant prevalence at detection <5% |
+                            # >0.5% cases sequenced, max varian prevalence at detection >5%
+# low sequencing data availability: <0.5% cases sequenced, max variant prevalence at detection >5%
+
+find_df<-find_df %>%
+  mutate(
+    sequencing_data_level = case_when(
+      (pct_seq_cat == "0.5%+" & max_variant_prev_cat == "<5%") ~ "high",
+      ((pct_seq_cat == "<0.5%" & max_variant_prev_cat == "<5%") | (pct_seq_cat == "0.5%+" & max_variant_prev_cat == "5%+")) ~ "medium",
+      (pct_seq_cat == "<0.5%" & max_variant_prev_cat == "5%+") ~ "low"
+    )
+  )
+```
+
+Make new archetypes
+```{r}
+# Percent of recent cases sequenced & max variant prevalence at detection 
+# high sequencing data availability: >0.5% cases sequenced, max variant prevalence at detection <5%
+# medium sequencing data availability: <0.5% cases sequenced, max variant prevalence at detection <5% |
+                            # >0.5% cases sequenced, max varian prevalence at detection >5%
+# low sequencing data availability: <0.5% cases sequenced, max variant prevalence at detection >5%
+
+find_df<-find_df %>%
+  mutate(
+    sequencing_data_level = case_when(
+      (pct_seq_cat2 == "0.5%+") ~ "high",
+      (pct_seq_cat2 == "<0.5%" ) ~ "medium",
+      (pct_seq_cat2 == "0%") ~ "low"
+    )
+  )
+```
+
+```{r}
+
+find_df <- find_df %>%
+  mutate(
+    archetype_new = case_when(
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & sequencing_data_level == "high" & dx_testing_capacity == "Reliable testing capacity") ~ "Strengthen",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & sequencing_data_level == "high" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & sequencing_data_level == "medium" & dx_testing_capacity == "Reliable testing capacity") ~ "Leverage",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & sequencing_data_level == "medium" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & sequencing_data_level == "low" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & sequencing_data_level == "low" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sequencing_data_level == "high" & dx_testing_capacity == "Reliable testing capacity") ~ "Strengthen",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sequencing_data_level == "high" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sequencing_data_level == "medium" & dx_testing_capacity == "Reliable testing capacity") ~ "Leverage",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sequencing_data_level == "medium" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sequencing_data_level == "low" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sequencing_data_level == "low" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & sequencing_data_level == "high" & dx_testing_capacity == "Reliable testing capacity") ~ "Leverage",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & sequencing_data_level == "high" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & sequencing_data_level == "medium" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & sequencing_data_level == "medium"  & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & sequencing_data_level == "low" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & sequencing_data_level == "low" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (dx_testing_capacity == "Unreliable testing capacity") ~ "Test"
+    )
+  )
+# order the archetypes
+find_df$archetype_new<-factor(find_df$archetype_new, ordered = TRUE, stringr::str_wrap(c("Test", "Connect", "Leverage", "Strengthen")))
+```
+
+ Archetypes and metrics
+```{r}
+pct_seq_density_violin_archetype<-ggplot(find_df) + geom_violin(aes(x = factor(archetype_new), y = percent_of_recent_cases_sequenced), fill = "orange") +
+    scale_y_log10()+
+    geom_jitter(aes(x = factor(archetype_new), y = percent_of_recent_cases_sequenced), height = 0, width = 0.4)+
+    geom_hline(aes(yintercept = 0.05), linetype = "dashed") +
+    ylab('% of cases sequences in the past 90 days') + xlab('New archetype')
+pct_seq_density_violin_archetype
+
+
+per_cap_seq_rate_archetype<-ggplot(find_df) + geom_violin(aes(x = factor(archetype_new), y = per_capita_seq_rate), fill = "green") +
+    scale_y_log10()+
+    geom_jitter(aes(x = factor(archetype_new), y = per_capita_seq_rate), height = 0, width = 0.4)+
+    ylab('Sequences in the past 90 days per 100k') + xlab('Per capita seq archetype')
+per_cap_seq_rate_archetype
+
+
+max_seq_cap_arch<-ggplot(find_df) + geom_violin(aes(x = factor(archetype_new), y = max_new_seq_cap_avg), fill = "navy") +
+    scale_y_log10()+
+    geom_jitter(aes(x = factor(archetype_new), y = max_new_seq_cap_avg), height = 0, width = 0.4)+
+    ylab('Maximum 90-day avg of per capita seq rate') + xlab('New archetype')
+max_seq_cap_arch
+
+max_prev_detect_arch<-ggplot(find_df) + geom_violin(aes(x = factor(archetype_new), y = max_prevalence_variant_pct), fill = "purple") +
+    scale_y_log10()+
+    geom_hline(aes(yintercept = 5), linetype = "dashed") +
+    geom_jitter(aes(x = factor(archetype_new), y = max_prevalence_variant_pct), height = 0, width = 0.4)+
+    ylab('Maximum prevalence at detection') + xlab('New archetype')
+max_prev_detect_arch
+
+# percent of cases sequenced vs max variant prevalence at detection
+pct_seq_v_max_detect<-ggplot(find_df) + geom_point(aes(y = max_prevalence_variant_pct, x = percent_of_recent_cases_sequenced, color = factor(archetype_new)))+
+    scale_x_log10()+
+    geom_vline(xintercept = 0.5, linetype = "dashed")+
+    geom_hline(yintercept = 5, linetype = "dashed") +
+    xlab('Percent of recent cases sequenced') + ylab('Max prevalence of variant at detection (%)')+ labs(size = "cases in 90 days", color = "New Archetype")+
+    scale_color_brewer(palette = "Set2")
+pct_seq_v_max_detect
+
+pct_seq_v_max_detect2<-ggplot(find_df) + geom_point(aes(y = max_prevalence_variant_pct, x = percent_of_recent_cases_sequenced, color = factor(archetype_clean)))+
+    scale_x_log10()+
+    geom_vline(xintercept = 0.5, linetype = "dashed")+
+    geom_hline(yintercept = 5, linetype = "dashed") +
+    xlab('Percent of recent cases sequenced') + ylab('Max prevalence of variant at detection (%)')+ labs(size = "cases in 90 days", color = "Original Archetype")+
+    scale_color_brewer(palette = "Set2")
+pct_seq_v_max_detect2
+```
+
+
+Summary statistics on the archetypes
+```{r}
+orig_summary<-find_df%>%
+    group_by(archetype_clean)%>%
+    summarise(
+        n_countries = n(),
+        n_LMIC = sum(LMIC_status == "LMIC"))%>%
+    mutate(
+        pct_of_LMICs = n_LMIC/sum(n_LMIC),
+        pct_of_countries = 100*n_countries/sum(n_countries)
+    )
+
+bar_orig<-ggplot(orig_summary) + geom_bar(aes(x = factor(archetype_clean), y = pct_of_countries), stat = "identity", position = "dodge", fill = "blue4") +
+    theme(axis.text.x = element_text(angle=45, hjust =1),
+          aspect.ratio = 1)+
+    xlab('Original archetype')+ ylab('Percent of countries')
+bar_orig
+new_summary<-find_df%>%
+    group_by(archetype_new)%>%
+    summarise(
+        n_countries = n(),
+        n_LMIC = sum(LMIC_status == "LMIC"))%>%
+    mutate(
+        pct_of_LMICs = n_LMIC/sum(n_LMIC),
+        pct_of_countries = 100*n_countries/sum(n_countries)
+    )
+
+# order the archetypes
+new_summary$archetype_new<-factor(new_summary$archetype_new, ordered = TRUE, stringr::str_wrap(c("Test", "Connect", "Leverage", "Strengthen")))
+
+bar_new<-ggplot(new_summary) + geom_bar(aes(x = factor(archetype_new), y = pct_of_countries), stat = "identity", position = "dodge", fill = "darkgreen") +
+    theme(axis.text.x = element_text(angle=45, hjust =1),
+          aspect.ratio = 1)+
+    xlab('New archetype')+ ylab('Percent of countries')
+bar_new
+
+
+full_map_df<-full_join(map_df, find_df, by = "code")
+map6<- ggplot(data = full_map_df, aes(x = long, y = lat)) + 
+    geom_polygon(aes(group = group, fill = archetype_new)) +
+    theme(legend.position = "bottom", legend.key.width = unit(2.1, "cm")) + 
+    scale_x_discrete(labels = NULL, breaks = NULL) +
+    scale_y_discrete(labels = NULL, breaks = NULL) +
+    labs(x = "", y = "", fill = "")+
+    scale_fill_manual(values = c("plum", "orchid3", "darkorchid3", "darkorchid4"),name = "")+
+  ggtitle("New archetype")
+map6
+map7<- ggplot(data = full_map_df, aes(x = long, y = lat)) + 
+    geom_polygon(aes(group = group, fill = archetype_clean)) +
+    theme(legend.position = "bottom", legend.key.width = unit(2.1, "cm")) + 
+    scale_x_discrete(labels = NULL, breaks = NULL) +
+    scale_y_discrete(labels = NULL, breaks = NULL) +
+    labs(x = "", y = "", fill = "")+
+    scale_fill_manual(values = c("plum", "orchid3", "darkorchid3", "darkorchid4"),name = "")+
+  ggtitle("Original archetype")
+map7
+
+N_sequences<- log(1-0.95)/log(1-0.05)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+# Per capita sequencing rate
+find_df<-find_df %>%
+    mutate(
+        # <0.034 | NA
+        # 0.034-3.2
+        # 3.2+
+        per_cap_seq_cat = case_when(
+            per_capita_seq_rate < thirds_per_cap_seq[1]  ~ "<0.034 per 100k",
+            per_capita_seq_rate< thirds_per_cap_seq[2] & per_capita_seq_rate >= thirds_per_cap_seq[1] ~ "0.034-3.2 per 100k",
+            per_capita_seq_rate >= thirds_per_cap_seq[2] ~ "3.2+ per 100k",
+            is.na(per_capita_seq_rate) == T ~ "<0.034 per 100k"
+        )
+    )
+
+
+arch_per_cap_seq_df<-find_df%>%
+    group_by(per_cap_seq_cat)%>%
+    summarise(
+        n_countries = n(),
+        n_LMIC = sum(LMIC_status == "LMIC"),
+        avg_n_sequences = mean(total_sequences),
+        avg_sequences_per_100k = mean(per_capita_seq_rate, na.rm = TRUE),
+        avg_percent_cases_seq = mean(percent_of_recent_cases_sequenced, na.rm = TRUE),
+        avg_max_daily_seq_cap = mean(max_new_seq_cap_avg, na.rm = TRUE)
+        )%>%
+    mutate(
+        pct_of_LMICs = n_LMIC/sum(n_LMIC),
+        pct_of_countries = 100*n_countries/sum(n_countries)
+    )
+
+# order the archetypes
+find_df$per_cap_seq_cat<-factor(find_df$per_cap_seq_cat, ordered = TRUE, stringr::str_wrap(c("<0.034 per 100k", "0.034-3.2 per 100k", "3.2+ per 100k")))
+
+bar_per_cap_seq<-ggplot(arch_per_cap_seq_df) + geom_bar(aes(x = factor(per_cap_seq_cat), y = pct_of_countries), stat = "identity", position = "dodge", fill = "green") +
+    theme(axis.text.x = element_text(angle=45, hjust =1),
+          aspect.ratio =1)+
+    xlab('Per capita sequencing in the past 90 days')+ ylab('Percent of countries')
+bar_per_cap_seq
+
+
+
+# Maximum 90-day average daily per capita sequencing rate
+find_df<-find_df %>%
+    mutate(
+        # <0.018 | NA
+        # 0.018- 0.19
+        # 0.19+
+        max_seq_cat = case_when(
+            max_new_seq_cap_avg < thirds_max_avg_seq_rate[1]  ~ "<0.018 moving avg per 100k",
+            max_new_seq_cap_avg< thirds_max_avg_seq_rate[2] & thirds_max_avg_seq_rate >= thirds_max_avg_seq_rate[1] ~ "0.018-0.19 moving avg per 100k",
+            max_new_seq_cap_avg >= thirds_max_avg_seq_rate[2] ~ "0.19+ moving avg per 100k",
+            is.na(max_new_seq_cap_avg) == T ~ "<0.018 moving avg per 100k"
+        )
+    )
+
+
+arch_seq_cap_df<-find_df%>%
+    group_by(max_seq_cat)%>%
+    summarise(
+        n_countries = n(),
+        n_LMIC = sum(LMIC_status == "LMIC"),
+        avg_n_sequences = mean(total_sequences),
+        avg_sequences_per_100k = mean(per_capita_seq_rate, na.rm = TRUE),
+        avg_percent_cases_seq = mean(percent_of_recent_cases_sequenced, na.rm = TRUE),
+        avg_max_daily_seq_cap = mean(max_new_seq_cap_avg, na.rm = TRUE))%>%
+    mutate(
+        pct_of_LMICs = n_LMIC/sum(n_LMIC),
+        pct_of_countries = 100*n_countries/sum(n_countries)
+    )
+
+# order the archetypes
+find_df$max_seq_cat<-factor(find_df$max_seq_cat, ordered = TRUE, stringr::str_wrap(c("<0.018 moving avg per 100k", "0.018-0.19 moving avg per 100k", "0.19+ moving avg per 100k")))
+
+bar_per_cap_seq<-ggplot(arch_per_cap_seq_df) + geom_bar(aes(x = factor(per_cap_seq_cat), y = pct_of_countries), stat = "identity", position = "dodge", fill = "navy") +
+    theme(axis.text.x = element_text(angle=45, hjust =1),
+          aspect.ratio = 1)+
+    xlab('Maximum 90-day moving average of new sequences per 100k')+ ylab('Percent of countries')
+bar_per_cap_seq
+```
+
+Make new archetypes
+```{r}
+# Percent of recent cases sequenced
+find_df <- find_df %>%
+  mutate(
+    archetype_pct_cases_seq = case_when(
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & pct_seq_cat == "0.57%+" & dx_testing_capacity == "Reliable testing capacity") ~ "Strengthen",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" &  pct_seq_cat == "0.57%+" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & pct_seq_cat == "0.02-0.57%" & dx_testing_capacity == "Reliable testing capacity") ~ "Leverage",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & pct_seq_cat == "0.02-0.57%" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & pct_seq_cat == "<0.02%" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & pct_seq_cat == "<0.02%" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & pct_seq_cat == "0.57%+" & dx_testing_capacity == "Reliable testing capacity") ~ "Strengthen",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & pct_seq_cat == "0.57%+" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & pct_seq_cat == "0.02-0.57%" & dx_testing_capacity == "Reliable testing capacity") ~ "Leverage",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & pct_seq_cat == "0.02-0.57%" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" &  pct_seq_cat == "<0.02%" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & pct_seq_cat == "<0.02%" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "0 NGS facilities or equivalent" &  pct_seq_cat == "0.57%+" & dx_testing_capacity == "Reliable testing capacity") ~ "Leverage",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & pct_seq_cat == "0.57%+" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & pct_seq_cat == "0.02-0.57%" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & pct_seq_cat == "0.02-0.57%"  & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & pct_seq_cat == "<0.02%" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & pct_seq_cat == "<0.02%"& dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (dx_testing_capacity == "Unreliable testing capacity") ~ "Test"
+    )
+  )
+# order the archetypes
+find_df$archetype_pct_cases_seq<-factor(find_df$archetype_pct_cases_seq, ordered = TRUE, stringr::str_wrap(c("Test", "Connect", "Leverage", "Strengthen")))
+
+# Per capita sequencing in the past 90 days
+find_df <- find_df %>%
+  mutate(
+    archetype_per_cap_seq = case_when(
+       (sequencing_capacity == "4+ NGS facilities or equivalent" & per_cap_seq_cat == "3.2+ per 100k" & dx_testing_capacity == "Reliable testing capacity") ~ "Strengthen",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & per_cap_seq_cat == "3.2+ per 100k" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & per_cap_seq_cat== "0.034-3.2 per 100k" & dx_testing_capacity == "Reliable testing capacity") ~ "Leverage",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & per_cap_seq_cat== "0.034-3.2 per 100k" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & per_cap_seq_cat== "<0.034 per 100k" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & per_cap_seq_cat== "<0.034 per 100k" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & per_cap_seq_cat == "3.2+ per 100k" & dx_testing_capacity == "Reliable testing capacity") ~ "Strengthen",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & per_cap_seq_cat == "3.2+ per 100k" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & per_cap_seq_cat== "0.034-3.2 per 100k" & dx_testing_capacity == "Reliable testing capacity") ~ "Leverage",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & per_cap_seq_cat== "0.034-3.2 per 100k" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & per_cap_seq_cat== "<0.034 per 100k" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & per_cap_seq_cat== "<0.034 per 100k" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & per_cap_seq_cat == "3.2+ per 100k" & dx_testing_capacity == "Reliable testing capacity") ~ "Leverage",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & per_cap_seq_cat == "3.2+ per 100k" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & per_cap_seq_cat== "0.034-3.2 per 100k" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & per_cap_seq_cat== "0.034-3.2 per 100k" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & per_cap_seq_cat== "<0.034 per 100k" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & per_cap_seq_cat== "<0.034 per 100k" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (dx_testing_capacity == "Unreliable testing capacity") ~ "Test"
+    )
+  )
+
+# order the archetypes
+find_df$archetype_per_cap_seq<-factor(find_df$archetype_per_cap_seq, ordered = TRUE, stringr::str_wrap(c("Test", "Connect", "Leverage", "Strengthen")))
+# Maximum 90 day daily rolling avg per capita sequencing over entire pandemic
+find_df <- find_df %>%
+  mutate(
+    archetype_max_avg_seq = case_when(
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & max_seq_cat == "0.19+ moving avg per 100k" & dx_testing_capacity == "Reliable testing capacity") ~ "Strengthen",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & max_seq_cat == "0.19+ moving avg per 100k" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & max_seq_cat== "0.018-0.19 moving avg per 100k" & dx_testing_capacity == "Reliable testing capacity") ~ "Leverage",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & max_seq_cat== "0.018-0.19 moving avg per 100k" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & max_seq_cat== "<0.018 moving avg per 100k" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
+      (sequencing_capacity == "4+ NGS facilities or equivalent" & max_seq_cat== "<0.018 moving avg per 100k" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & max_seq_cat == "0.19+ moving avg per 100k" & dx_testing_capacity == "Reliable testing capacity") ~ "Strengthen",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & max_seq_cat == "0.19+ moving avg per 100k" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & max_seq_cat== "0.018-0.19 moving avg per 100k" & dx_testing_capacity == "Reliable testing capacity") ~ "Leverage",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & max_seq_cat== "0.018-0.19 moving avg per 100k" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & max_seq_cat== "<0.018 moving avg per 100k" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
+      (sequencing_capacity == "1-3 NGS facilities or equivalent" & max_seq_cat== "<0.018 moving avg per 100k" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & max_seq_cat == "0.19+ moving avg per 100k" & dx_testing_capacity == "Reliable testing capacity") ~ "Leverage",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & max_seq_cat == "0.19+ moving avg per 100k" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & max_seq_cat== "0.018-0.19 moving avg per 100k" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & max_seq_cat== "0.018-0.19 moving avg per 100k" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & max_seq_cat== "<0.018 moving avg per 100k" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
+      (sequencing_capacity == "0 NGS facilities or equivalent" & max_seq_cat== "<0.018 moving avg per 100k" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
+      (dx_testing_capacity == "Unreliable testing capacity") ~ "Test"
+    )
+  )
+# order the archetypes
+find_df$archetype_max_avg_seq<-factor(find_df$archetype_max_avg_seq, ordered = TRUE, stringr::str_wrap(c("Test", "Connect", "Leverage", "Strengthen")))
+
+```
+ Archetypes and metrics
+```{r}
+pct_seq_density_violin_archetype<-ggplot(find_df) + geom_violin(aes(x = factor(archetype_pct_cases_seq), y = percent_of_recent_cases_sequenced), fill = "orange") +
+    scale_y_log10()+
+    geom_jitter(aes(x = factor(archetype_pct_cases_seq), y = percent_of_recent_cases_sequenced), height = 0, width = 0.4)+
+    geom_hline(aes(yintercept = thirds_pct_cases_seq[1]), linetype = "dashed") +
+    geom_hline(aes(yintercept = thirds_pct_cases_seq[2]), linetype = "dashed") +
+    ylab('% of cases sequences in the past 90 days') + xlab('% cases sequenced archetype')
+pct_seq_density_violin_archetype
+
+
+per_cap_seq_rate_archetype<-ggplot(find_df) + geom_violin(aes(x = factor(archetype_per_cap_seq), y = per_capita_seq_rate), fill = "green") +
+    scale_y_log10()+
+    geom_hline(aes(yintercept = thirds_per_cap_seq[1]), linetype = "dashed") +
+    geom_hline(aes(yintercept = thirds_per_cap_seq[2]), linetype = "dashed") +
+    geom_jitter(aes(x = factor(archetype_per_cap_seq), y = per_capita_seq_rate), height = 0, width = 0.4)+
+    ylab('Sequences in the past 90 days per 100k') + xlab('Per capita seq archetype')
+per_cap_seq_rate_archetype
+
+
+max_seq_cap_arch<-ggplot(find_df) + geom_violin(aes(x = factor(archetype_max_avg_seq), y = max_new_seq_cap_avg), fill = "navy") +
+    scale_y_log10()+
+    geom_hline(aes(yintercept = thirds_max_avg_seq_rate[1]), linetype = "dashed") +
+    geom_hline(aes(yintercept = thirds_max_avg_seq_rate[2]), linetype = "dashed") +
+    geom_jitter(aes(x = factor(archetype_max_avg_seq), y = max_new_seq_cap_avg), height = 0, width = 0.4)+
+    ylab('Maximum 90-day avg of per capita seq rate') + xlab('Maximum 90 day daily per capita avg sequencing archetype')
+max_seq_cap_arch
+```
+
+
+
+Original and 3 proposed new archetypes
+```{r}
+orig_summary<-find_df%>%
+    group_by(archetype_clean)%>%
+    summarise(
+        n_countries = n(),
+        n_LMIC = sum(LMIC_status == "LMIC"))%>%
+    mutate(
+        pct_of_LMICs = n_LMIC/sum(n_LMIC),
+        pct_of_countries = 100*n_countries/sum(n_countries)
+    )
+
+bar_orig<-ggplot(orig_summary) + geom_bar(aes(x = factor(archetype_clean), y = pct_of_countries), stat = "identity", position = "dodge", fill = "purple") +
+    theme(axis.text.x = element_text(angle=45, hjust =1),
+          aspect.ratio = 1)+
+    xlab('Original archetype')+ ylab('Percent of countries')
+bar_orig
+
+pct_cases_summary<-find_df%>%
+    group_by(archetype_pct_cases_seq)%>%
+    summarise(
+        n_countries = n(),
+        n_LMIC = sum(LMIC_status == "LMIC"))%>%
+    mutate(
+        pct_of_LMICs = n_LMIC/sum(n_LMIC),
+        pct_of_countries = 100*n_countries/sum(n_countries)
+    )
+
+# order the archetypes
+pct_cases_summary$archetype_pct_cases_seq<-factor(pct_cases_summary$archetype_pct_cases_seq, ordered = TRUE, stringr::str_wrap(c("Test", "Connect", "Leverage", "Strengthen")))
+
+bar_orig<-ggplot(pct_cases_summary) + geom_bar(aes(x = factor(archetype_pct_cases_seq), y = pct_of_countries), stat = "identity", position = "dodge", fill = "orange") +
+    theme(axis.text.x = element_text(angle=45, hjust =1),
+          aspect.ratio = 1)+
+    xlab('Percent of cases sequenced archetype')+ ylab('Percent of countries')
+bar_orig
+
+per_cap_summary<-find_df%>%
+    group_by(archetype_per_cap_seq)%>%
+    summarise(
+        n_countries = n(),
+        n_LMIC = sum(LMIC_status == "LMIC"))%>%
+    mutate(
+        pct_of_LMICs = n_LMIC/sum(n_LMIC),
+        pct_of_countries = 100*n_countries/sum(n_countries)
+    )
+
+# order the archetypes
+per_cap_summary$archetype_per_cap_seq<-factor(per_cap_summary$archetype_per_cap_seq, ordered = TRUE, stringr::str_wrap(c("Test", "Connect", "Leverage", "Strengthen")))
+
+
+bar_per_cap<-ggplot(per_cap_summary) + geom_bar(aes(x = factor(archetype_per_cap_seq), y = pct_of_countries), stat = "identity", position = "dodge", fill = "green") +
+    theme(axis.text.x = element_text(angle=45, hjust =1),
+          aspect.ratio = 1)+
+    xlab('Per capita sequence archetype')+ ylab('Percent of countries')
+bar_per_cap
+
+max_seq_summary<-find_df%>%
+    group_by(archetype_max_avg_seq)%>%
+    summarise(
+        n_countries = n(),
+        n_LMIC = sum(LMIC_status == "LMIC"))%>%
+    mutate(
+        pct_of_LMICs = n_LMIC/sum(n_LMIC),
+        pct_of_countries = 100*n_countries/sum(n_countries)
+    )
+
+# order the archetypes
+max_seq_summary$archetype_max_avg_seq<-factor(max_seq_summary$archetype_max_avg_seq, ordered = TRUE, stringr::str_wrap(c("Test", "Connect", "Leverage", "Strengthen")))
+
+
+bar_max_avg<-ggplot(max_seq_summary) + geom_bar(aes(x = factor(archetype_max_avg_seq), y = pct_of_countries), stat = "identity", position = "dodge", fill = "navy") +
+    theme(axis.text.x = element_text(angle=45, hjust =1),
+          aspect.ratio = 1)+
+    xlab('Max sequencing rate archetype')+ ylab('Percent of countries')
+bar_max_avg
+
+
+```
+Archetype comparison
+```{r}
+
+# percent of cases sequenced vs max 90 day avg seq rate
+pct_seq_v_max<-ggplot(find_df) + geom_point(aes(y = max_new_seq_cap_avg, x = percent_of_recent_cases_sequenced, color = factor(archetype_clean), size = recent_cases, shape = factor(archetype_per_cap_seq)))+
+    scale_x_log10()+ scale_y_log10()+
+    geom_vline(xintercept = 0.5, linetype = "dashed")+
+    geom_hline(yintercept = 0.1, linetype = "dashed") +
+    xlab('Percent of recent cases sequenced') + ylab('Max 90-day avg per capita seq rate')+ labs(size = "cases in 90 days", color = "Original Archetype", shape = "New Archetype")+
+    scale_color_brewer(palette = "Set2")
+pct_seq_v_max
+```
