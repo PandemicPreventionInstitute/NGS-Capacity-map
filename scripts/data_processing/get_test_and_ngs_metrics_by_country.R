@@ -2,16 +2,32 @@
 # Updated: Briana Thrift & Zach Susswein
 # Current Author: Kaitlyn Johnson
 
-# Date updated: 11-15-2021
+# Date updated: 11-29-2021
+
+# This script takes in the GISAID metadata and OWID and find data and finds the recent cases, tests, and sequences
+# It will be used to put the Omicron sequencing data in context
+rm(list = ls())
+USE_CASE = 'domino' # options: 'local' or 'domino'
 
 
 
+#---- Libraries----------
+if (USE_CASE == 'domino'){
+install.packages("tidyverse", dependencies = TRUE, repos = 'http://cran.us.r-project.org')
+install.packages("janitor", dependencies = TRUE, repos = 'http://cran.us.r-project.org')
+install.packages("tibble", dependencies = TRUE, repos = 'http://cran.us.r-project.org')
+install.packages("countrycode", dependencies = TRUE, repos = 'http://cran.us.r-project.org')
+install.packages("lubridate", dependencies=TRUE, repos='http://cran.us.r-project.org')
+install.packages("readxl", dependencies=TRUE, repos='http://cran.us.r-project.org')
+install.packages("zoo", dependencies=TRUE, repos='http://cran.us.r-project.org')
+install.packages("R.utils", dependencies=TRUE, repos='http://cran.us.r-project.org')
+install.packages("stringr", dependencies=TRUE, repos='http://cran.us.r-project.org')
+install.packages("tsoutliers", dependencies=TRUE, repos='http://cran.us.r-project.org')
+install.packages("dplyr", dependencies=TRUE, repos='http://cran.us.r-project.org')
+install.packages("scales", dependencies=TRUE, repos='http://cran.us.r-project.org')
+}
 
-#install.packages("janitor")
-#install.packages("countrycode")
-#install.packages("lubridate")
-#install.packages("tsoutliers")
- 
+
 library(tidyverse) # data wrangling
 library(tibble) # data wrangling
 library(janitor) # column naming
@@ -23,21 +39,45 @@ library(R.utils) # R utilities
 library(stringr) # to parse strings in R
 library(tsoutliers) # remove outliers
 library(dplyr) # data wrangling
+library(scales) # comma formatting
  
 # ------ Name data paths and set parameters -------------------------------------------
-rm(list = ls())
-## Set local file path names
-WHO_REGIONS_PATH<-'../data/who_regions.csv'
-FIND_TESTING_SEQ_RAW_PATH<- '../data/2021_04_04_FIND_capacity_mapping_data_sources.xlsx'
-OWID_TESTING_POLICY_PATH<- '../data/covid-19-testing-policy.csv'
-ALL_DATA_PATH<- '../data/data_all.csv'
-#GISAID_RAW_METADATA_PATH<-'../data/GISAID_raw_metadata_10_18_2021.tsv'
-# PROVISION_PATH<-'../data/provision.csv'
-GISAID_DAILY_PATH<-'../data/GISAID_daily_country_aggregated_10.18.21.csv' # this is the file that comes from Briana's processing file
-ECONOMY_PATH<-'../data/CLASS.xls'
+today <- substr(lubridate::now('EST'), 1, 13)
+today <- chartr(old = ' ', new = '-', today)
+today_date<-lubridate::today('EST')
+#today<-"2021-12-22-13"
 
-LAST_DATA_PULL_DATE<-as.Date("2021-10-18") # enter here "YYYY-10-18"
-TIME_WINDOW <- 90
+## Set filepaths
+ALL_DATA_PATH<- url("https://raw.githubusercontent.com/dsbbfinddx/FINDCov19TrackerData/master/processed/data_all.csv")
+
+if (USE_CASE == 'domino'){
+#GISAID_DAILY_PATH<-'/mnt/data/processed/gisaid_cleaning_output.csv' # this is the file that comes from Briana's processing file
+GISAID_DAILY_PATH<-'/mnt/data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
+OMICRON_DAILY_CASES<-'/mnt/data/raw/omicron_gisaid_feed.csv'
+#BNO_CASES_BY_COUNTRY_PATH<-paste0('/mnt/data/raw/daily_BNO_file/', today,'.csv')
+BNO_CASES_BY_COUNTRY_DATE<-'/mnt/data/raw/BNO_scraped_master.csv'
+SEQUENCES_LAST_30_DAYS<-'/mnt/data/processed/sequences_last_30_days.csv'
+SHAPEFILES_FOR_FLOURISH_PATH <- '/mnt/data/static/geometric_country_code_name_master_file.txt'
+LAT_LONG_FOR_FLOURISH_PATH<-'/mnt/data/static/country_lat_long_names.csv'
+}
+
+if (USE_CASE == 'local'){
+ALL_DATA_PATH<- url("https://raw.githubusercontent.com/dsbbfinddx/FINDCov19TrackerData/master/processed/data_all.csv")
+#GISAID_DAILY_PATH<-'../data/processed/gisaid_cleaning_output.csv' # this is the file that comes from Briana's processing file
+GISAID_DAILY_PATH<-'../data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
+OMICRON_DAILY_CASES<-'../data/raw/omicron_gisaid_feed.csv'
+#BNO_CASES_BY_COUNTRY_PATH<-paste0('../data/raw/daily_BNO_file/', today,'.csv')
+BNO_CASES_BY_COUNTRY_DATE<-'../data/raw/BNO_scraped_master.csv'
+SEQUENCES_LAST_30_DAYS<-'../data/processed/sequences_last_30_days.csv'
+SHAPEFILES_FOR_FLOURISH_PATH <- '../data/static/geometric_country_code_name_master_file.txt'
+LAT_LONG_FOR_FLOURISH_PATH<-'../data/static/country_lat_long_names.csv'
+}
+
+LAST_DATA_PULL_DATE<-as.Date(substr(lubridate::now('EST'), 1, 10))-days(1) # Make this based off of yesterday!
+FIRST_DATE<-"2019-12-01"
+TIME_WINDOW <- 29 # since we will include the reference data
+TIME_WINDOW_WEEK<- 6 # since will include the reference date
+TIME_SERIES_WINDOW<- 89 # last 90 days?
 CONF_LEVEL<-0.95 # confidence we want to be that a variant is not greater than our estimated prevalence
 # that has been detected at least once (i.e. what variant prevalence would we be able to detect?)
 
@@ -45,106 +85,6 @@ CONF_LEVEL<-0.95 # confidence we want to be that a variant is not greater than o
 # intermediates with time series are designated with _t
 
 
- 
-# ------ WHO countries, regions, and code ---------------------------------------------
- 
-# import csv of WHO region countries 
-find_clean <- read.csv(WHO_REGIONS_PATH) %>%
-# standardize names with this janitor function
-  clean_names() %>%
-  # rename columns name
-  rename(name = country_name)
-# All additional variables will be joined to these
- 
- 
-# ------ Categorical testing and sequencing capacity data -------------------------------------
- 
-test_seq_raw <- read_excel(FIND_TESTING_SEQ_RAW_PATH,
-                              sheet = "Country classification",
-                              skip = 1) %>%
-# standardize names with this janitor function
-  clean_names()%>%
-  # remove rows with country code x
-  filter(country_code != "x") %>%
-  # remove rows with country code ""
-  filter(country_code != "") %>%
-  # remove rows with country code " "
-  filter(country_code != " ")
-
-# select only testing or sequencing capacity data
-testing_clean <- test_seq_raw %>%
-  # drop all columns except iso code and WHO testing capacity
-  select(contains("code"), starts_with("testing_capacity_"))
-ngs_clean <- test_seq_raw %>%
-  # drop all columns except iso code and NGS capacity
-  select(contains("code"), starts_with("ngs_capacity_"))
-
-# define  capacity column for later reference
-ngs_capacity_column <- colnames(ngs_clean)[max(ncol(ngs_clean))]
-testing_column <- colnames(testing_clean)[max(ncol(testing_clean))]
-
-# print column names so that user knows when these were last updated 
-print(ngs_capacity_column)
-print(testing_column)
-
-
-# assign ngs_capacity variable a label
-ngs_clean$ngs_capacity <- case_when(
-  # 0: "0 - 0 NGS facilities" or 0
-  # 1: "1 - 1-3 NGS facilities or equivalent" or 1
-  # 2: "2 - 4+ NGS facilities or equivalent" or 2
-  ngs_clean[ , ngs_capacity_column] == 0 ~ 0,
-  ngs_clean[ , ngs_capacity_column] == "0 - No NGS facilities" ~ 0,
-  ngs_clean[ , ngs_capacity_column] == 1 ~ 1,
-  ngs_clean[ , ngs_capacity_column] == "1 - 1-3 NGS facilities or equivalent" ~ 1,
-  ngs_clean[ , ngs_capacity_column] == 2 ~ 2,
-  ngs_clean[ , ngs_capacity_column] == "2 - >3 NGS facilities or equivalent" ~ 2
-)
-
-# Convert to binary testing capacity
-testing_clean$who_testing_capacity <- case_when(
-  # 0: "0 - No reliable testing capacity" or 0
-  # 1: "1 - Reliable testing capacity" or 1
-  testing_clean[ , testing_column] == 0 ~ 0,
-  testing_clean[ , testing_column] == "0 - No reliable testing capacity" ~ 0,
-  testing_clean[ , testing_column] == 1 ~ 1,
-  testing_clean[ , testing_column] == "1 - Reliable testing capacity" ~ 1
-) 
-
-
-# select only code and capacity variables
-ngs_clean <- ngs_clean %>%
-  select(contains("code"), ends_with("ngs_capacity"))
-testing_clean <- testing_clean %>%
-  select(contains("code"), matches("who_testing_capacity"))
-
-# find_clean: merge testing and sequencing capacity data into template
-find_clean <- left_join(find_clean, ngs_clean, by = c("code" = "country_code"))
-find_clean <- left_join(find_clean, testing_clean, by = c("code" = "country_code"))
- 
-# ------- Sequencing Capacity Classifier variable
-
-## Sequencing Capacity Classifier variable
-
-# create Sequencing Capacity Classifier variable
-# Variable indicating evidence of Sequencing Capacity
-# Variable is based on WHO slides on facilities, GISRS data for extraction of capacity & testing data
-# Variable is based on confidential manufacturer data on install bases
-find_clean <- find_clean %>%
-  # create new variable for Sequencing Capacity based on:
-  # WHO slides, GISRS data
-  # confidential manufacturer data on install bases
-  mutate(
-    # "0 NGS facilities or equivalent": 0 ngs_capacity
-    # "1-3 NGS facilities or equivalent": 1 ngs_capacity
-    # "4+ NGS facilities or equivalent": 2 ngs_capacity
-    sequencing_capacity = case_when(
-      ngs_capacity == 0 ~ "0 NGS facilities or equivalent",
-      ngs_capacity == 1 ~ "1-3 NGS facilities or equivalent",
-      ngs_capacity == 2 ~ "4+ NGS facilities or equivalent",
-      is.na(ngs_capacity) == T ~ "0 NGS facilities or equivalent"
-    )
-  )
 
 
 # ------ FIND testing data to estimate testing metric -------------------------------------
@@ -179,6 +119,18 @@ find_testing_t$code[find_testing_t$country == "Kosovo"] <- "XKX"
 find_testing_t$code[find_testing_t$country == "Namibia"] <- "NAM"
 
 # CHECK THAT DATA SET HAS COMPLETED DATE TIME SERIES
+# set start date
+first_date<-min(find_testing_t$date, na.rm = TRUE)
+date <- seq.Date(first_date, LAST_DATA_PULL_DATE, by = "day")
+code <-unique(find_testing_t$code)
+date_country<-expand_grid(date, code)
+find_testing_t<-left_join(date_country,find_testing_t, by = c("code", "date"))
+
+# Fill in the NAs on the values 
+find_testing_t$new_tests_cap[is.na(find_testing_t$new_tests_cap)]<-0
+find_testing_t$new_tests_all[is.na(find_testing_t$new_tests_all)]<-0
+
+
 
 # create variable for 30 day rolling average of new tests per capita
 find_testing_t <- find_testing_t %>%
@@ -186,7 +138,7 @@ find_testing_t <- find_testing_t %>%
   group_by(code) %>%
   # create column for 30 day rolling average
   mutate(
-    new_tests_cap_avg = round(zoo::rollmean(new_tests_cap, 30, fill = NA),2)
+    new_tests_cap_avg = round(zoo::rollmean(new_tests_all/pop_100k, 30, fill = NA),2)
   )
  
  
@@ -199,6 +151,25 @@ find_testing_clean <- find_testing_t %>%
     cap_cum_tests = max(cap_cum_tests, na.rm = T),
     cum_tpr = max(all_cum_cases, na.rm = T)/max(all_cum_tests, na.rm = T)
   )
+
+
+# Add in recent testing capacity metrics ie average test positivity over past 90 days
+# Subset to last 7 days of data
+
+tests_recent<-find_testing_t%>%filter(date>=(LAST_DATA_PULL_DATE - TIME_WINDOW_WEEK) & 
+                                          date<=LAST_DATA_PULL_DATE)%>%
+  group_by(code)%>%
+  summarise(tests_in_last_7_days = sum(new_tests_all))
+
+tests_30_days<-find_testing_t%>%filter(date>=(LAST_DATA_PULL_DATE - TIME_WINDOW) & 
+                                        date<=LAST_DATA_PULL_DATE)%>%
+  group_by(code)%>%
+  summarise(tests_in_last_30_days = sum(new_tests_all))
+
+tests_recent<-left_join(tests_recent, tests_30_days, by = "code")
+
+find_testing_clean<-left_join(find_testing_clean, tests_recent, by = "code")
+
  
 # remove any -Inf
 find_testing_clean$max_new_tests_cap_avg <- ifelse(find_testing_clean$max_new_tests_cap_avg < 0, NA, find_testing_clean$max_new_tests_cap_avg)
@@ -206,43 +177,7 @@ find_testing_clean$max_new_tests_cap_avg <- ifelse(find_testing_clean$max_new_te
 # remove any Inf
 find_testing_clean$cum_tpr <- ifelse(find_testing_clean$cum_tpr < 0 | find_testing_clean$cum_tpr > 1, NA, find_testing_clean$cum_tpr)
  
-# select code, pop_100k, cap_cum_tests, and max_new_tests_cap_avg columns
-find_testing_clean <- find_testing_clean %>%
-  select(code, pop_100k, max_new_tests_cap_avg, cap_cum_tests, cum_tpr)
- 
-# find_clean: merge FIND testing data into template
-find_clean <- left_join(find_clean, find_testing_clean, by = "code")
- 
-# quartile division of max_new_tests_cap_avg
-find_testing_quantile <- quantile(find_testing_clean$max_new_tests_cap_avg, na.rm = T)
- 
-## Dx Testing Capacity Classifier
- 
-# create Dx Testing Capacity Classifier variable
-# Variable indicating highest level of diagnostic throughput (Low testing capacity, Medium testing capacity, High testing capacity)
-# Variable is based on FIND testing dashboard
-# If FIND source missing for that country, take source OWD
-find_clean <- find_clean %>%
-  # create new variable for Dx testing capacity based on:
-  # FIND testing capacity
-  # OWID testing Capacity
-  mutate(
-    # "0-49.99": < 50 max_new_tests_cap_avg in FIND
-    # "50-99.99": >= 10 & < 100 max_new_tests_cap_avg in FIND
-    # "100+": >= 100 max_new_tests_cap_avg in FIND
-    # "0-49.99": NA in FIND
-    dx_testing_capacity = case_when(
-      max_new_tests_cap_avg >= 50 & who_testing_capacity == 1 ~ "Reliable testing capacity",
-      max_new_tests_cap_avg >= 50 & who_testing_capacity == 0 ~ "Reliable testing capacity",
-      max_new_tests_cap_avg >= 50 & is.na(who_testing_capacity) == T ~ "Reliable testing capacity",
-      max_new_tests_cap_avg < 50 & who_testing_capacity == 1 ~ "Reliable testing capacity",
-      max_new_tests_cap_avg < 50 & who_testing_capacity == 0 ~ "Unreliable testing capacity",
-      max_new_tests_cap_avg < 50 & is.na(who_testing_capacity) == T ~ "Unreliable testing capacity",
-      is.na(max_new_tests_cap_avg) == T & who_testing_capacity == 1 ~ "Reliable testing capacity",
-      is.na(max_new_tests_cap_avg) == T & who_testing_capacity == 0 ~ "Unreliable testing capacity",
-      is.na(max_new_tests_cap_avg) == T & is.na(who_testing_capacity) == T ~ "Unreliable testing capacity"
-    )
-  )
+
  
 
 # -------- GISAID data on SARS-CoV-2 sequences by country and time --------------------------------
@@ -251,541 +186,442 @@ gisaid_raw <- read.csv(GISAID_DAILY_PATH) %>% # raw refers to all variants, by c
   # standardize names with this janitor function
   clean_names()
 
-# generate country codes from GISAID country names
-gisaid_raw$country_code <- countrycode(gisaid_raw$gisaid_country, origin = 'country.name', destination = 'iso3c')
-
-# Remove any rows that don't contain country codes (i.e. not a valid country)
-gisaid_raw<-gisaid_raw[!is.na(gisaid_raw$country_code),]
-
-# generate country codes from OWID country names
-gisaid_raw$country_code_owid <- countrycode(gisaid_raw$owid_location, origin = 'country.name', destination = 'iso3c')
-
-# inserts missing country codes
-gisaid_raw$country_code[gisaid_raw$country == "Micronesia (country)"] <- "FSM"
-gisaid_raw$country_code[gisaid_raw$country == "Timor"] <- "TLS"
-gisaid_raw$country_code[gisaid_raw$country == "Turks and Caicos Islands"] <- "TCA"
-gisaid_raw$country_code[gisaid_raw$country == "Nauru"] <- "NRU"
-gisaid_raw$country_code[gisaid_raw$country == "Kosovo"] <- "XKX"
-gisaid_raw$country_code[gisaid_raw$country == "Guernsey"] <- "GGY"
-gisaid_raw$country_code[gisaid_raw$country == "Falkland Islands"] <- "FLK"
-
-# parse collection dates as dates
-# any observations with only year or year-month become NA
+# parse collection dates as dates (note this uses the imputed day 15 from metadata processing script)
 gisaid_raw$collection_date <- as.Date(as.character(gisaid_raw$gisaid_collect_date), format = "%Y-%m-%d")
 
-# parse submission dates as dates
-print("FLAG: THIS IS WHAT WILL BE DELETED WHEN WE GET SUBMISSION DATE")
-gisaid_raw$submission_date <- as.Date(as.character(gisaid_raw$owid_date), format = "%Y-%m-%d")
+gisaid_t <- gisaid_raw%>%select(collection_date, gisaid_country, n_new_sequences,
+                                         owid_new_cases, owid_population, country_code, owid_location)
 
-gisaid_t <- gisaid_raw%>%select(collection_date,submission_date, gisaid_country, all_lineages,
-                                         owid_new_cases, owid_population, country_code, owid_location)%>%
-  rename(n_new_sequences = all_lineages)
-
-# set start date
-first_date<-min(gisaid_t$collection_date, na.rm = TRUE)
-
-# fill in all dates that no submissions occur
-gisaid_t<-gisaid_t %>% complete(collection_date = seq.Date(first_date, LAST_DATA_PULL_DATE, by = "day"))
-
-# replace NAs with 0s
-gisaid_t$n_new_sequences[is.na(gisaid_t$n_new_sequences)]<-0
-gisaid_t$owid_new_cases[is.na(gisaid_t$owid_new_cases)]<-0
+# # CHECK THAT DATA SET HAS COMPLETED DATE TIME SERIES (commented out because we do this in gisaid_metatdata_processing.R)
+# collection_date <- seq.Date(first_date, LAST_DATA_PULL_DATE, by = "day")
+# country_code <-unique(gisaid_t$country_code)
+# date_country<-expand_grid(collection_date, country_code)
+# gisaid_t<-left_join(date_country,gisaid_t, by = c("country_code", "collection_date"))
+# 
+# # Fill in the NAs on the values 
+# gisaid_t$n_new_sequences[is.na(gisaid_t$n_new_sequences)]<-0
+# gisaid_t$owid_new_cases[is.na(gisaid_t$owid_new_cases)]<-0
 
   
-# find 90 day average of new sequences
+# find 7 day average of new sequences
 gisaid_t <- gisaid_t %>%
   # group rows by country code
   group_by(country_code) %>%
-  # create column for 90 day rolling average
+  # create column for 7 day rolling average
   mutate(
-    seq_cap_avg = round(zoo::rollmean(n_new_sequences, TIME_WINDOW, fill = NA),2)
+    seq_7davg = round(zoo::rollmean(n_new_sequences, 7, fill = NA),2),
+    #gisaid_md_seq_omicron_7davg = round(zoo::rollmean(b_1_1_529, 7, fill = NA), 2),# remove because we don't have omicron feed anymore
+    #pct_omicron_7davg = gisaid_md_seq_omicron_7davg/seq_7davg, 
+    rolling_cases_last_30_days = rollapplyr(owid_new_cases,30,sum, partial = TRUE, align = "right"),
+    rolling_cases_last_7_days = rollapplyr(owid_new_cases, 7, sum, partial = TRUE, align = "right"),
+    rolling_seq_last_30_days = rollapplyr(n_new_sequences, 30, sum, partial = TRUE, align = "right"),
+    percent_of_cases_seq_last_30_days = 100*rolling_seq_last_30_days/rolling_cases_last_30_days
   )
 
-# find the maximum of the 90 day rolling average
-gisaid_max_seq<-gisaid_t%>%
-  group_by(country_code)%>%
-  summarise(max_new_seq_cap_avg = max(seq_cap_avg, na.rm = TRUE),
-            total_sequences = sum(n_new_sequences))
+
+# filter to last 60 days 
+gisaid_t <- gisaid_t %>%filter(collection_date>=(LAST_DATA_PULL_DATE -TIME_SERIES_WINDOW) & 
+                                 collection_date<= LAST_DATA_PULL_DATE)
+# Make sure that the most recent date is yesterday
+stopifnot("GISAID metadata run isnt up to date" = max(gisaid_t$collection_date) == (today_date - days(1)))
+#write.csv(gisaid_t, "../data/gisaid_t.csv")
 
 
-# Subset to only recent data
+
+
+# Subset to only recent data to get recent sequences and cases by country
 gisaid_recent_data<-gisaid_t%>%filter(collection_date>=(LAST_DATA_PULL_DATE -TIME_WINDOW) & 
                                         collection_date<= LAST_DATA_PULL_DATE)%>%
   group_by(country_code)%>%
-  summarise(recent_cases = sum(owid_new_cases),
-            recent_sequences = sum(n_new_sequences),
-            population_size = max(owid_population))%>%
-  mutate(percent_of_recent_cases_sequenced = 100*recent_sequences/recent_cases,
-         per_capita_seq_rate = 100000*recent_sequences/population_size,
-         max_prevalence_variant_pct = 100*(1-((1-CONF_LEVEL)^(1/recent_sequences))))
+  summarise(cases_in_last_30_days = sum(owid_new_cases, na.rm = TRUE),
+            sequences_in_last_30_days = sum(n_new_sequences, na.rm = TRUE),
+            population_size = max(owid_population, na.rm = TRUE),
+            cases_per_100k_last_30_days = 100000*sum(owid_new_cases, na.rm = TRUE)/max(owid_population, na.rm = TRUE))
+
+# replaces NAs with 0
+gisaid_recent_data$sequences_in_last_30_days[is.na(gisaid_recent_data$sequences_in_last_30_days)]<-0
+gisaid_recent_data<-gisaid_recent_data%>%
+  mutate(percent_of_cases_sequenced_last_30_days = 100*sequences_in_last_30_days/cases_in_last_30_days,
+         per_capita_seq_rate_in_last_30_days = 100000*sequences_in_last_30_days/population_size,
+         max_prevalence_variant_pct = 100*(1-((1-CONF_LEVEL)^(1/sequences_in_last_30_days))))
+
+
 
 # Subset to last 7 days of data
-cases_in_last_7_days<-gisaid_t%>%filter(collection_date>=(LAST_DATA_PULL_DATE - 6) & 
-                                           collection_date <= LAST_DATA_PULL_DATE)%>%
+cases_in_last_7_days<-gisaid_t%>%filter(collection_date>=(LAST_DATA_PULL_DATE - TIME_WINDOW_WEEK) & 
+                                          collection_date<=LAST_DATA_PULL_DATE)%>%
   group_by(country_code)%>%
-  summarise(cases_newly_reported_in_last_7_days_per_100000_population = 
-              100000*sum(owid_new_cases)/max(owid_population))
+  summarise(cases_per_100k_last_7_days = round(100000*sum(owid_new_cases)/max(owid_population, na.rm = TRUE), 1))
 
-# replace percent_cases_sequenced > 100 or NaN with NA
-gisaid_recent_data$percent_of_recent_cases_sequenced[gisaid_recent_data$percent_of_recent_cases_sequenced > 100 | gisaid_recent_data$percent_of_recent_cases_sequenced == "NaN"] <- NA
+# join with 30 day summary 
+gisaid_recent_data<-left_join(gisaid_recent_data, cases_in_last_7_days, by = "country_code")
 
-# merge gisaid sets
-gisaid_clean<-left_join(gisaid_recent_data, gisaid_max_seq, by = "country_code")
+gisaid_recent_data<-left_join(gisaid_recent_data, find_testing_clean, by = c("country_code"="code"))
 
-# Join both sets of metrics 
-find_clean <- left_join(find_clean, gisaid_clean, by = c("code" = "country_code"))
-find_clean<-left_join(find_clean, cases_in_last_7_days, by = c("code" = "country_code"))
-
-
-
-
-#----- Find difference in reporting lag from 2020 to 2021---------------------------
-
-print("FLAG: THIS WILL BE 0 UNTIL WE GET UPDATED DATASET FROM ZACH")
-
-month_1_start <- as.Date("2020-01-01", format = "%Y-%m-%d")
-month_1_end <- as.Date("2020-12-31", format = "%Y-%m-%d")
-month_2_start <- as.Date("2021-01-01", format = "%Y-%m-%d")
-month_2_end <- as.Date("2021-12-31", format = "%Y-%m-%d")
-
-# dataframe for first month of interest reporting lag
-global_month_1_lag <- gisaid_t %>%
-  filter(collection_date >= as.Date(month_1_start) &
-           collection_date <= as.Date(month_1_end)) %>%
-  group_by(country_code) %>%
-  summarise(median_reporting_lag_month_1 = median(as.numeric(submission_date - collection_date,
-                                                          unit = "days"), na.rm = T)
-  ) %>%
-  select(country_code, median_reporting_lag_month_1)
-
-
-# create dataframe for second month of interest reporting lag
-global_month_2_lag <- gisaid_t %>%
-  filter(collection_date >= as.Date(month_2_start) &
-           collection_date <= as.Date(month_2_end)) %>%
-  group_by(country_code) %>%
-  summarise(median_reporting_lag_month_2 = median(as.numeric(submission_date - collection_date,
-                                                          unit = "days"), na.rm = T)
-  ) %>%
-  select(country_code, median_reporting_lag_month_2)
-
-
-# join first and second month of interest data frames
-global_month_lag <- full_join(global_month_2_lag, global_month_1_lag, by = "country_code")
-
-#remove NA
-global_month_lag<-na.omit(global_month_lag)
-
-# create reporting lag month to month difference column
-global_month_lag$reporting_lag_diff <- as.numeric(global_month_lag$median_reporting_lag_month_2 - global_month_lag$median_reporting_lag_month_1)
-
-# remove unnecessary columns and rows
-global_month_lag <- global_month_lag %>%
-  select(country_code, reporting_lag_diff)
-
-# find_clean: merge GISAID metadata into template
-find_clean <- left_join(find_clean, global_month_lag, by = c("code" = "country_code"))
-
-# ------ World Bank Economy classifier ------------------------------------------------
-world_bank_background_raw <- read_excel(ECONOMY_PATH,
-                                        sheet = "List of economies",
-                                        skip = 5) %>%
-  # standardize names with this janitor function
-  clean_names()
-
-# remove buffer rows by iso code and select code and testing capacity columns
-world_bank_background_clean <- world_bank_background_raw %>%
-  # drop all columns except iso code and world_bank_economies
-  select(4,7)
-
-# rename columns code and world_bank_economies
-colnames(world_bank_background_clean) <- c("code", "world_bank_economies")
-
-# find_clean: merge WHO testing data into template
-find_clean <- left_join(find_clean, world_bank_background_clean, by = c("code" = "code"))
+gisaid_recent_data<-gisaid_recent_data%>%
+  mutate(tests_per_100k_in_last_7_days= 100000*tests_in_last_7_days/population_size,
+         tests_per_100k_in_last_30_days = 100000*tests_in_last_30_days/population_size,
+         positivity_in_last_7_days = cases_per_100k_last_7_days/tests_per_100k_in_last_7_days,
+         positivity_in_last_30_days = cases_per_100k_last_30_days/tests_per_100k_in_last_30_days)
 
 
 
 
 
 
-# -------- SARS-CoV-2 sequencing capacity classifier original -----------------------
-# Variable indicating how many submissions from each country appear in GISAID
-find_clean <- find_clean %>%
-  # create new variable for SARS-CoV-2 Sequencing based on:
-  # submission_count variable derived from GISAID provision
-  mutate(
-    # "0 sequences": 0 submission_count | NA submission_count
-    # "1-499 sequences": <500 submission_count
-    # "500+ sequences": >= 500 submission_count
-    sars_cov_2_sequencing = case_when(
-      total_sequences >= 500 ~ "500+ sequences",
-      total_sequences < 500 & total_sequences > 0 ~ "1-499 sequences",
-      total_sequences == 0 ~ "0 sequences",
-      is.na(total_sequences) == T ~ "0 sequences"
-    )
-  )
+
+# -------- Merge GISAID Omicron & BNO Omicron by country  --------------------------------
+
+BNO_omicron_t<-read_csv(BNO_CASES_BY_COUNTRY_DATE)
+BNO_omicron_t<-unique(BNO_omicron_t)
+BNO_omicron_t<-BNO_omicron_t%>%drop_na(confirmed)
+BNO_omicron_t<-BNO_omicron_t%>%rename(BNO_confirmed = confirmed, BNO_probable = probable)%>%
+  select(code, BNO_confirmed, BNO_probable, timestamp)
+BNO_omicron_t$date<-as.Date(substr(BNO_omicron_t$timestamp, 1, 10))
+# Records time of scrape 
+BNO_omicron_t$hour_of_day<-as.numeric(substr(BNO_omicron_t$timestamp, 12,13)) 
+BNO_omicron_t$min_of_day<-as.numeric(substr(BNO_omicron_t$timestamp, 15,16))/60 
+BNO_omicron_t$time_of_day<- BNO_omicron_t$hour_of_day + BNO_omicron_t$min_of_day
+
+# Grab today's most recent data only (and throw error if not updated)
+BNO_omicron<-BNO_omicron_t%>%filter(timestamp == (max(timestamp)))
+today_date<-lubridate::today('EST')
+stopifnot("Scraper didnt update properly today" = max(BNO_omicron$date) == today_date)
+
+BNO_omicron<-BNO_omicron%>%
+  select(code, BNO_confirmed, BNO_probable)
+
+# GISAID OMICRON data read in
+omicron_t<-read.csv(OMICRON_DAILY_CASES)
+omicron_seq<-omicron_t%>%group_by(code)%>%
+  summarise(cum_omicron_seq = sum(n, na.rm = TRUE))
+
+# GISAID Omicron global summary stats
+GISAID_print<-omicron_seq%>%
+  mutate(Country = countrycode(code, origin = 'iso3c', destination = 'country.name'))%>%
+  rename(Count = cum_omicron_seq)%>%select(Country, Count)
+
+
+# combine the two tables
+omicron_seq<-full_join(omicron_seq, BNO_omicron, by = "code")
+omicron_seq<-distinct(omicron_seq) # remove duplicate rows
+omicron_seq$max_omicron<- rep(0, nrow(omicron_seq))
+# Set max
+for (i in 1:nrow(omicron_seq)){
+  omicron_seq$max_omicron[i]<-max(c(omicron_seq$cum_omicron_seq[i], omicron_seq$BNO_confirmed[i]), na.rm = TRUE)
+}
+
+omicron_seq$max_omicron[omicron_seq$max_omicron== -Inf]<-NA
+
+omicron_seq<- omicron_seq%>%
+  mutate(country_name = countrycode(code, origin = 'iso3c', destination = 'country.name'))
+# rename columns
+omicron_seq_print<-omicron_seq%>%select(
+  country_name,BNO_confirmed, BNO_probable, cum_omicron_seq)%>%rename(
+  `Country/Region/Territory` = country_name,
+  Confirmed = BNO_confirmed,
+  Probable = BNO_probable, 
+  GISAID = cum_omicron_seq
+)
+
+n_GISAID_omicron_seq<-sum(omicron_seq$cum_omicron_seq, na.rm = TRUE)
+n_GISAID_omicron_countries<-sum(!is.na(omicron_seq$cum_omicron_seq))
+n_total_omicron_cases<-sum(omicron_seq$max_omicron, na.rm = TRUE) # sum of the max of GISAID or newsnodes
+n_confirmed_omicron_cases<-sum(omicron_seq$BNO_confirmed, na.rm = TRUE) # sumof only newsnodes confirmed
+diff_total_and_confirmed<-n_total_omicron_cases-n_confirmed_omicron_cases
+n_countries_w_cases<-sum(!is.na(omicron_seq$max_omicron))
+omicron_global_summary<-data.frame(n_total_omicron_cases, n_countries_w_cases, n_confirmed_omicron_cases,
+                                   diff_total_and_confirmed, n_GISAID_omicron_seq, n_GISAID_omicron_countries)
+
+# join GISAID data with omicron sequence counts
+gisaid_summary_df<-left_join(gisaid_recent_data, omicron_seq, by = c("country_code" = "code"))
+
+# Make a column with omicron sequences where absenses are NAs
+gisaid_summary_df$cum_omicron_seq_NA<-gisaid_summary_df$cum_omicron_seq
+gisaid_summary_df$max_omicron_seq_NA<-gisaid_summary_df$max_omicron
+gisaid_summary_df$max_omicron_seq_NA<-as.integer(gisaid_summary_df$max_omicron_seq_NA)
+
+
+#Make another column where missing omicron sequences are 0s
+gisaid_summary_df$cum_omicron_seq[is.na(gisaid_summary_df$cum_omicron_seq)]<-0
+gisaid_summary_df$max_omicron[is.na(gisaid_summary_df$max_omicron)]<-0
+gisaid_summary_df$max_omicron<-as.integer(gisaid_summary_df$max_omicron)
+
+# Log transform max_prevalence_variant_pct
+gisaid_summary_df$log10_max_prevalence_variant_pct<-log10(gisaid_summary_df$max_prevalence_variant_pct)
+
+# Round percent to 2 decimal points
+gisaid_summary_df$max_prevalence_variant_pct[gisaid_summary_df$max_prevalence_variant_pct>0.01]<-round(
+      gisaid_summary_df$max_prevalence_variant_pct[gisaid_summary_df$max_prevalence_variant_pct>0.01],2)
+# If <0.01, set as 0.01
+gisaid_summary_df$max_prevalence_variant_pct[gisaid_summary_df$max_prevalence_variant_pct<=0.01]<-0.01
+
+
+# Add a column with numbers and flags
+gisaid_summary_df$max_prevalence_variant_pct_flags<-gisaid_summary_df$max_prevalence_variant_pct
+gisaid_summary_df$max_prevalence_variant_pct_flags[gisaid_summary_df$max_prevalence_variant_pct<=0.01]<-'<0.01'
+gisaid_summary_df$max_prevalence_variant_pct_flags[gisaid_summary_df$max_prevalence_variant_pct>=95]<-'not estimated, insufficient recent sequencing'
+gisaid_summary_df$max_prevalence_variant_pct_flags[gisaid_summary_df$cum_tpr<0.002 & gisaid_summary_df$max_prevalence_variant_pct>=95]<-'minimal recent COVID cases'
+
+gisaid_summary_df$max_prevalence_variant_pct_w_pct<-gisaid_summary_df$max_prevalence_variant_pct
+gisaid_summary_df$max_prevalence_variant_pct_w_pct<-paste0(gisaid_summary_df$max_prevalence_variant_pct, '%')
+gisaid_summary_df$max_prevalence_variant_pct_w_pct[gisaid_summary_df$max_prevalence_variant_pct<=0.01]<-'<0.01%'
+gisaid_summary_df$max_prevalence_variant_pct_w_pct[gisaid_summary_df$max_prevalence_variant_pct>=95]<-'not estimated, insufficient recent sequencing'
+gisaid_summary_df$max_prevalence_variant_pct_w_pct[gisaid_summary_df$cum_tpr<0.002 & gisaid_summary_df$max_prevalence_variant_pct>=95]<-'minimal recent COVID cases'
+
+
+
+# Load and join shapefile for flourish
+shapefile <- read_delim(SHAPEFILES_FOR_FLOURISH_PATH, delim = "\t") %>%
+ rename(country_code = `3-letter ISO code`) %>%
+ select(geometry, Name, country_code)
+
+lat_long<-read.csv(LAT_LONG_FOR_FLOURISH_PATH)%>% clean_names()%>%
+  rename(country_code= x3_letter_iso_code) %>%
+  select(country_code, latitude, longitude)
+
+gisaid_summary_df <-left_join(shapefile, gisaid_summary_df, by = 'country_code')
+gisaid_summary_df <- left_join(lat_long, gisaid_summary_df, by = "country_code")
+
+# select cols for flourish and ensure that they're present in the df
+stopifnot ("Error: gisaid_summary_df.csv does not contain all necessary columns" = 
+             c('geometry', 'latitude', 'longitude', 'Name', 'max_omicron',
+               'max_omicron_seq_NA', 'cases_per_100k_last_7_days') %in% colnames(gisaid_summary_df))
+
+# Check to make sure cases are filled in for say USA
+stopifnot("Error: case data not in gisaid_summary_df" = 
+            !is.na(gisaid_summary_df$cases_per_100k_last_7_days[gisaid_summary_df$country_code=="USA"]))
+
+# only output the necessary columns!
+gisaid_summary_df<-gisaid_summary_df%>% select(geometry,latitude, longitude, Name, max_omicron, 
+                                               max_omicron_seq_NA, cases_per_100k_last_7_days)
+# Ready to for output
+gisaid_summary_df<-distinct(gisaid_summary_df)
 
 
 
 
 
 
-# -------- Create Original Archetype classifier variable ----------------------------------------
 
-print("FLAG: Eventually we will just change these, but for now, keep as is")
-# Variable indicating archetype each country belongs
-# Variable is based on Dx Testing Capacity Classifier, NGS Capacity Classifier, and SARS-CoV-2 Sequencing Classifier
-# create new variable for archetype based on:
-# Dx Testing Capacity Classifier (dx_testing_capacity)
-# NGS Capacity Classifier (ngs_capacity)
-# SARS-CoV-2 Sequencing Classifier (sars_cov_2_sequencing)
-# WHO background data (world_bank_economies)
-# "0 - High Income *": world_bank_economies "High Income" + code CHN, RUS
-# "4 - Strengthen"
-# "3 - Leverage"
-# "2 - Connect"
-# "1 - Test"
-find_clean <- find_clean %>%
-  mutate(
-    archetype_full = case_when(
-      ((world_bank_economies == "High income") ~ "0 - High Income*"),
-      ((code == "CHN") ~ "0 - High Income*"),
-      ((code == "RUS") ~ "0 - High Income*"),
-      (sequencing_capacity == "4+ NGS facilities or equivalent" & sars_cov_2_sequencing == "500+ sequences" & dx_testing_capacity == "Reliable testing capacity") ~ "4 - Strengthen",
-      (sequencing_capacity == "4+ NGS facilities or equivalent" & sars_cov_2_sequencing == "500+ sequences" & dx_testing_capacity == "Unreliable testing capacity") ~ "1 - Test",
-      (sequencing_capacity == "4+ NGS facilities or equivalent" & sars_cov_2_sequencing == "1-499 sequences" & dx_testing_capacity == "Reliable testing capacity") ~ "3 - Leverage",
-      (sequencing_capacity == "4+ NGS facilities or equivalent" & sars_cov_2_sequencing == "1-499 sequences" & dx_testing_capacity == "Unreliable testing capacity") ~ "1 - Test",
-      (sequencing_capacity == "4+ NGS facilities or equivalent" & sars_cov_2_sequencing == "0 sequences" & dx_testing_capacity == "Reliable testing capacity") ~ "2 - Connect",
-      (sequencing_capacity == "4+ NGS facilities or equivalent" & sars_cov_2_sequencing == "0 sequences" & dx_testing_capacity == "Unreliable testing capacity") ~ "1 - Test",
-      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sars_cov_2_sequencing == "500+ sequences" & dx_testing_capacity == "Reliable testing capacity") ~ "4 - Strengthen",
-      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sars_cov_2_sequencing == "500+ sequences" & dx_testing_capacity == "Unreliable testing capacity") ~ "1 - Test",
-      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sars_cov_2_sequencing == "1-499 sequences" & dx_testing_capacity == "Reliable testing capacity") ~ "3 - Leverage",
-      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sars_cov_2_sequencing == "1-499 sequences" & dx_testing_capacity == "Unreliable testing capacity") ~ "1 - Test",
-      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sars_cov_2_sequencing == "0 sequences" & dx_testing_capacity == "Reliable testing capacity") ~ "2 - Connect",
-      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sars_cov_2_sequencing == "0 sequences" & dx_testing_capacity == "Unreliable testing capacity") ~ "1 - Test",
-      (sequencing_capacity == "0 NGS facilities or equivalent" & sars_cov_2_sequencing == "500+ sequences" & dx_testing_capacity == "Reliable testing capacity") ~ "3 - Leverage",
-      (sequencing_capacity == "0 NGS facilities or equivalent" & sars_cov_2_sequencing == "500+ sequences" & dx_testing_capacity == "Unreliable testing capacity") ~ "1 - Test",
-      (sequencing_capacity == "0 NGS facilities or equivalent" & sars_cov_2_sequencing == "1-499 sequences" & dx_testing_capacity == "Reliable testing capacity") ~ "2 - Connect",
-      (sequencing_capacity == "0 NGS facilities or equivalent" & sars_cov_2_sequencing == "1-499 sequences" & dx_testing_capacity == "Unreliable testing capacity") ~ "1 - Test",
-      (sequencing_capacity == "0 NGS facilities or equivalent" & sars_cov_2_sequencing == "0 sequences" & dx_testing_capacity == "Reliable testing capacity") ~ "2 - Connect",
-      (sequencing_capacity == "0 NGS facilities or equivalent" & sars_cov_2_sequencing == "0 sequences" & dx_testing_capacity == "Unreliable testing capacity") ~ "1 - Test",
-      (dx_testing_capacity == "Unreliable testing capacity") ~ "1 - Test"
-    )
-  )
- 
-# clean archetype column
-find_clean <- find_clean %>%
-  mutate(
-    archetype = case_when(
-      archetype_full == "0 - High Income*" ~ "High Income*",
-      archetype_full == "4 - Strengthen" ~ "Strengthen",
-      archetype_full == "3 - Leverage" ~ "Leverage",
-      archetype_full == "2 - Connect" ~ "Connect",
-      archetype_full == "1 - Test" ~ "Test"
-    )
-  )
- 
-# label column
-find_clean <- find_clean %>%
-  mutate(
-    label = case_when(
-      archetype == "High Income*" ~ "",
-      archetype == "Strengthen" ~ "? Build additional NGS capacity for scale-up",
-      archetype == "Leverage" ~ "? Leverage existing NGS capacity",
-      archetype == "Connect" ~ "? Set-up sample referral networks or build NGS capacity from scratch",
-      archetype == "Test" ~ "? Increase diagnostic testing capacity"
-    )
-  )
- 
-# create Dx Testing Capacity Classifier clean variable
-# Variable indicating highest level of diagnostic throughput (Low testing capacity, Medium testing capacity, High testing capacity)
-# Variable is based on FIND testing dashboard
-# If FIND source missing for that country, take source OWD
-find_clean <- find_clean %>%
-  # create new variable for Dx testing capacity based on:
-  # FIND testing capacity
-  # OWID testing Capacity
-  mutate(
-    # "0-49.99": < 50 max_new_tests_cap_avg in FIND
-    # "50-99.99": >= 10 & < 100 max_new_tests_cap_avg in FIND
-    # "100+": >= 100 max_new_tests_cap_avg in FIND
-    # "0-49.99": NA in FIND
-    # "High Income*": world_bank_economies == "High income"
-    dx_testing_capacity_clean = case_when(
-      world_bank_economies == "High income" ~ "High Income*",
-      code == "CHN" ~ "High Income*",
-      code == "RUS" ~ "High Income*",
-      max_new_tests_cap_avg >= 50 & who_testing_capacity == 1 ~ "Reliable testing capacity",
-      max_new_tests_cap_avg >= 50 & who_testing_capacity == 0 ~ "Reliable testing capacity",
-      max_new_tests_cap_avg >= 50 & is.na(who_testing_capacity) == T ~ "Reliable testing capacity",
-      max_new_tests_cap_avg < 50 & who_testing_capacity == 1 ~ "Reliable testing capacity",
-      max_new_tests_cap_avg < 50 & who_testing_capacity == 0 ~ "Unreliable testing capacity",
-      max_new_tests_cap_avg < 50 & is.na(who_testing_capacity) == T ~ "Unreliable testing capacity",
-      is.na(max_new_tests_cap_avg) == T & who_testing_capacity == 1 ~ "Reliable testing capacity",
-      is.na(max_new_tests_cap_avg) == T & who_testing_capacity == 0 ~ "Unreliable testing capacity",
-      is.na(max_new_tests_cap_avg) == T & is.na(who_testing_capacity) == T ~ "Unreliable testing capacity"
-    )
-  )
- 
-# create Sequencing Capacity Classifier clean variable
-# Variable indicating evidence of Sequencing Capacity
-# Variable is based on WHO slides on facilities, GISRS data for extraction of capacity & testing data
-# Variable is based on confidential manufacturer data on install bases
-find_clean <- find_clean %>%
-  # create new variable for Sequencing Capacity based on:
-  # WHO slides, GISRS data
-  # confidential manufacturer data on install bases
-  mutate(
-    # "0 NGS facilities or equivalent": 0 ngs_capacity
-    # "1-3 NGS facilities or equivalent": 1 ngs_capacity
-    # "4+ NGS facilities or equivalent": 2 ngs_capacity
-    sequencing_capacity_clean = case_when(
-      world_bank_economies == "High income" ~ "High Income*",
-      code == "CHN" ~ "High Income*",
-      code == "RUS" ~ "High Income*",
-      ngs_capacity == 0 ~ "0 NGS facilities or equivalent",
-      ngs_capacity == 1 ~ "1-3 NGS facilities or equivalent",
-      ngs_capacity == 2 ~ "4+ NGS facilities or equivalent",
-      is.na(ngs_capacity) == T ~ "0 NGS facilities or equivalent"
-    )
-  )
+# -------- Global Combined Omicron from BNO and GISAID, and GISAID+FIND stats over time --------------------------------
+# Keeps only the latest timestamp only for that day
+BNO_omicron_t<-BNO_omicron_t%>%group_by(date)%>%
+  mutate(time_diff= (abs(time_of_day) - 13))%>%
+  filter(time_diff == min(time_diff))
+
+
+# Global Omicron cases by time
+BNO_global_t<-BNO_omicron_t%>%group_by(date)%>%
+  summarise(n_countries_BNO = n(),
+            n_case_BNO = sum(BNO_confirmed, na.rm = TRUE))
+#write.csv(BNO_global_t, "../data/processed/BNO_global_t.csv")
+
+# Make omicron sequences from GISAID a global time series
+omicron_t<-read.csv(OMICRON_DAILY_CASES)
+omicron_t<-omicron_t%>%rename(GISAID_sequences = n)
+omicron_t$submission_date<-as.Date(omicron_t$submission_date)
+omicron_t$GISAID_sequences<-replace_na(omicron_t$GISAID_sequences, 0)
+
+
+# Need to make a column for cumulative sequences 
+omicron_t<-omicron_t%>%group_by(code)%>%
+  mutate(cum_GISAID_seq = cumsum(GISAID_sequences))
+
+# remove rows where cumulative GISAID sequences is 0
+omicron_t<-omicron_t%>%filter(cum_GISAID_seq!=0)
   
-# create SARS-CoV-2 Sequencing Classifier clean variable
-# Variable indicating how many submissions from each country appear in GISAID
-find_clean <- find_clean %>%
-  # create new variable for SARS-CoV-2 Sequencing based on:
-  # submission_count variable derived from GISAID provision
-  mutate(
-    # "0 sequences": 0 submission_count | NA submission_count
-    # "1-499 sequences": <500 submission_count
-    # "500+ sequences": >= 500 submission_count
-    sars_cov_2_sequencing_clean = case_when(
-      world_bank_economies == "High income" ~ "High Income*",
-      code == "CHN" ~ "High Income*",
-      code == "RUS" ~ "High Income*",
-      total_sequences >= 500 ~ "500+ sequences",
-      total_sequences < 500 & total_sequences > 0 ~ "1-499 sequences",
-      total_sequences == 0 ~ "0 sequences",
-      is.na(total_sequences) == T ~ "0 sequences"
-    )
-  )
- 
-## Clean Archetype Classifier (without HIC archetype)
- 
-# create Archetype Classifier variable
-# Variable indicating archetype each country belongs
-# Variable is based on Dx Testing Capacity Classifier, NGS Capacity Classifier, and SARS-CoV-2 Sequencing Classifier
-# create new variable for archetype based on:
-# Dx Testing Capacity Classifier (dx_testing_capacity)
-# NGS Capacity Classifier (ngs_capacity)
-# SARS-CoV-2 Sequencing Classifier (sars_cov_2_sequencing)
-# "4 - Strengthen"
-# "3 - Leverage"
-# "2 - Connect"
-# "1 - Test"
-find_clean <- find_clean %>%
-  mutate(
-    archetype_clean = case_when(
-      (sequencing_capacity == "4+ NGS facilities or equivalent" & sars_cov_2_sequencing == "500+ sequences" & dx_testing_capacity == "Reliable testing capacity") ~ "Strengthen",
-      (sequencing_capacity == "4+ NGS facilities or equivalent" & sars_cov_2_sequencing == "500+ sequences" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
-      (sequencing_capacity == "4+ NGS facilities or equivalent" & sars_cov_2_sequencing == "1-499 sequences" & dx_testing_capacity == "Reliable testing capacity") ~ "Leverage",
-      (sequencing_capacity == "4+ NGS facilities or equivalent" & sars_cov_2_sequencing == "1-499 sequences" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
-      (sequencing_capacity == "4+ NGS facilities or equivalent" & sars_cov_2_sequencing == "0 sequences" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
-      (sequencing_capacity == "4+ NGS facilities or equivalent" & sars_cov_2_sequencing == "0 sequences" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
-      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sars_cov_2_sequencing == "500+ sequences" & dx_testing_capacity == "Reliable testing capacity") ~ "Strengthen",
-      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sars_cov_2_sequencing == "500+ sequences" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
-      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sars_cov_2_sequencing == "1-499 sequences" & dx_testing_capacity == "Reliable testing capacity") ~ "Leverage",
-      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sars_cov_2_sequencing == "1-499 sequences" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
-      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sars_cov_2_sequencing == "0 sequences" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
-      (sequencing_capacity == "1-3 NGS facilities or equivalent" & sars_cov_2_sequencing == "0 sequences" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
-      (sequencing_capacity == "0 NGS facilities or equivalent" & sars_cov_2_sequencing == "500+ sequences" & dx_testing_capacity == "Reliable testing capacity") ~ "Leverage",
-      (sequencing_capacity == "0 NGS facilities or equivalent" & sars_cov_2_sequencing == "500+ sequences" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
-      (sequencing_capacity == "0 NGS facilities or equivalent" & sars_cov_2_sequencing == "1-499 sequences" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
-      (sequencing_capacity == "0 NGS facilities or equivalent" & sars_cov_2_sequencing == "1-499 sequences" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
-      (sequencing_capacity == "0 NGS facilities or equivalent" & sars_cov_2_sequencing == "0 sequences" & dx_testing_capacity == "Reliable testing capacity") ~ "Connect",
-      (sequencing_capacity == "0 NGS facilities or equivalent" & sars_cov_2_sequencing == "0 sequences" & dx_testing_capacity == "Unreliable testing capacity") ~ "Test",
-      (dx_testing_capacity == "Unreliable testing capacity") ~ "Test"
-    )
-  )
- 
-# rename name column as country column
-colnames(find_clean)[1] <- "country"
 
-# ZS add deduplication -- THIS IS NOT ROBUST, if there are two *different* rows for a
-# given country this will not fix the duplication. At the moment not a big deal bc all
-# are NA, but I don't know the generating process for the missingness so may present an
-# issue in a future dataset
-find_clean <- find_clean %>% 
-  filter(code != '') %>% # NAs stored as empty strings, not NAs
-  unique()
- 
-# alphabetize find_clean by country
-find_clean <- find_clean[order(find_clean$country),]
- 
-# add geometry variable as first column
-find_clean <- cbind(geometry=NA, find_clean)
- 
- 
-# add padding to who_testing_capacity
-find_clean <- find_clean %>%
+#Summarise by date (need to make this submission date)
+GISAID_omicron_t<-omicron_t%>%group_by(submission_date)%>%
+  summarise(n_countries_GISAID = n(),
+            n_seq_GISAID = sum(replace_na(cum_GISAID_seq, 0)))
+
+omicron_merge_country_date<-full_join(omicron_t, BNO_omicron_t, by = c("submission_date"= 
+"date", "code"= "code"))
+
+omicron_merge_country_date<-distinct(omicron_merge_country_date) # remove duplicate rows
+omicron_merge_country_date$max_omicron<- rep(0, nrow(omicron_merge_country_date))
+# Set max
+for (i in 1:nrow(omicron_merge_country_date)){
+  omicron_merge_country_date$max_omicron[i]<-max(c(omicron_merge_country_date$cum_GISAID_seq[i], omicron_merge_country_date$BNO_confirmed[i]), na.rm = TRUE)
+}
+
+
+# On each day, find total countries reporting omicron cases 
+# and total cases from max of both sources
+omicron_global_t<-omicron_merge_country_date%>%group_by(submission_date)%>%
+  summarise(n_countries_all = n(),
+            n_cases_all = sum(max_omicron),
+            n_cases_BNO = sum(BNO_confirmed, na.rm = TRUE),
+            n_seq_GISAID = sum(cum_GISAID_seq, na.rm = TRUE))
+
+# Merge with GISAID metadata global
+gisaid_global_t<-gisaid_t%>%group_by(collection_date)%>%
+  summarise(
+    rolling_cases_last_7_days = sum(rolling_cases_last_7_days),
+    rolling_cases_last_30_days = sum(rolling_cases_last_30_days),
+    #rolling_seq_last_30_days = sum(rolling_seq_last_30_days),
+    n_new_sequences = sum(n_new_sequences),
+    n_new_cases = sum(owid_new_cases)
+  )%>%
   mutate(
-    who_testing_capacity = case_when(
-      who_testing_capacity == 1 ~ "1 - Reliable",
-      who_testing_capacity == 0 ~ "0 - Unreliable"
-    )
+    #percent_of_cases_seq_last_30_days = 100*rolling_seq_last_30_days/rolling_cases_last_30_days,
+    new_cases_7d_avg = round(zoo::rollmean(n_new_cases, 7, fill = NA),2),
+    new_seq_7d_avg = round(zoo::rollmean(n_new_sequences, 7, fill = NA),2)
   )
- 
-# add padding to sequencing_capacity
-find_clean <- find_clean %>%
-  mutate(
-    sequencing_capacity = case_when(
-      sequencing_capacity == "4+ NGS facilities or equivalent" ~ "2 - 4+ NGS facilities or equivalent",
-      sequencing_capacity == "1-3 NGS facilities or equivalent" ~ "1 - 1-3 NGS facilities or equivalent",
-      sequencing_capacity == "0 NGS facilities or equivalent" ~ "0 - 0 NGS facilities or equivalent"
-    )
-  )
- 
-# export find_clean to csv
-write.csv(find_clean, "../data/find_map.csv", na = "NaN", row.names = FALSE)
+
+gisaid_global_t <- gisaid_global_t %>%
+  mutate(rolling_cases_lag_7 = c(rep(NA_integer_, 7), gisaid_global_t$rolling_cases_last_7_days[1:(nrow(gisaid_global_t)-7)]),
+         rolling_cases_lag_30 = c(rep(NA_integer_, 30), gisaid_global_t$rolling_cases_last_30_days[1:(nrow(gisaid_global_t)-30)]))
+
+# Merge with the cases_sequenced_by_time_window and lagged version
+seq_last_30_days<-read_csv(SEQUENCES_LAST_30_DAYS)%>%
+  rename(cases_seq_last_30_days = n,
+         cases_seq_last_30_days_lag_30 = n_lag_30)%>%
+  select(date, cases_seq_last_30_days, cases_seq_last_30_days_lag_30)%>%
+ filter(date<=LAST_DATA_PULL_DATE & date>=as.Date(FIRST_DATE))
+
+toplines_t<-full_join(gisaid_global_t, seq_last_30_days, by = c("collection_date" = "date"))
+toplines_t<-toplines_t%>%mutate(
+  pct_cases_seq_30_day_window = round(100*cases_seq_last_30_days/rolling_cases_last_30_days,1)
+)
 
 
 
-# export find_clean Global to csv
-write.csv(find_clean %>%
-            select(country, region, who_testing_capacity, max_new_tests_cap_avg, sequencing_capacity, total_sequences, recent_sequences,
-                   cases_newly_reported_in_last_7_days_per_100000_population,
-                  max_new_seq_cap_avg, percent_of_recent_cases_sequenced, per_capita_seq_rate,
-                  max_prevalence_variant_pct,
-                   reporting_lag_diff, archetype_full) %>%
-            rename(., "Country" = country, "Region" = region, 'WHO testing Capacity' = who_testing_capacity, 
-                   'Max 30-day average of new tests per capita' = max_new_tests_cap_avg, 'Sequencing capacity' = sequencing_capacity, 
-                   'Cumulative GISAID sequences' = total_sequences, 
-                   'Number of sequences in the last 90 days'= recent_sequences,
-                   'Max 90-day average of new sequences per capita' = max_new_seq_cap_avg,
-                   'Percent of cases in the last 90 days sequences' = percent_of_recent_cases_sequenced,
-                   'Number of recent sequences per capita' = per_capita_seq_rate,
-                   'Prevalence at which we would detect at least 1 variant' = max_prevalence_variant_pct,
-                   'New cases per capita in the last 7 days per 100k' = cases_newly_reported_in_last_7_days_per_100000_population, 
-                   "Archetype" = archetype_full),
-          "../data/find_table_global.csv", na = "NaN", row.names = FALSE)
- 
-# export find_clean Africa to csv
-write.csv(find_clean %>%
-            filter(region == "Africa") %>%
-            select(country, region, who_testing_capacity, max_new_tests_cap_avg, sequencing_capacity, total_sequences, recent_sequences,
-                   cases_newly_reported_in_last_7_days_per_100000_population,
-                   max_new_seq_cap_avg, percent_of_recent_cases_sequenced, per_capita_seq_rate,
-                   max_prevalence_variant_pct,
-                   reporting_lag_diff, archetype_full) %>%
-            rename(., "Country" = country, "Region" = region, 'WHO testing Capacity' = who_testing_capacity, 
-                   'Max 30-day average of new tests per capita' = max_new_tests_cap_avg, 'Sequencing capacity' = sequencing_capacity, 
-                   'Cumulative GISAID sequences' = total_sequences, 
-                   'Number of sequences in the last 90 days'= recent_sequences,
-                   'Max 90-day average of new sequences per capita' = max_new_seq_cap_avg,
-                   'Percent of cases in the last 90 days sequences' = percent_of_recent_cases_sequenced,
-                   'Number of recent sequences per capita' = per_capita_seq_rate,
-                   'Prevalence at which we would detect at least 1 variant' = max_prevalence_variant_pct,
-                   'New cases per capita in the last 7 days per 100k' = cases_newly_reported_in_last_7_days_per_100000_population, 
-                   "Archetype" = archetype_full),
-          "../data/find_table_africa.csv", na = "NaN", row.names = FALSE)
- 
-# export find_clean Americas to csv
-write.csv(find_clean %>%
-            filter(region == "Americas") %>%
-            select(country, region, who_testing_capacity, max_new_tests_cap_avg, sequencing_capacity, total_sequences, recent_sequences,
-                   cases_newly_reported_in_last_7_days_per_100000_population,
-                  max_new_seq_cap_avg, percent_of_recent_cases_sequenced, per_capita_seq_rate,
-                  max_prevalence_variant_pct,
-                   reporting_lag_diff, archetype_full) %>%
-            rename(., "Country" = country, "Region" = region, 'WHO testing Capacity' = who_testing_capacity, 
-                   'Max 30-day average of new tests per capita' = max_new_tests_cap_avg, 'Sequencing capacity' = sequencing_capacity, 
-                   'Cumulative GISAID sequences' = total_sequences, 
-                   'Number of sequences in the last 90 days'= recent_sequences,
-                   'Max 90-day average of new sequences per capita' = max_new_seq_cap_avg,
-                   'Percent of cases in the last 90 days sequences' = percent_of_recent_cases_sequenced,
-                   'Number of recent sequences per capita' = per_capita_seq_rate,
-                   'Prevalence at which we would detect at least 1 variant' = max_prevalence_variant_pct,
-                   'New cases per capita in the last 7 days per 100k' = cases_newly_reported_in_last_7_days_per_100000_population, 
-                   "Archetype" = archetype_full),
-          "../data/find_table_americas.csv", na = "NaN", row.names = FALSE)
- 
-# export find_clean Eastern Mediterranean to csv
-write.csv(find_clean %>%
-            filter(region == "Eastern Mediterranean") %>%
-            select(country, region, who_testing_capacity, max_new_tests_cap_avg, sequencing_capacity, total_sequences, recent_sequences,
-                   cases_newly_reported_in_last_7_days_per_100000_population,
-                   max_new_seq_cap_avg, percent_of_recent_cases_sequenced, per_capita_seq_rate,
-                   max_prevalence_variant_pct,
-                   reporting_lag_diff, archetype_full) %>%
-            rename(., "Country" = country, "Region" = region, 'WHO testing Capacity' = who_testing_capacity, 
-                   'Max 30-day average of new tests per capita' = max_new_tests_cap_avg, 'Sequencing capacity' = sequencing_capacity, 
-                   'Cumulative GISAID sequences' = total_sequences, 
-                   'Number of sequences in the last 90 days'= recent_sequences,
-                   'Max 90-day average of new sequences per capita' = max_new_seq_cap_avg,
-                   'Percent of cases in the last 90 days sequences' = percent_of_recent_cases_sequenced,
-                   'Number of recent sequences per capita' = per_capita_seq_rate,
-                   'Prevalence at which we would detect at least 1 variant' = max_prevalence_variant_pct,
-                   'New cases per capita in the last 7 days per 100k' = cases_newly_reported_in_last_7_days_per_100000_population, 
-                   "Archetype" = archetype_full),
-          "../data/find_table_eastern_mediterranean.csv", na = "NaN", row.names = FALSE)
- 
-# export find_clean Europe to csv
-write.csv(find_clean %>%
-            filter(region == "Europe") %>%
-            select(country, region, who_testing_capacity, max_new_tests_cap_avg, sequencing_capacity, total_sequences, recent_sequences,
-                   cases_newly_reported_in_last_7_days_per_100000_population,
-                   max_new_seq_cap_avg, percent_of_recent_cases_sequenced, per_capita_seq_rate,
-                   max_prevalence_variant_pct,
-                   reporting_lag_diff, archetype_full) %>%
-            rename(., "Country" = country, "Region" = region, 'WHO testing Capacity' = who_testing_capacity, 
-                   'Max 30-day average of new tests per capita' = max_new_tests_cap_avg, 'Sequencing capacity' = sequencing_capacity, 
-                   'Cumulative GISAID sequences' = total_sequences, 
-                   'Number of sequences in the last 90 days'= recent_sequences,
-                   'Max 90-day average of new sequences per capita' = max_new_seq_cap_avg,
-                   'Percent of cases in the last 90 days sequences' = percent_of_recent_cases_sequenced,
-                   'Number of recent sequences per capita' = per_capita_seq_rate,
-                   'Prevalence at which we would detect at least 1 variant' = max_prevalence_variant_pct,
-                   'New cases per capita in the last 7 days per 100k' = cases_newly_reported_in_last_7_days_per_100000_population, 
-                   "Archetype" = archetype_full),
-          "../data/find_table_europe.csv", na = "NaN", row.names = FALSE)
- 
-# export find_clean South-East Asia to csv
-write.csv(find_clean %>%
-            filter(region == "South-East Asia") %>%
-            select(country, region, who_testing_capacity, max_new_tests_cap_avg, sequencing_capacity, total_sequences, recent_sequences,
-                   cases_newly_reported_in_last_7_days_per_100000_population,
-                   max_new_seq_cap_avg, percent_of_recent_cases_sequenced, per_capita_seq_rate,
-                   max_prevalence_variant_pct,
-                   reporting_lag_diff, archetype_full) %>%
-            rename(., "Country" = country, "Region" = region, 'WHO testing Capacity' = who_testing_capacity, 
-                   'Max 30-day average of new tests per capita' = max_new_tests_cap_avg, 'Sequencing capacity' = sequencing_capacity, 
-                   'Cumulative GISAID sequences' = total_sequences, 
-                   'Number of sequences in the last 90 days'= recent_sequences,
-                   'Max 90-day average of new sequences per capita' = max_new_seq_cap_avg,
-                   'Percent of cases in the last 90 days sequences' = percent_of_recent_cases_sequenced,
-                   'Number of recent sequences per capita' = per_capita_seq_rate,
-                   'Prevalence at which we would detect at least 1 variant' = max_prevalence_variant_pct,
-                   'New cases per capita in the last 7 days per 100k' = cases_newly_reported_in_last_7_days_per_100000_population, 
-                   "Archetype" = archetype_full),
-          "../data/find_table_south_east_asia.csv", na = "NaN", row.names = FALSE)
- 
-# export find_clean Western Pacific to csv
-write.csv(find_clean %>%
-            filter(region == "Western Pacific") %>%
-            select(country, region, who_testing_capacity, max_new_tests_cap_avg, sequencing_capacity, total_sequences, recent_sequences,
-                   cases_newly_reported_in_last_7_days_per_100000_population,
-                   max_new_seq_cap_avg, percent_of_recent_cases_sequenced, per_capita_seq_rate,
-                   max_prevalence_variant_pct,
-                   reporting_lag_diff, archetype_full) %>%
-            rename(., "Country" = country, "Region" = region, 'WHO testing Capacity' = who_testing_capacity, 
-                   'Max 30-day average of new tests per capita' = max_new_tests_cap_avg, 'Sequencing capacity' = sequencing_capacity, 
-                   'Cumulative GISAID sequences' = total_sequences, 
-                   'Number of sequences in the last 90 days'= recent_sequences,
-                   'Max 90-day average of new sequences per capita' = max_new_seq_cap_avg,
-                   'Percent of cases in the last 90 days sequences' = percent_of_recent_cases_sequenced,
-                   'Number of recent sequences per capita' = per_capita_seq_rate,
-                   'Prevalence at which we would detect at least 1 variant' = max_prevalence_variant_pct,
-                   'New cases per capita in the last 7 days per 100k' = cases_newly_reported_in_last_7_days_per_100000_population, 
-                   "Archetype" = archetype_full),
-          "../data/find_table_western_pacific.csv", na = "NaN", row.names = FALSE)
+global_t<-full_join(omicron_global_t,gisaid_global_t, by = c("submission_date" = "collection_date"))
+global_t<-global_t%>%arrange((submission_date))
+global_t<-left_join(global_t, seq_last_30_days, by = c("submission_date" = "date"))
+global_t<-global_t%>%rename(n_omicron_seq = n_seq_GISAID, n_omicron_cases = n_cases_all)
+#write.csv(global_t, '../data/processed/all_metrics_global_t.csv')
+
+
+
+
+
+# -------- Make the toplines -------------------------------------------------------------
+today <- lubridate::today('EST')
+global_today<-global_t%>%filter(submission_date==(today-6) | # grab todaya nd a week ago
+                                submission_date==today)%>%
+              select(submission_date, n_omicron_cases,n_countries_all, n_omicron_seq)%>%
+ rename(n_omicroncases = n_omicron_cases,
+         n_countries = n_countries_all,
+         n_omicronseq = n_omicron_seq)%>%
+  mutate(change_omicroncases = diff(n_omicroncases),
+         change_countries = diff(n_countries),
+         change_omicronseq = diff(n_omicronseq))%>%
+  filter(submission_date == today)%>%
+  mutate(pctchange_omicroncases = round(100*change_omicroncases/(n_omicroncases - change_omicroncases),1),
+         pctchange_countries = round(100*change_countries/(n_countries - change_countries),1),
+         pctchange_omicronseq = round(100*change_omicronseq/(n_omicronseq - change_omicronseq),1))
+
+# Pivot the dataframe so sources are rows and the number, increase, and percent change are columns
+topline_df<-global_today%>%pivot_longer(
+  cols = !submission_date,
+  names_to = c("metric", "type"),
+               names_sep = "_",
+               values_to = "value")%>%
+  select(!submission_date)%>%pivot_wider(
+  names_from = metric,
+  values_from = value
+)
+# Remove the sequences one since we're  not suing currently
+topline_df<-topline_df%>%filter(type!="omicronseq")
+
+
+
+# Find the total number, raw change, and % change of cases reported as of yesterday
+cases_recent<-global_t%>%filter(submission_date==LAST_DATA_PULL_DATE)%>%
+  select(submission_date, rolling_cases_last_7_days, n_new_cases, rolling_cases_lag_7)%>%
+  mutate(change_cases_rolling_7_day_sum = (rolling_cases_last_7_days - rolling_cases_lag_7),
+         pctchange_cases_rolling_7_day_sum = round(100*change_cases_rolling_7_day_sum/(rolling_cases_lag_7),1))%>%
+  select(!submission_date)
+
+# rename so we can bind to toplin df
+cases_df<-cases_recent%>%select(!rolling_cases_lag_7)%>%rename(
+  n = rolling_cases_last_7_days, change = change_cases_rolling_7_day_sum,
+  pctchange = pctchange_cases_rolling_7_day_sum)%>%
+  mutate(type = "global_cases")%>%
+  select(type, n, change, pctchange)
+
+# Combine with the omicron global summary
+topline_df<-rbind(topline_df, cases_df)
+
+
+
+
+
+
+# Do the same with sequences over the last 30 days, need to add column for sequences, by collection date
+sequences_recent<-global_t%>%filter(submission_date==LAST_DATA_PULL_DATE)%>%
+  select(submission_date,  rolling_seq_last_30_days, rolling_cases_last_30_days,
+         cases_seq_last_30_days_lag_30,rolling_cases_lag_30)%>%mutate(
+           percent_of_cases_seq_last_30_days = round(100*cases_seq_last_30_days/rolling_cases_last_30_days,2),
+           previous_percent_of_cases_seq_30_days = round(100*cases_seq_last_30_days_lag_30/rolling_cases_lag_30,2),
+           change_pct_cases_seq = (percent_of_cases_seq_last_30_days - previous_percent_of_cases_seq_30_days),
+           pctchange_pct_cases_seq = round(100*change_pct_cases_seq/previous_percent_of_cases_seq_30_days,1))
+type = "pct_cases_seq"
+seq_df<-sequences_recent%>%select(!submission_date & !rolling_cases_last_30_days & !rolling_seq_last_30_days
+                                  & !cases_seq_last_30_days_lag_30 & !rolling_cases_lag_30
+                                  & !previous_percent_of_cases_seq_30_days)%>%rename(
+                                    n = percent_of_cases_seq_last_30_days,
+                                    change = change_pct_cases_seq,
+                                    pctchange = pctchange_pct_cases_seq)%>%
+                                mutate(type = "pct_cases_seq")%>%
+                                select(type, n, change, pctchange)
+
+topline_df<-rbind(topline_df, seq_df)
+
+
+
+
+# Make topline df pretty! *** NOTE THIS IS SUPER HARDCODED IN***
+
+
+# Change all but percent to be formatted with commas!
+topline_df$n[1:3]<-comma_format()(topline_df$n[1:3])
+topline_df$change[1:3]<-comma_format()(topline_df$change[1:3])
+# add percents
+topline_df$n[4]<-paste0(topline_df$n[4], ' %')
+topline_df$change[4]<-paste0(topline_df$change[4], ' %')
+topline_df$pctchange<-paste0(topline_df$pctchange, ' %')
+
+# Add pluses to the changes and percent changes
+topline_df$change[topline_df$change>0]<-paste0('+ ', topline_df$change[topline_df$change>0])
+topline_df$pctchange[topline_df$pctchange>0]<-paste0('+ ', topline_df$pctchange[topline_df$pctchange>0])
+
+# add column for timeframe
+topline_df$change_from = c("Last week", "Last week", "7 days ago", "30 days ago")
+
+# Add descriptors of metrics
+topline_df$Metric <-c("Cumulative confirmed Omicron cases",
+                      "Countries/territories with confirmed Omicron case(s)",
+                      "Total Covid-19 cases reported in the last 7 days",
+                      "Percent of Covid-19 cases sequenced in the last 30 days*")
+
+topline_df<-topline_df%>%select(Metric, n, change, pctchange, change_from)%>%
+  rename(Value = n, `Change (#)` = change, `Change (%)`= pctchange, `Change from` = change_from)
+
+
+# ----- Output paths ------------------------------------------------------
+
+# Domino path
+if (USE_CASE == 'domino'){
+write.csv(omicron_seq_print, "/mnt/data/processed/omicron_seq.csv")
+write.csv(omicron_global_summary, '/mnt/data/processed/sitrep_summary.csv')
+write.csv(topline_df, '/mnt/data/processed/topline_df_weekly.csv')
+write.csv(gisaid_summary_df, "/mnt/data/processed/gisaid_summary_df.csv")
+write.csv(global_t, "/mnt/data/processed/all_metrics_global_t.csv")
+write.csv(GISAID_omicron_t, "/mnt/data/processed/GISAID_omicron_t.csv")
+write_csv(toplines_t, '/mnt/data/processed/processed_toplines_t.csv')
+}
+
+if (USE_CASE == 'local'){
+write.csv(omicron_seq_print, "../data/processed/omicron_seq.csv") # omicron by country currently
+write.csv(topline_df, '../data/processed/topline_df.csv') #toplines for carousel
+write.csv(gisaid_summary_df, "../data/processed/gisaid_summary_df.csv") # country-level metrics for FLourish
+write.csv(global_t, '../data/processed/all_metrics_global_t.csv') #data for global timecourse
+write.csv(GISAID_omicron_t, "../data/processed/GISAID_omicron_t.csv")
+}
+
+
