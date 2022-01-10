@@ -6,7 +6,7 @@
 
 #Jan 3rd 2022
 rm(list = ls())
-USE_CASE = 'domino' # 'domino' or 'local'
+USE_CASE = 'local' # 'domino' or 'local'
 
 #------Libraries------------
 if (USE_CASE== 'domino'){
@@ -41,9 +41,9 @@ library(readr) # read_csv
 #-----Filepaths------------
 #local
 if (USE_CASE == 'local'){
-GISAID_METADATA_PATH<-"../data/raw/metadata.csv" # from extracted datastream
+GISAID_METADATA_PATH<-"../../data/raw/metadata.csv" # from extracted datastream
 OWID_PATH<-url('https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv')
-FUTURE_DATE_PATH<-'../data/suspect_date.csv'
+FUTURE_DATE_PATH<-'../../data/suspect_date.csv'
 }
 #Domino
 if (USE_CASE == 'domino'){
@@ -215,7 +215,7 @@ n_global_cases<-sum(merged_df$owid_new_cases)
 
 #local
 if (USE_CASE == 'local'){
-write.csv(merged_df, '../data/processed/gisaid_owid_merged.csv', row.names = FALSE)
+write.csv(merged_df, '../../data/processed/gisaid_owid_merged.csv', row.names = FALSE)
 #write_csv(suspect_date, '../data/suspect_date.csv')
 }
 if (USE_CASE == 'domino'){

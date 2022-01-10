@@ -7,7 +7,7 @@
 # This script takes in the GISAID metadata and OWID and find data and finds the recent cases, tests, and sequences
 # It will be used to put the Omicron sequencing data in context
 rm(list = ls())
-USE_CASE = 'domino' # options: 'local' or 'domino'
+USE_CASE = 'local' # options: 'local' or 'domino'
 
 
 
@@ -63,14 +63,14 @@ LAT_LONG_FOR_FLOURISH_PATH<-'/mnt/data/static/country_lat_long_names.csv'
 
 if (USE_CASE == 'local'){
 ALL_DATA_PATH<- url("https://raw.githubusercontent.com/dsbbfinddx/FINDCov19TrackerData/master/processed/data_all.csv")
-#GISAID_DAILY_PATH<-'../data/processed/gisaid_cleaning_output.csv' # this is the file that comes from Briana's processing file
-GISAID_DAILY_PATH<-'../data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
-OMICRON_DAILY_CASES<-'../data/raw/omicron_gisaid_feed.csv'
-#BNO_CASES_BY_COUNTRY_PATH<-paste0('../data/raw/daily_BNO_file/', today,'.csv')
-BNO_CASES_BY_COUNTRY_DATE<-'../data/raw/BNO_scraped_master.csv'
-SEQUENCES_LAST_30_DAYS<-'../data/processed/sequences_last_30_days.csv'
-SHAPEFILES_FOR_FLOURISH_PATH <- '../data/static/geometric_country_code_name_master_file.txt'
-LAT_LONG_FOR_FLOURISH_PATH<-'../data/static/country_lat_long_names.csv'
+GISAID_DAILY_PATH<-'../../data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
+SEQUENCES_LAST_30_DAYS<-'../../data/processed/sequences_last_30_days.csv'
+SHAPEFILES_FOR_FLOURISH_PATH <- '../../data/static/geometric_country_code_name_master_file.txt'
+LAT_LONG_FOR_FLOURISH_PATH<-'../../data/static/country_lat_long_names.csv'
+WHO_REGIONS_PATH<-'../../data/static/who_regions.csv'
+ECONOMY_PATH<-'../../data/static/CLASS.xls'
+OWID_TESTING_POLICY_PATH<- '../data/covid-19-testing-policy.csv'
+FIND_TESTING_SEQ_RAW_PATH<- '../data/2021_04_04_FIND_capacity_mapping_data_sources.xlsx'
 }
 
 LAST_DATA_PULL_DATE<-as.Date(substr(lubridate::now('EST'), 1, 10))-days(1) # Make this based off of yesterday!
