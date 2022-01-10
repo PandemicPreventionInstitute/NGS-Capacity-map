@@ -7,7 +7,11 @@
 # This script takes in the GISAID metadata and OWID and find data and finds the recent cases, tests, and sequences
 # It will be used to put the Omicron sequencing data in context
 rm(list = ls())
-USE_CASE = 'local' # options: 'local' or 'domino'
+global_var = Sys.getenv("USE_CASE")
+if(global_var == ""){
+  USE_CASE=='local'
+}
+#USE_CASE = 'local' # options: 'local' or 'domino'
 
 
 
@@ -706,12 +710,21 @@ find_clean <- find_clean %>%
 
 # export find_clean to csv
 
+# Join shapefiles! 
+shapefile <- read_delim(SHAPEFILES_FOR_FLOURISH_PATH, delim = "\t") %>%
+  rename(code = `3-letter ISO code`) %>%
+  select(geometry, Name, code)
+
+find_clean_flourish<-left_join(shapefile, find_clean, by = "code")
+
 if (USE_CASE == 'local'){
-write.csv(find_clean, "../../data/processed/find_map.csv", na = "NaN", row.names = FALSE)
+  write.csv(find_clean, "../../data/processed/find_clean.csv", na = "NaN", row.names = FALSE)
+  write.csv(find_clean_flourish, "../../data/processed/find_map.csv", na = "NaN", row.names = FALSE)
 }
 
 if (USE_CASE == 'domino'){
-  write.csv(find_clean, "/mnt/data/processed/find_map.csv", na = "NaN", row.names = FALSE)
+  write.csv(find_clean, "/mnt/data/processed/find_clean.csv", na = "NaN", row.names = FALSE)
+  write.csv(find_clean_flourish, "../../data/processed/find_map.csv", na = "NaN", row.names = FALSE)
 }
 
 

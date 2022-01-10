@@ -6,7 +6,11 @@
 
 #Jan 3rd 2022
 rm(list = ls())
-USE_CASE = 'local' # 'domino' or 'local'
+global_var = Sys.getenv("USE_CASE")
+if(global_var == ""){
+  USE_CASE=='local'
+}
+#USE_CASE = 'local' # 'domino' or 'local'
 
 #------Libraries------------
 if (USE_CASE== 'domino'){

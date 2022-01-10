@@ -8,7 +8,12 @@
 
 #getwd()
 
-USE_CASE = 'domino' # 'domino or local'
+global_var = Sys.getenv("USE_CASE")
+if(global_var == ""){
+  USE_CASE=='local'
+}
+
+#USE_CASE = 'domino' # 'domino or local'
 # Libraries ---------------------------------------------------------------
 if (USE_CASE == 'domino'){
 install.packages("tidyverse", dependencies=TRUE, repos='http://cran.us.r-project.org')
