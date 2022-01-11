@@ -7,11 +7,11 @@
 # This script takes in the GISAID metadata and OWID and find data and finds the recent cases, tests, and sequences
 # It will be used to put the Omicron sequencing data in context
 rm(list = ls())
-# global_var = Sys.getenv("USE_CASE")
-# if(global_var == ""){
-#   USE_CASE<-'local'
-# }
-USE_CASE = 'domino' # options: 'local' or 'domino'
+USE_CASE = Sys.getenv("USE_CASE")
+if(USE_CASE == ""){
+  USE_CASE<-'local'
+}
+#USE_CASE = 'domino' # options: 'local' or 'domino'
 
 
 
