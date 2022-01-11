@@ -215,7 +215,8 @@ find_testing_t <- find_raw %>%
   rename(country = name, date = time, code= unit, pop_100k = pop_100k, new_tests_cap = cap_new_tests, new_tests_all = all_new_tests, 
           cap_cum_tests = cap_cum_tests, all_cum_tests = all_cum_tests, all_cum_cases = all_cum_cases, new_cases_all = all_new_cases) %>%
   # parse date as date class
-  mutate(date = as.Date(date, format = "%Y-%m-%d"))
+  mutate(date = as.Date(date, format = "%Y-%m-%d"),
+         pop = pop_100k*100000)
 
 #cap cum tests is number of cumulative tests per 100k 
  
@@ -249,7 +250,7 @@ find_testing_t <- find_testing_t %>%
   group_by(code) %>%
   # create column for 30 day rolling average
   mutate(
-    new_tests_cap_avg = round(zoo::rollmean(new_tests_all/pop_100k, 30, fill = NA),2)
+    new_tests_cap_avg = round(zoo::rollmean(100000*new_tests_all/pop, 30, fill = NA),2)
   )
 
  
@@ -301,8 +302,8 @@ find_testing_last_year<- find_testing_t %>% filter(date>=(LAST_DATA_PULL_DATE -T
   summarise(tests_in_last_year = sum(new_tests_all),
             cases_in_last_year_find = sum(new_cases_all),
             tpr_year_find = cases_in_last_year_find/tests_in_last_year,
-            avg_daily_test_per_1000_last_year = 1000*mean(new_tests_all)/(100000*max(pop_100k)),
-            median_daily_tests_per_1000_last_year = 1000*median(new_tests_all/(100000*max(pop_100k))))
+            avg_daily_test_per_1000_last_year = 1000*mean(new_tests_all)/max(pop),
+            median_daily_tests_per_1000_last_year = 1000*median(new_tests_all/max(pop)))
 
 find_testing_recent<-left_join(find_testing_recent, find_testing_last_year, by = "code")
 
@@ -729,7 +730,7 @@ if (USE_CASE == 'local'){
 
 if (USE_CASE == 'domino'){
   write.csv(find_clean, "/mnt/data/processed/find_clean.csv", na = "NaN", row.names = FALSE)
-  write.csv(find_clean_flourish, "../../data/processed/find_map.csv", na = "NaN", row.names = FALSE)
+  write.csv(find_clean_flourish, "/mnt/data/processed/find_map.csv", na = "NaN", row.names = FALSE)
 }
 
 
