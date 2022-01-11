@@ -210,10 +210,10 @@ find_testing_t <- find_raw %>%
   # filter for country set
   filter(set == "country") %>%
   # select time, code, new_tests_corrected, pop_100k, cap_new_tests, all_new_tests, all_cum_cases
-  select(name, time, unit, pop_100k, cap_new_tests, cap_cum_tests, all_new_tests, all_cum_tests, all_cum_cases) %>%
+  select(name, time, unit, pop_100k, cap_new_tests, cap_cum_tests, all_new_tests, all_cum_tests, all_cum_cases, all_new_cases) %>%
   # rename columns as date, code, pop_100k, new_tests_cap, new_tests_all
   rename(country = name, date = time, code= unit, pop_100k = pop_100k, new_tests_cap = cap_new_tests, new_tests_all = all_new_tests, 
-          cap_cum_tests = cap_cum_tests, all_cum_tests = all_cum_tests, all_cum_cases = all_cum_cases) %>%
+          cap_cum_tests = cap_cum_tests, all_cum_tests = all_cum_tests, all_cum_cases = all_cum_cases, new_cases_all = all_new_cases) %>%
   # parse date as date class
   mutate(date = as.Date(date, format = "%Y-%m-%d"))
 
