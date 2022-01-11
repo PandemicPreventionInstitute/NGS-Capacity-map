@@ -7,11 +7,11 @@
 # This script takes in the GISAID metadata and OWID and find data and finds the recent cases, tests, and sequences
 # It will be used to put the Omicron sequencing data in context
 rm(list = ls())
-global_var = Sys.getenv("USE_CASE")
-if(global_var == ""){
-  USE_CASE<-'local'
-}
-#USE_CASE = 'local' # options: 'local' or 'domino'
+# global_var = Sys.getenv("USE_CASE")
+# if(global_var == ""){
+#   USE_CASE<-'local'
+# }
+USE_CASE = 'domino' # options: 'local' or 'domino'
 
 
 
@@ -251,7 +251,10 @@ find_testing_t <- find_testing_t %>%
   mutate(
     new_tests_cap_avg = round(zoo::rollmean(new_tests_all/pop_100k, 30, fill = NA),2)
   )
+
  
+
+
  
 # display max 30 day rolling average of new tests per capita for each country
 # removes time element so now just country and metrics
@@ -296,6 +299,8 @@ find_testing_last_year<- find_testing_t %>% filter(date>=(LAST_DATA_PULL_DATE -T
                                                      date<= LAST_DATA_PULL_DATE)%>%
   group_by(code) %>%
   summarise(tests_in_last_year = sum(new_tests_all),
+            cases_in_last_year_find = sum(new_cases_all),
+            tpr_year_find = cases_in_last_year_find/tests_in_last_year,
             avg_daily_test_per_1000_last_year = mean(new_tests_all)/100*max(pop_100k),
             median_daily_tests_per_1000_last_year = median(new_tests_all/100*max(pop_100k)))
 
