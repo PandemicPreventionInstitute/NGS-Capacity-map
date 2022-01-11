@@ -301,8 +301,8 @@ find_testing_last_year<- find_testing_t %>% filter(date>=(LAST_DATA_PULL_DATE -T
   summarise(tests_in_last_year = sum(new_tests_all),
             cases_in_last_year_find = sum(new_cases_all),
             tpr_year_find = cases_in_last_year_find/tests_in_last_year,
-            avg_daily_test_per_1000_last_year = mean(new_tests_all)/100*max(pop_100k),
-            median_daily_tests_per_1000_last_year = median(new_tests_all/100*max(pop_100k)))
+            avg_daily_test_per_1000_last_year = 1000*mean(new_tests_all)/(100000*max(pop_100k)),
+            median_daily_tests_per_1000_last_year = 1000*median(new_tests_all/(100000*max(pop_100k))))
 
 find_testing_recent<-left_join(find_testing_recent, find_testing_last_year, by = "code")
 
