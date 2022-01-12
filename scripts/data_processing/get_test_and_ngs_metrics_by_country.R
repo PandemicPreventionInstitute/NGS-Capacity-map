@@ -79,6 +79,7 @@ FIND_TESTING_SEQ_RAW_PATH<- '../../data/static/2021_04_04_FIND_capacity_mapping_
 }
 
 LAST_DATA_PULL_DATE<-as.Date(substr(lubridate::now('EST'), 1, 10))-days(1) # Make this based off of yesterday!
+LAST_DATA_PULL_DATE<-as.Date("2022-01-04") # date to align with Briana
 FIRST_DATE<-"2019-12-01"
 TIME_WINDOW <- 29 # since we will include the reference data
 TIME_WINDOW_WEEK<- 6 # since will include the reference date
@@ -210,10 +211,11 @@ find_testing_t <- find_raw %>%
   # filter for country set
   filter(set == "country") %>%
   # select time, code, new_tests_corrected, pop_100k, cap_new_tests, all_new_tests, all_cum_cases
-  select(name, time, unit, pop_100k, cap_new_tests, cap_cum_tests, all_new_tests, all_cum_tests, all_cum_cases, all_new_cases) %>%
+  select(name, time, unit, pop_100k, all_new_tests, all_cum_tests, all_cum_cases, all_new_cases, 
+         pos, new_tests_orig, new_cases_orig) %>%
   # rename columns as date, code, pop_100k, new_tests_cap, new_tests_all
-  rename(country = name, date = time, code= unit, pop_100k = pop_100k, new_tests_cap = cap_new_tests, new_tests_all = all_new_tests, 
-          cap_cum_tests = cap_cum_tests, all_cum_tests = all_cum_tests, all_cum_cases = all_cum_cases, new_cases_all = all_new_cases) %>%
+  rename(country = name, date = time, code= unit, new_tests_smoothed = all_new_tests, 
+           cum_tests = all_cum_tests, cum_cases = all_cum_cases, new_cases_smoothed = all_new_cases) %>%
   # parse date as date class
   mutate(date = as.Date(date, format = "%Y-%m-%d"),
          pop = pop_100k*100000)
@@ -238,9 +240,18 @@ code <-unique(find_testing_t$code)
 date_country<-expand_grid(date, code)
 find_testing_t<-left_join(date_country,find_testing_t, by = c("code", "date"))
 
-# Fill in the NAs on the values 
-find_testing_t$new_tests_cap[is.na(find_testing_t$new_tests_cap)]<-0
-find_testing_t$new_tests_all[is.na(find_testing_t$new_tests_all)]<-0
+find_testing_US_t<-find_testing_t%>%filter(code == "USA")%>%
+  filter(date>=(LAST_DATA_PULL_DATE-80) & 
+  date<= LAST_DATA_PULL_DATE)
+tpr<-sum(find_testing_US_t$new_cases_orig, na.rm = TRUE)/sum(find_testing_US_t$new_tests_orig, na.rm = TRUE)
+tpr_smoothed<-sum(find_testing_US_t$new_cases_smoothed, na.rm = TRUE)/sum(find_testing_US_t$new_tests_smoothed, na.rm = TRUE)
+med_tpr<-median(find_testing_US_t$pos, na.rm = TRUE)
+
+
+# Fill in the NAs on the values as 0s, but leave the NAs on the smoothed ones?
+find_testing_t$new_tests_orig[is.na(find_testing_t$new_tests_orig)]<-0
+find_testing_t$new_cases_orig[is.na(find_testing_t$new_cases_orig)]<-0
+
 
 
 
@@ -250,7 +261,7 @@ find_testing_t <- find_testing_t %>%
   group_by(code) %>%
   # create column for 30 day rolling average
   mutate(
-    new_tests_cap_avg = round(zoo::rollmean(100000*new_tests_all/pop, 30, fill = NA),2)
+    new_tests_cap_avg = round(zoo::rollmean(100000*new_tests_orig/pop, 30, fill = NA),2)
   )
 
  
@@ -263,9 +274,9 @@ find_testing_clean <- find_testing_t %>%
   group_by(code) %>%
   summarise(
     max_new_tests_cap_avg = max(new_tests_cap_avg, na.rm = T),
-    cap_cum_tests = max(cap_cum_tests, na.rm = T),
-    cum_tpr = max(all_cum_cases, na.rm = T)/max(all_cum_tests, na.rm = T),
-    total_tests = sum(new_tests_cap)
+    cum_tests_per_100k = 100000*max(cum_tests, na.rm = T)/max(pop),
+    cum_tpr = max(cum_cases, na.rm = T)/max(cum_tests, na.rm = T),
+    total_tests = sum(new_tests_orig)
   )
 
 # Find the countries where they have no tests
@@ -283,13 +294,13 @@ write.csv(no_tests, '/mnt/data/processed/countries_w_no_FIND_tests.csv')
 find_testing_90_days<- find_testing_t %>% filter(date>=(LAST_DATA_PULL_DATE -TIME_WINDOW) & 
                                                    date<= LAST_DATA_PULL_DATE)%>%
   group_by(code) %>%
-  summarise(tests_in_last_90_days = sum(new_tests_all))
+  summarise(tests_in_last_90_days = sum(new_tests_orig))
 
 # Add in recent testing capacity metrics ie average test positivity over past 7 days
 find_testing_7_days<- find_testing_t %>% filter(date>=(LAST_DATA_PULL_DATE -TIME_WINDOW_WEEK) & 
                                                   date<= LAST_DATA_PULL_DATE)%>%
   group_by(code) %>%
-  summarise(tests_in_last_7_days = sum(new_tests_all))
+  summarise(tests_in_last_7_days = sum(new_tests_orig))
 
 find_testing_recent<-left_join(find_testing_90_days, find_testing_7_days, by = "code")
 
@@ -299,32 +310,57 @@ find_testing_recent<-left_join(find_testing_90_days, find_testing_7_days, by = "
 find_testing_last_year<- find_testing_t %>% filter(date>=(LAST_DATA_PULL_DATE -TIME_WINDOW_YEAR) & 
                                                      date<= LAST_DATA_PULL_DATE)%>%
   group_by(code) %>%
-  summarise(tests_in_last_year = sum(new_tests_all),
-            cases_in_last_year_find = sum(new_cases_all),
-            tpr_year_find = cases_in_last_year_find/tests_in_last_year,
-            avg_daily_test_per_1000_last_year = 1000*mean(new_tests_all)/max(pop),
-            median_daily_tests_per_1000_last_year = 1000*median(new_tests_all/max(pop)))
+  summarise(tests_in_last_year_raw = sum(new_tests_orig, na.rm = TRUE),
+            cases_in_last_year_raw = sum(new_cases_orig, na.rm = TRUE),
+            tests_in_last_year_smoothed = sum(new_tests_smoothed, na.rm = TRUE),
+            cases_in_last_year_smoothed = sum(new_cases_smoothed, na.rm = TRUE),
+            med_tpr_find = median(pos, na.rm = TRUE),
+            tpr_year_raw = cases_in_last_year_raw/tests_in_last_year_raw,
+            tpr_year_smoothed = cases_in_last_year_smoothed/tests_in_last_year_smoothed,
+            avg_daily_test_per_1000_last_year = 1000*mean(new_tests_orig, na.rm = TRUE)/max(pop),
+            median_daily_tests_per_1000_last_year = 1000*median(new_tests_smoothed/max(pop), na.rm = TRUE))
 
+# Find the countries where they have no tests
+no_tests<-find_testing_last_year%>%filter(tests_in_last_year_smoothed==0)
+no_tests<-left_join(no_tests, find_clean)%>%select(name, code, tests_in_last_year_raw, 
+                                                   tests_in_last_year_smoothed, who_testing_capacity, ngs_capacity)
+if (USE_CASE=='local'){
+  write.csv(no_tests, '../../data/processed/countries_w_no_FIND_tests_in_last_year.csv')
+}
+if (USE_CASE == 'domino'){
+  write.csv(no_tests, '/mnt/data/processed/countries_w_no_FIND_tests_in_last_year.csv')
+}
+
+# Join the time window sumamry stats
 find_testing_recent<-left_join(find_testing_recent, find_testing_last_year, by = "code")
-
+# Join with cleaned data frame
 find_testing_clean<-left_join(find_testing_clean, find_testing_recent, by = "code")
+
+## DELETE, just for Flourish troubleshooting
+find_testing_last_year<- find_testing_last_year%>%
+  mutate(country = countrycode(code, origin = 'iso3c', destination = 'country.name'))
+if (USE_CASE == "local"){
+write.csv(find_testing_last_year, '../../data/processed/find_test_metrics.csv')
+}
+if (USE_CASE == "domino"){
+  write.csv(find_testing_last_year, '/mnt/data/processed/find_test_metrics.csv')
+}
+##
 
 
 # remove any -Inf
 find_testing_clean$max_new_tests_cap_avg <- ifelse(find_testing_clean$max_new_tests_cap_avg < 0, NA, find_testing_clean$max_new_tests_cap_avg)
+find_testing_clean$median_daily_tests_per_1000_last_year <- ifelse(find_testing_clean$median_daily_tests_per_1000_last_year < 0, NA, 
+                                                                   find_testing_clean$median_daily_tests_per_1000_last_year)
 
 # remove any Inf
-find_testing_clean$cum_tpr <- ifelse(find_testing_clean$cum_tpr < 0 | find_testing_clean$cum_tpr > 1, NA, find_testing_clean$cum_tpr)
+find_testing_clean$tpr_year_smoothed <- ifelse(find_testing_clean$tpr_year_smoothed < 0 | find_testing_clean$tpr_year_smoothed > 1, NA, 
+                                               find_testing_clean$tpr_year_smoothed)
 
-# select code, pop_100k, cap_cum_tests, and max_new_tests_cap_avg columns
-find_testing_clean <- find_testing_clean %>%
-  select(code, max_new_tests_cap_avg, cap_cum_tests, cum_tpr)
 
-# merge the find_testing dataframes
-find_testing_clean<-left_join(find_testing_clean, find_testing_recent, by = "code")
+# Join to find_clean
+find_clean<-left_join(find_clean, find_testing_clean, by = "code")
 
-# find_clean: merge FIND testing data into template
-find_clean <- left_join(find_clean, find_testing_clean, by = "code")
 
 #------Dx Testing Capacity Classifier------------------
 
@@ -448,7 +484,7 @@ find_clean<-find_clean%>%mutate(
   tpr_90_days = cases_in_last_90_days/tests_in_last_90_days,
   tpr_7_days = cases_in_last_7_days/tests_in_last_7_days,
   test_in_the_last_7_days_per_100k = 100000*tests_in_last_7_days/population_size,
-  tpr_year = cases_in_last_year/tests_in_last_year
+  tpr_year = cases_in_last_year/tests_in_last_year_raw
 )
 
 find_clean$tpr_90_days[find_clean$tpr_90_days == Inf] <- NA
@@ -459,6 +495,9 @@ find_clean$tpr_year[find_clean$tpr_year == Inf] <- NA
 
 
 # ------ World Bank Economy classifier ------------------------------------------------
+# Should we replace this with just pulling in the old Find map and excluding all countries labeled as high income
+
+
 world_bank_background_raw <- read_excel(ECONOMY_PATH,
                                         sheet = "List of economies",
                                         skip = 5) %>%
