@@ -240,16 +240,10 @@ code <-unique(find_testing_t$code)
 date_country<-expand_grid(date, code)
 find_testing_t<-left_join(date_country,find_testing_t, by = c("code", "date"))
 
-find_testing_US_t<-find_testing_t%>%filter(code == "USA")%>%
-  filter(date>=(LAST_DATA_PULL_DATE-80) & 
-  date<= LAST_DATA_PULL_DATE)
-tpr<-sum(find_testing_US_t$new_cases_orig, na.rm = TRUE)/sum(find_testing_US_t$new_tests_orig, na.rm = TRUE)
-tpr_smoothed<-sum(find_testing_US_t$new_cases_smoothed, na.rm = TRUE)/sum(find_testing_US_t$new_tests_smoothed, na.rm = TRUE)
-med_tpr<-median(find_testing_US_t$pos, na.rm = TRUE)
-
 
 # Fill in the NAs on the values as 0s, but leave the NAs on the smoothed ones?
-find_testing_t$new_tests_orig[is.na(find_testing_t$new_tests_orig)]<-0
+#find_testing_t$new_tests_orig[is.na(find_testing_t$new_tests_orig)]<-0
+find_testing_t$new_tests_orig[find_testing_t$new_tests_orig<0]<-NA
 find_testing_t$new_cases_orig[is.na(find_testing_t$new_cases_orig)]<-0
 
 
@@ -261,8 +255,18 @@ find_testing_t <- find_testing_t %>%
   group_by(code) %>%
   # create column for 30 day rolling average
   mutate(
-    new_tests_cap_avg = round(zoo::rollmean(100000*new_tests_orig/pop, 30, fill = NA),2)
+    new_tests_cap_avg = round(zoo::rollmean(100000*new_tests_orig/pop, 30, fill = NA),2), 
+    cases_7d_avg = round(zoo::rollmean(new_cases_orig, 7, fill = NA),2),
+    tests_7d_avg = round(zoo::rollmean(new_tests_orig, 7, fill = NA), 2)
   )
+
+
+find_testing_US_t<-find_testing_t%>%filter(code == "USA")%>%
+  filter(date>=(LAST_DATA_PULL_DATE-80) & 
+           date<= LAST_DATA_PULL_DATE)
+tpr<-sum(find_testing_US_t$new_cases_orig, na.rm = TRUE)/sum(find_testing_US_t$new_tests_orig, na.rm = TRUE)
+tpr_smoothed<-sum(find_testing_US_t$new_cases_smoothed, na.rm = TRUE)/sum(find_testing_US_t$new_tests_smoothed, na.rm = TRUE)
+med_tpr<-median(find_testing_US_t$pos, na.rm = TRUE)
 
  
 
@@ -312,6 +316,8 @@ find_testing_last_year<- find_testing_t %>% filter(date>=(LAST_DATA_PULL_DATE -T
   group_by(code) %>%
   summarise(tests_in_last_year_raw = sum(new_tests_orig, na.rm = TRUE),
             cases_in_last_year_raw = sum(new_cases_orig, na.rm = TRUE),
+            tests_in_last_year_sum_avg = sum(tests_7d_avg, na.rm = TRUE),
+            cases_in_last_year_sum_avg = sum(cases_7d_avg, na.rm = TRUE), 
             tests_in_last_year_smoothed = sum(new_tests_smoothed, na.rm = TRUE),
             cases_in_last_year_smoothed = sum(new_cases_smoothed, na.rm = TRUE),
             med_tpr_find = median(pos, na.rm = TRUE),
