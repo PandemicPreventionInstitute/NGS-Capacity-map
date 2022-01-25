@@ -655,7 +655,7 @@ find_map<-find_map%>% mutate(
   cases_per_100k = paste0(round(cases_per_100k_last_7_days, 1), ' per 100k persons')
   )
 find_map$TPR_pct[find_map$TPR_pct == "NA %"]<- 'Insufficient Data'
-find_map$daily_tests_per_1000[find_map$daily_test_per_1000 == "NA per 1000 persons"]<- 'Insufficient Data'
+find_map$daily_tests_per_1000[find_map$daily_tests_per_1000 == "NA per 1000 persons"]<- 'Insufficient Data'
 find_map$pct_seq[find_map$pct_seq == "NA %" | find_map$pct_sew == "NaN %"]<-'Insufficient Data'
 find_map$seq_per_100k[find_map$seq_per_100k == "NA per 100k persons"]<- 'Insufficient Data'
 find_map$cases_per_100k[find_map$cases_per_100k == "NA per 100k persons"]<- 'Insufficient Data'
@@ -671,12 +671,22 @@ find_map<-find_map%>%rename(
   `Cases in the last 7 days` = cases_per_100k
 )
 
+stopifnot('More than 3 countries missing archetype at final step' = sum(find_map$Archetype == "NaN" |is.na(find_map$Archetype)) <=3)
+
+#find_map$Archetype[find_map$Archetype == "NaN" | is.na(find_map$Archetype)]<-'Insufficient Data'
+
 # Join shapefiles! 
 shapefile <- read_delim(SHAPEFILES_FOR_FLOURISH_PATH, delim = "\t") %>%
-  rename(code = `3-letter ISO code`) %>%
-  select(geometry, Name, code)
+  rename(code = `3-letter ISO code`,
+         name = Name) %>%
+  select(geometry, code)
+# Need to deduplicate?? 
 
-find_clean_flourish<-left_join(shapefile, find_map, by = "code")
+duplicates<-shapefile[duplicated(shapefile$code),] 
+
+
+find_clean_flourish<-left_join(shapefile,find_map, by = "code")
+find_clean_flourish<-find_clean_flourish%>%filter(!is.na("code"))
 
 if (USE_CASE == 'local'){
   write.csv(find_clean, "../../data/processed/find_clean.csv", na = "NaN", row.names = FALSE)
