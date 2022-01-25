@@ -355,7 +355,7 @@ find_testing_clean<-left_join(find_testing_clean, find_testing_last_year, by = "
 n_not_rept_6_mos= nrow(find_testing_clean%>%filter(!is.na(avg_tpr_find) & rept_tests_within_last_6_months == FALSE))
 
 # unit test on test per 100k per day
-stopifnot('Countries reporting greater than a test per person per day' = sum(find_testing_clean$avg_daily_tests_per_1000_last_year_smoothed>1000,na.rm = T)> 0)
+stopifnot('Countries reporting greater than a test per person per day' = sum(find_testing_clean$avg_daily_tests_per_1000_last_year_smoothed>1000,na.rm = T)== 0)
 
 # unit test for number of countries with test data over 6 months old
 stopifnot('More than 25 countries with data havent reported tests in 6 months' = n_not_rept_6_mos<=25)
