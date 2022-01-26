@@ -589,8 +589,8 @@ find_clean <- find_clean %>%
     sars_cov_2_sequencing = case_when(
       is.na(sequences_per_100k_last_year) ~ "insufficient sequencing",
       pct_cases_sequenced_in_last_year >= 0.5  ~ "sufficient sequencing",
-      pct_cases_sequenced_in_last_year < 0.5 & sequences_per_100k_last_year >= 50 ~ "sufficient sequencing",
-      pct_cases_sequenced_in_last_year < 0.5 & sequences_per_100k_last_year <50 ~ "insufficient sequencing"
+      pct_cases_sequenced_in_last_year < 0.5 & sequences_per_100k_last_year >= 30 ~ "sufficient sequencing",
+      pct_cases_sequenced_in_last_year < 0.5 & sequences_per_100k_last_year <30 ~ "insufficient sequencing"
     )
   )
 
