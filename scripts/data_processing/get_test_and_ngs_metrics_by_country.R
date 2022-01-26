@@ -626,6 +626,23 @@ n_Leverage <- sum(find_clean_LMICs$archetype_orig == "Leverage")
 n_Connect <- sum(find_clean_LMICs$archetype_orig == "Connect")
 n_Sequence<- sum(find_clean_LMICs$archetype_new == "Sequence")
 
+if (USE_CASE == 'local') {
+find_clean_LMICs%>%filter(archetype_orig == "Insufficient Data")%>%write.csv('../../data/processed/countries_in_insufficient_data.csv')
+find_clean_LMICs%>%filter(archetype_orig == "Test")%>%write.csv('../../data/processed/countries_in_test.csv')
+find_clean_LMICs%>%filter(archetype_orig == "Strengthen")%>%write.csv('../../data/processed/countries_in_strengthen.csv')
+find_clean_LMICs%>%filter(archetype_orig == "Leverage" | archetype_orig == "Connect")%>%
+  write.csv('../../data/processed/countries_in_Lev_or_Connect.csv')
+}
+
+if (USE_CASE == 'domino') {
+  find_clean_LMICs%>%filter(archetype_orig == "Insufficient Data")%>%write.csv('/mnt/data/processed/countries_in_insufficient_data.csv')
+  find_clean_LMICs%>%filter(archetype_orig == "Test")%>%write.csv('/mnt/data/processed/countries_in_test.csv')
+  find_clean_LMICs%>%filter(archetype_orig == "Strengthen")%>%write.csv('/mnt/data/processed/countries_in_strengthen.csv')
+  find_clean_LMICs%>%filter(archetype_orig == "Leverage" | archetype_orig == "Connect")%>%
+    write.csv('/mnt/data/processed/countries_in_Lev_or_Connect.csv')
+}
+
+
 n_given_archetypes = n_Test + n_Strengthen + n_Sequence
 
 stopifnot("Number given arhcetypes other than insufficient data is less than 90 (should be around 95)"= n_given_archetypes>=90)
