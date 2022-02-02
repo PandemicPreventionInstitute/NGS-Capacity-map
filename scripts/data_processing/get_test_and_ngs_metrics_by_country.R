@@ -608,6 +608,13 @@ find_clean<-find_clean%>%mutate(
     (dx_testing_capacity == "Reliable testing capacity" & sars_cov_2_sequencing == "insufficient sequencing" &
     (ngs_capacity == 2 | ngs_capacity == 1)) ~ "Leverage",
     dx_testing_capacity == "Reliable testing capacity" & sars_cov_2_sequencing == "insufficient sequencing" & ngs_capacity == 0 ~ "Connect"),
+  archetype_orig_w_HICs = case_when(
+    dx_testing_capacity == "Insufficient data" ~ "Insufficient Data",
+    dx_testing_capacity == "Unreliable testing capacity" ~ "Test",
+    dx_testing_capacity == "Reliable testing capacity" & sars_cov_2_sequencing == "sufficient sequencing" ~ "Strengthen",
+    (dx_testing_capacity == "Reliable testing capacity" & sars_cov_2_sequencing == "insufficient sequencing" &
+       (ngs_capacity == 2 | ngs_capacity == 1)) ~ "Leverage",
+    dx_testing_capacity == "Reliable testing capacity" & sars_cov_2_sequencing == "insufficient sequencing" & ngs_capacity == 0 ~ "Connect"),
   archetype_new = case_when(
     old_archetype == "High Income*" ~ "High Income*",
     dx_testing_capacity == "Insufficient data" ~ "Insufficient Data",
