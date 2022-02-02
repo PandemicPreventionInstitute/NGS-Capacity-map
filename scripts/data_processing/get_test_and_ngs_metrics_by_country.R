@@ -656,7 +656,8 @@ stopifnot("Number given arhcetypes other than insufficient data is less than 90 
 
 find_map<- find_clean %>%select(name, code, population_size, sequencing_capacity, tpr_year_smoothed_truncated, avg_daily_tests_per_1000_last_year_smoothed,
                                 dx_testing_capacity, date_tests_last_reported, days_since_tests_reported, pct_cases_sequenced_in_last_year,
-                                sequences_per_100k_last_year, sars_cov_2_sequencing, cases_per_100k_last_7_days, old_archetype, archetype_orig, archetype_new)
+                                sequences_per_100k_last_year, sars_cov_2_sequencing, cases_per_100k_last_7_days, old_archetype, archetype_orig,
+                                archetype_orig_w_HICs, archetype_new)
 # Make pretty with rounded numbers! 
 find_map<-find_map%>% mutate(
   archetype_full_orig = case_when(
@@ -672,6 +673,12 @@ find_map<-find_map%>% mutate(
     archetype_new == "Test" ~ "Test - Increase diagnostic testing capacity",
     archetype_new == "Sustain" ~ "Sustain - Sustain diagnostic & sequencing levels",
     archetype_new == "Sequence" ~ "Sequence - Improve sequencing levels"),
+  archetype_full_orig_w_HICs = case_when(
+    archetype_orig_w_HICs == "Insufficient Data" ~ "Missing key diagnostic or case metrics",
+    archetype_orig_w_HICs == "Test" ~ "Test - Increase diagnostic testing capacity",
+    archetype_orig_w_HICs == "Strengthen" ~ "Strengthen - Build additional NGS capacity for scale-up",
+    archetype_orig_w_HICs == "Leverage" ~ "Leverage - Leverage existing NGS capacity",
+    archetype_orig_w_HICs == "Connect" ~ "Connect - Connect to countries with NGS capacity or build NGS capacity from scratch"),
   TPR_pct = paste0(round(100*tpr_year_smoothed_truncated, 1), ' %'),
   daily_tests_per_1000 = paste0(round(avg_daily_tests_per_1000_last_year_smoothed,2), ' per 1000 persons'),
   pct_seq = paste0(round(pct_cases_sequenced_in_last_year,2), ' %'),
@@ -686,6 +693,7 @@ find_map$cases_per_100k[find_map$cases_per_100k == "NA per 100k persons"]<- 'Ins
 
 find_map<-find_map%>%rename(
   Archetype = archetype_full_orig,
+  `Archetype*` = archetype_full_orig_w_HICs,
   `Test positivity rate (%) in past year` = TPR_pct,
   `Average daily tests in past year` = daily_tests_per_1000,
   `Date tests last reported` = date_tests_last_reported,
