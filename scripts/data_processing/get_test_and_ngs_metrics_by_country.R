@@ -602,6 +602,7 @@ find_clean <- find_clean %>%
 
 
 
+
 # -------- Create Original Archetype classifier variable ----------------------------------------
 
 print("FLAG: Eventually we will just change these, but for now, keep as is")
@@ -681,6 +682,12 @@ find_map<- find_clean %>%select(name, code, population_size, sequencing_capacity
                                 sequences_per_100k_last_year, sars_cov_2_sequencing, ngs_capacity, facility_access, cases_per_100k_last_7_days, 
                                 old_archetype, archetype_orig,
                                 archetype_orig_w_HICs, archetype_new)
+# Replace facility access column so we gray out HICs
+find_map$sars_cov_2_sequencing[find_map$old_archetype == "High Income*"]<- "High Income*"
+find_map$facility_access[find_map$old_archetype == "High Income*"]<-"High Income*"
+find_map$facility_access[is.na(find_map$facility_access)]<-"No facility data available"
+
+
 # Make pretty with rounded numbers! 
 find_map<-find_map%>% mutate(
   archetype_full_orig = case_when(
