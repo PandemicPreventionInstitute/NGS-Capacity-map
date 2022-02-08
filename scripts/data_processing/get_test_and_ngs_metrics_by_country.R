@@ -630,8 +630,17 @@ find_clean<-find_clean%>%mutate(
 )
 
 # Edit the date
-test<-find_clean%>%mutate(date_tests_reported_pretty = lubridate::dmy(date_tests_last_reported))
-test<-as.character.Date(find_clean$date_tests_last_reported)
+test<-find_clean%>%separate(date_tests_last_reported,
+                            into = c("year", "month", "day"),
+                            sep = "-")
+test$month<-month.name[as.numeric(test$month)]
+test$date_tests_last_reported<-paste0(test$month, ' ', test$day, ', ', test$year)
+test$date_tests_last_reported[test$date_tests_last_reported == "NA NA, NA"]<-"No tests reported"
+find_clean$date_tests_last_reported<-test$date_tests_last_reported
+
+separate(location,
+         into = c("continent", "country", "division", "location"),
+         sep = " / | /|/ |/")
 
 
 
