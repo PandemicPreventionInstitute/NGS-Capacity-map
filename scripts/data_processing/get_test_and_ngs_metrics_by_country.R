@@ -50,7 +50,6 @@ today <- substr(lubridate::now('EST'), 1, 13)
 today <- chartr(old = ' ', new = '-', today)
 today_date<-lubridate::today('EST')
 #today<-"2021-12-22-13"
-
 ## Set filepaths
 ALL_DATA_PATH<- url("https://raw.githubusercontent.com/dsbbfinddx/FINDCov19TrackerData/master/processed/data_all.csv")
 OLD_FIND_MAP_PATH<-url("https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/LMIC%20centered%20map/NGS_flourish_file_11.9.2021_TEST3.csv")
@@ -151,6 +150,13 @@ ngs_clean$ngs_capacity <- case_when(
   ngs_clean[ , ngs_capacity_column] == "2 - >3 NGS facilities or equivalent" ~ 2
 )
 
+ngs_clean<-ngs_clean%>%mutate(
+  facility_access = case_when(
+    ngs_capacity ==0 ~ "No NGS facilities",
+    (ngs_capacity ==1 | ngs_capacity == 2) ~ "1 or more NGS facilities"
+  
+))
+
 # Convert to binary testing capacity
 testing_clean$who_testing_capacity <- case_when(
   # 0: "0 - No reliable testing capacity" or 0
@@ -164,7 +170,7 @@ testing_clean$who_testing_capacity <- case_when(
 
 # select only code and capacity variables
 ngs_clean <- ngs_clean %>%
-  select(contains("code"), ends_with("ngs_capacity"))
+  select(contains("code"),  ngs_capacity, facility_access)
 testing_clean <- testing_clean %>%
   select(contains("code"), matches("who_testing_capacity"))
 
@@ -587,10 +593,10 @@ find_clean <- find_clean %>%
   # cases sequenced per 100k in the past year >= 50
   mutate(
     sars_cov_2_sequencing = case_when(
-      is.na(sequences_per_100k_last_year) ~ "insufficient sequencing",
-      pct_cases_sequenced_in_last_year >= 0.5  ~ "sufficient sequencing",
-      pct_cases_sequenced_in_last_year < 0.5 & sequences_per_100k_last_year >= 30 ~ "sufficient sequencing",
-      pct_cases_sequenced_in_last_year < 0.5 & sequences_per_100k_last_year <30 ~ "insufficient sequencing"
+      is.na(sequences_per_100k_last_year) ~ "Insufficient sequencing capacity",
+      pct_cases_sequenced_in_last_year >= 0.5  ~ "Sufficient sequencing capacity",
+      pct_cases_sequenced_in_last_year < 0.5 & sequences_per_100k_last_year >= 30 ~ "Sufficient sequencing capacity",
+      pct_cases_sequenced_in_last_year < 0.5 & sequences_per_100k_last_year <30 ~ "Insufficient sequencing capacity"
     )
   )
 
@@ -604,24 +610,31 @@ find_clean<-find_clean%>%mutate(
     old_archetype == "High Income*" ~ "High Income*",
     dx_testing_capacity == "Insufficient data" ~ "Insufficient Data",
     dx_testing_capacity == "Unreliable testing capacity" ~ "Test",
-    dx_testing_capacity == "Reliable testing capacity" & sars_cov_2_sequencing == "sufficient sequencing" ~ "Strengthen",
-    (dx_testing_capacity == "Reliable testing capacity" & sars_cov_2_sequencing == "insufficient sequencing" &
+    dx_testing_capacity == "Reliable testing capacity" & sars_cov_2_sequencing == "Sufficient sequencing capacity" ~ "Strengthen",
+    (dx_testing_capacity == "Reliable testing capacity" & sars_cov_2_sequencing == "Insufficient sequencing capacity" &
     (ngs_capacity == 2 | ngs_capacity == 1)) ~ "Leverage",
-    dx_testing_capacity == "Reliable testing capacity" & sars_cov_2_sequencing == "insufficient sequencing" & ngs_capacity == 0 ~ "Connect"),
+    dx_testing_capacity == "Reliable testing capacity" & sars_cov_2_sequencing == "Insufficient sequencing capacity" & ngs_capacity == 0 ~ "Connect"),
   archetype_orig_w_HICs = case_when(
     dx_testing_capacity == "Insufficient data" ~ "Insufficient Data",
     dx_testing_capacity == "Unreliable testing capacity" ~ "Test",
-    dx_testing_capacity == "Reliable testing capacity" & sars_cov_2_sequencing == "sufficient sequencing" ~ "Strengthen",
-    (dx_testing_capacity == "Reliable testing capacity" & sars_cov_2_sequencing == "insufficient sequencing" &
+    dx_testing_capacity == "Reliable testing capacity" & sars_cov_2_sequencing == "Sufficient sequencing capacity" ~ "Strengthen",
+    (dx_testing_capacity == "Reliable testing capacity" & sars_cov_2_sequencing == "Insufficient sequencing capacity" &
        (ngs_capacity == 2 | ngs_capacity == 1)) ~ "Leverage",
-    dx_testing_capacity == "Reliable testing capacity" & sars_cov_2_sequencing == "insufficient sequencing" & ngs_capacity == 0 ~ "Connect"),
+    dx_testing_capacity == "Reliable testing capacity" & sars_cov_2_sequencing == "Insufficient sequencing capacity" & ngs_capacity == 0 ~ "Connect"),
   archetype_new = case_when(
     old_archetype == "High Income*" ~ "High Income*",
     dx_testing_capacity == "Insufficient data" ~ "Insufficient Data",
     dx_testing_capacity == "Unreliable testing capacity" ~ "Test",
-    dx_testing_capacity == "Reliable testing capacity" & sars_cov_2_sequencing == "sufficient sequencing" ~ "Sustain",
-    dx_testing_capacity == "Reliable testing capacity" & sars_cov_2_sequencing == "insufficient sequencing" ~ "Sequence")
+    dx_testing_capacity == "Reliable testing capacity" & sars_cov_2_sequencing == "Sufficient sequencing capacity" ~ "Sustain",
+    dx_testing_capacity == "Reliable testing capacity" & sars_cov_2_sequencing == "Insufficient sequencing capacity" ~ "Sequence")
 )
+
+# Edit the date
+test<-find_clean%>%mutate(date_tests_reported_pretty = lubridate::dmy(date_tests_last_reported))
+test<-as.character.Date(find_clean$date_tests_last_reported)
+
+
+
 
 
 find_clean_LMICs<-find_clean%>%filter(!old_archetype == "High Income*")
@@ -656,7 +669,8 @@ stopifnot("Number given arhcetypes other than insufficient data is less than 90 
 
 find_map<- find_clean %>%select(name, code, population_size, sequencing_capacity, tpr_year_smoothed_truncated, avg_daily_tests_per_1000_last_year_smoothed,
                                 dx_testing_capacity, date_tests_last_reported, days_since_tests_reported, pct_cases_sequenced_in_last_year,
-                                sequences_per_100k_last_year, sars_cov_2_sequencing, cases_per_100k_last_7_days, old_archetype, archetype_orig,
+                                sequences_per_100k_last_year, sars_cov_2_sequencing, ngs_capacity, facility_access, cases_per_100k_last_7_days, 
+                                old_archetype, archetype_orig,
                                 archetype_orig_w_HICs, archetype_new)
 # Make pretty with rounded numbers! 
 find_map<-find_map%>% mutate(
@@ -704,6 +718,12 @@ find_map<-find_map%>%rename(
 )
 
 stopifnot('More than 3 countries missing archetype at final step' = sum(find_map$Archetype == "NaN" |is.na(find_map$Archetype)) <=3)
+
+# Generate datasets
+find_insuff_test_but_have_seq<-find_map%>%filter(old_archetype!= "High Income*")%>%filter(dx_testing_capacity == "Unreliable testing capacity")%>%
+  filter(sars_cov_2_sequencing == "sufficient sequencing")
+
+
 
 #find_map$Archetype[find_map$Archetype == "NaN" | is.na(find_map$Archetype)]<-'Insufficient Data'
 
