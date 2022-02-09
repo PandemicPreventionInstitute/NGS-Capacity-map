@@ -1,0 +1,68 @@
+,country,code,Region,World_Bank_Economic_Class,Archetype,N_projects,N_organizations
+0,Cameroon,CMR,Africa,Lower middle income,Leverage,5,3
+1,Brazil,BRA,Americas,Upper middle income,Strengthen,12,7
+2,Guinea,GIN,Africa,Low income,Test,2,1
+3,Lebanon,LBN,Eastern Mediterranean,Upper middle income,Leverage,3,1
+4,Bangladesh,BGD,South-East Asia,Lower middle income,Strengthen,8,6
+5,Madagascar,MDG,Africa,Low income,Leverage,4,1
+6,Malawi,MWI,Africa,Low income,Connect,2,2
+7,Zambia,ZMB,Africa,Lower middle income,Strengthen,4,4
+8,South Africa,ZAF,Africa,Upper middle income,Strengthen,7,5
+9,Uganda,UGA,Africa,Low income,Leverage,3,2
+10,Kenya,KEN,Africa,Lower middle income,Strengthen,13,6
+11,Senegal,SEN,Africa,Lower middle income,Leverage,2,3
+12,Argentina,ARG,Americas,Upper middle income,Strengthen,2,2
+13,India,IND,South-East Asia,Lower middle income,Strengthen,11,9
+14,Nepal,NPL,South-East Asia,Lower middle income,Leverage,3,3
+15,Pan-Africa,,,,,2,2
+16,Indonesia,IDN,South-East Asia,Upper middle income,Strengthen,5,5
+17,DRC,COD,Africa,Low income,Leverage,2,2
+18,Ethiopia,ETH,Africa,Low income,Connect,11,5
+19,Ghana,GHA,Africa,Lower middle income,Strengthen,2,2
+20,Mozambique,MOZ,Africa,Low income,Connect,0,0
+21,Nigeria,NGA,Africa,Lower middle income,Strengthen,10,5
+22,Rwanda,RWA,Africa,Low income,Connect,0,0
+23,Zimbabwe,ZWE,Africa,Lower middle income,Leverage,0,0
+24,Cambodia,KHM,Western Pacific,Lower middle income,Leverage,2,1
+25,Laos,LAO,Western Pacific,Lower middle income,Connect,3,2
+26,Thailand,THA,South-East Asia,Upper middle income,Strengthen,7,4
+27,Myanmar,MMR,South-East Asia,Lower middle income,Leverage,1,1
+28,Vietnam,VNM,Western Pacific,Lower middle income,Leverage,7,4
+29,Sudan,SDN,Eastern Mediterranean,Low income,Test,1,1
+30,Tanzania,TZA,Africa,Lower middle income,Connect,3,2
+31,The Gambia,GMB,Africa,Low income,Leverage,1,1
+32,Mali,MLI,Africa,Low income,Leverage,2,1
+33,Seychelles,SYC,Africa,High income,High Income *,1,1
+34,Comoros,COM,Africa,Lower middle income,Test,1,1
+35,Burkina Faso,BFA,Africa,Low income,Leverage,1,1
+36,Gabon,GAB,Africa,Upper middle income,Leverage,1,1
+37,Uruguay,URY,Americas,High income,High Income *,1,1
+38,Paraguay,PRY,Americas,Upper middle income,Connect,1,1
+39,Bolivia,BOL,Americas,Lower middle income,Connect,1,1
+40,Chile,CHL,Americas,High income,High Income *,1,1
+41,Peru,PER,Americas,Upper middle income,Strengthen,1,1
+42,Ecuador,ECU,Americas,Upper middle income,Strengthen,1,1
+43,Guatemala,GTM,Americas,Upper middle income,Test,1,1
+44,Colombia,COL,Americas,Upper middle income,Strengthen,3,2
+45,Venezuela,VEN,Americas,Upper middle income,Leverage,1,1
+46,Panama,PAN,Americas,High income,High Income *,3,2
+47,Costa rica,CRI,Americas,Upper middle income,Strengthen,3,2
+48,Mexico,MEX,Americas,Upper middle income,Strengthen,1,1
+49,The Bahamas,BHS,Americas,High income,High Income *,1,1
+50,Barbados,BRB,Americas,High income,High Income *,1,1
+51,Haiti,HTI,Americas,Low income,Test,2,2
+52,Jamaica,JAM,Americas,Upper middle income,Connect,2,1
+53,Sri Lanka,LKA,South-East Asia,Lower middle income,Strengthen,1,1
+54,South Asia,,,,,3,2
+55,Georgia,GEO,Europe,Upper middle income,Leverage,2,1
+56,Kazakhstan,KAZ,Europe,Upper middle income,Leverage,2,1
+57,Germany,DEU,Europe,High income,High Income *,1,1
+58,Russia,RUS,Europe,Upper middle income,High Income *,1,1
+59,Australia,AUS,Western Pacific,High income,High Income *,1,1
+60,China,CHN,Western Pacific,Upper middle income,High Income *,2,2
+61,Ukraine,UKR,Europe,Lower middle income,Leverage,1,1
+62,Pakistan,PAK,Eastern Mediterranean,Lower middle income,Leverage,7,3
+63,United States,USA,Americas,High income,High Income *,4,1
+64,Oman,OMN,Eastern Mediterranean,High income,High Income *,3,1
+65,Trinidad and Tobago,TTO,Americas,High income,High Income *,1,0
+66,Botswana,BWA,Africa,Upper middle income,Strengthen,1,1
