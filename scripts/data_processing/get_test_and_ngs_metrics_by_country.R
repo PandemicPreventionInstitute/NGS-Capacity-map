@@ -52,17 +52,15 @@ today_date<-lubridate::today('EST')
 #today<-"2021-12-22-13"
 ## Set filepaths
 ALL_DATA_PATH<- url("https://raw.githubusercontent.com/dsbbfinddx/FINDCov19TrackerData/master/processed/data_all.csv")
-OLD_FIND_MAP_PATH<-url("https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/NGS_Archetypes/NGS_archetypes_flourish_file_11.30.2021.csv")
+OLD_FIND_MAP_PATH<-url("https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/NGS_Data_Tables/November_2021/find_map_11.30.2021.csv")
 
 if (USE_CASE == 'domino'){
 
 GISAID_DAILY_PATH<-'/mnt/data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
-SEQUENCES_LAST_30_DAYS<-'/mnt/data/processed/sequences_last_30_days.csv'
 SHAPEFILES_FOR_FLOURISH_PATH <- '/mnt/data/static/geometric_country_code_name_master_file.txt'
 LAT_LONG_FOR_FLOURISH_PATH<-'/mnt/data/static/country_lat_long_names.csv'
 WHO_REGIONS_PATH<-'/mnt/data/static/who_regions.csv'
 ECONOMY_PATH<-'/mnt/data/static/CLASS.xls'
-OWID_TESTING_POLICY_PATH<- '/mnt/data/static/covid-19-testing-policy.csv'
 FIND_TESTING_SEQ_RAW_PATH<- '/mnt/data/static/2021_04_04_FIND_capacity_mapping_data_sources.xlsx'
 }
 
@@ -74,7 +72,6 @@ SHAPEFILES_FOR_FLOURISH_PATH <- '../../data/static/geometric_country_code_name_m
 LAT_LONG_FOR_FLOURISH_PATH<-'../../data/static/country_lat_long_names.csv'
 WHO_REGIONS_PATH<-'../../data/static/who_regions.csv'
 ECONOMY_PATH<-'../../data/static/CLASS.xls'
-OWID_TESTING_POLICY_PATH<- '../../data/static/covid-19-testing-policy.csv'
 FIND_TESTING_SEQ_RAW_PATH<- '../../data/static/2021_04_04_FIND_capacity_mapping_data_sources.xlsx'
 }
 
