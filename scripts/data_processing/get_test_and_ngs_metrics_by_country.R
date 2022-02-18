@@ -79,7 +79,6 @@ FIND_TESTING_SEQ_RAW_PATH<- '../../data/static/2021_04_04_FIND_capacity_mapping_
 }
 
 LAST_DATA_PULL_DATE<-as.Date(substr(lubridate::now('EST'), 1, 10))-days(1) # Make this based off of yesterday!
-LAST_DATA_PULL_DATE<-as.Date("2022-01-04") # date to align with Briana
 FIRST_DATE<-"2019-12-01"
 TIME_WINDOW <- 29 # since we will include the reference data
 TIME_WINDOW_WEEK<- 6 # since will include the reference date
