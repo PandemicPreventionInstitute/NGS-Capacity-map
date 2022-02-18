@@ -657,17 +657,17 @@ clean_dataset<-find_map%>%select(name, `Date tests last reported`, `Test positiv
 
 
 if (USE_CASE == 'local'){
-  write.csv(full_dataset, "../../data/processed/full_dataset.csv", na = "NaN", row.names = FALSE)
-  write.csv(find_clean_flourish, "../../data/processed/find_map.csv", na = "NaN", row.names = FALSE)
-  write.csv(clean_dataset, "../../data/processed/clean_dataset.csv", na = "NaN", row.names = FALSE)
-  write.csv(find_insuff_test_but_have_seq, "../../data/processed/test_but_suff_seq.csv", na = "NaN", row.names = FALSE )
+  write.csv(full_dataset, "../../data/NGS_region_data/February_2022/full_dataset.csv", na = "NaN", row.names = FALSE)
+  write.csv(find_clean_flourish, "../../data/NGS_region_data/February_2022/find_map.csv", na = "NaN", row.names = FALSE)
+  write.csv(clean_dataset, "../../data/NGS_Region_data/February_2022/clean_dataset.csv", na = "NaN", row.names = FALSE)
+  write.csv(find_insuff_test_but_have_seq, "../../data/NGS_region_data/February_2022/test_but_suff_seq.csv", na = "NaN", row.names = FALSE )
 }
 
 if (USE_CASE == 'domino'){
-  write.csv(full_dataset, "/mnt/data/processed/full_dataset.csv", na = "NaN", row.names = FALSE)
-  write.csv(find_clean_flourish, "/mnt/data/processed/find_map.csv", na = "NaN", row.names = FALSE)
-  write.csv(clean_dataset, "/mnt/data/processed/clean_dataset.csv", na = "NaN", row.names = FALSE)
-  write.csv(find_insuff_test_but_have_seq, "/mnt/data/processed/test_but_suff_seq.csv", na = "NaN", row.names = FALSE )
+  write.csv(full_dataset, "/mnt/data/NGS_region_data/February_2022/full_dataset.csv", na = "NaN", row.names = FALSE)
+  write.csv(find_clean_flourish, "/mnt/data/NGS_region_data/February_2022/find_map.csv", na = "NaN", row.names = FALSE)
+  write.csv(clean_dataset, "/mnt/data/NGS_region_data/February_2022/clean_dataset.csv", na = "NaN", row.names = FALSE)
+  write.csv(find_insuff_test_but_have_seq, "/mnt/data/NGS_region_data/February_2022/test_but_suff_seq.csv", na = "NaN", row.names = FALSE )
 }
 
 
