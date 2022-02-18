@@ -624,6 +624,8 @@ duplicates<-shapefile[duplicated(shapefile$code),]
 find_clean_flourish<-left_join(shapefile,find_map, by = "code")
 find_clean_flourish<-find_clean_flourish%>%filter(!is.na("code"))
 
+find_insufficient_test_but_have_seq<-left_join(shapefile, find_insuff_test_but_have_seq, by = "code")
+
 # Remove the extraneous columns from the full_dataset
 full_dataset<-find_clean%>%select(name, code, population_size, date_tests_last_reported,
                                   rept_tests_within_last_6_months, days_since_tests_reported,
