@@ -67,12 +67,10 @@ FIND_TESTING_SEQ_RAW_PATH<- '/mnt/data/static/2021_04_04_FIND_capacity_mapping_d
 if (USE_CASE == 'local'){
 
 GISAID_DAILY_PATH<-'../../data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
-SEQUENCES_LAST_30_DAYS<-'../../data/processed/sequences_last_30_days.csv'
-SHAPEFILES_FOR_FLOURISH_PATH <- '../../data/static/geometric_country_code_name_master_file.txt'
-LAT_LONG_FOR_FLOURISH_PATH<-'../../data/static/country_lat_long_names.csv'
-WHO_REGIONS_PATH<-'../../data/static/who_regions.csv'
-ECONOMY_PATH<-'../../data/static/CLASS.xls'
-FIND_TESTING_SEQ_RAW_PATH<- '../../data/static/2021_04_04_FIND_capacity_mapping_data_sources.xlsx'
+SHAPEFILES_FOR_FLOURISH_PATH <- '../../data/Geospatial_Data/geometric_country_code_name_master_file.txt'
+WHO_REGIONS_PATH<-'../../data/NGS_Data_Tables/February_2022/who_regions.csv'
+ECONOMY_PATH<-'../../data/NGS_Data_Tables/February_2022/CLASS.xls'
+FIND_TESTING_SEQ_RAW_PATH<- '../../data/NGS_Data_Tables/February_2022/2021_04_04_FIND_capacity_mapping_data_sources.xlsx'
 }
 
 LAST_DATA_PULL_DATE<-as.Date(substr(lubridate::now('EST'), 1, 10))-days(1) # Make this based off of yesterday!
