@@ -664,10 +664,10 @@ if (USE_CASE == 'local'){
 }
 
 if (USE_CASE == 'domino'){
-  write.csv(full_dataset, "/mnt/data/NGS_region_data/February_2022/full_dataset.csv", na = "NaN", row.names = FALSE)
-  write.csv(find_clean_flourish, "/mnt/data/NGS_region_data/February_2022/find_map.csv", na = "NaN", row.names = FALSE)
-  write.csv(clean_dataset, "/mnt/data/NGS_region_data/February_2022/clean_dataset.csv", na = "NaN", row.names = FALSE)
-  write.csv(find_insuff_test_but_have_seq, "/mnt/data/NGS_region_data/February_2022/test_but_suff_seq.csv", na = "NaN", row.names = FALSE )
+  write.csv(full_dataset, "/mnt/data/processed/full_dataset.csv", na = "NaN", row.names = FALSE)
+  write.csv(find_clean_flourish, "/mnt/data/processed/find_map.csv", na = "NaN", row.names = FALSE)
+  write.csv(clean_dataset, "/mnt/data/processed/clean_dataset.csv", na = "NaN", row.names = FALSE)
+  write.csv(find_insuff_test_but_have_seq, "/mnt/data/processed/test_but_suff_seq.csv", na = "NaN", row.names = FALSE )
 }
 
 
