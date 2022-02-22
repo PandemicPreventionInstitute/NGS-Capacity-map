@@ -277,7 +277,8 @@ find_testing_last_year<- find_testing_t %>% filter(date>=(LAST_DATA_PULL_DATE -T
             tpr_year_smoothed = cases_in_last_year_smoothed/tests_in_last_year_smoothed,
             tpr_year_smoothed_truncated = cases_in_last_year_smoothed_truncated/tests_in_last_year_smoothed,
             avg_daily_test_per_1000_last_year_raw = 1000*mean(new_tests_orig/max(pop), na.rm = TRUE),
-            avg_daily_tests_per_1000_last_year_smoothed = 1000*mean(new_tests_smoothed/max(pop), na.rm = TRUE))%>%
+            avg_daily_tests_per_1000_last_year_smoothed = 1000*mean(new_tests_smoothed/max(pop), na.rm = TRUE),
+            population_size = max(pop))%>%
   filter(!is.na(code))
 
 
@@ -352,17 +353,9 @@ gisaid_t <- gisaid_raw%>%
            collection_date<= LAST_DATA_PULL_DATE)
 
 # Make sure that the most recent date is yesterday
-stopifnot("GISAID metadata run isnt up to date" = max(gisaid_t$collection_date) == LAST_DATA_PULL_DATE)
+#stopifnot("GISAID metadata run isnt up to date" = max(gisaid_t$collection_date) == LAST_DATA_PULL_DATE)
 
-# Subset to last 7 days of data to get cases (just a good sanity check)
-cases_in_last_7_days<-gisaid_t%>%
-  filter(collection_date>=(LAST_DATA_PULL_DATE - TIME_WINDOW_WEEK) & 
-           collection_date<=LAST_DATA_PULL_DATE)%>%
-  group_by(country_code)%>%
-  summarise(
-    cases_in_last_7_days = sum(owid_new_cases, na.rm = TRUE),
-    cases_per_100k_last_7_days = round(100000*sum(owid_new_cases)/max(owid_population, na.rm = TRUE), 1),
-    population_size = max(owid_population, na.rm = TRUE))
+
 
 # Subset GISAID data to the last  year
 gisaid_last_year<-gisaid_t%>%filter(collection_date>=(LAST_DATA_PULL_DATE -TIME_WINDOW_YEAR) & 
@@ -373,10 +366,9 @@ gisaid_last_year<-gisaid_t%>%filter(collection_date>=(LAST_DATA_PULL_DATE -TIME_
             pct_cases_sequenced_in_last_year = round(100*(sequences_in_last_year/cases_in_last_year),2),
             sequences_per_100k_last_year = round(100000*sequences_in_last_year/max(owid_population),3))
 
-gisaid_recent_data<-left_join(gisaid_last_year, cases_in_last_7_days, by = "country_code")
 
 # Join both sets of metrics 
-find_clean <- left_join(find_clean, gisaid_recent_data, by = c("code" = "country_code"))
+find_clean <- left_join(find_clean, gisaid_last_year, by = c("code" = "country_code"))
 
 
 
@@ -538,7 +530,7 @@ stopifnot("Number given archetypes other than insufficient data is less than 90 
 
 find_map<- find_clean %>%select(name, code, population_size, sequencing_capacity, tpr_year_smoothed_truncated, avg_daily_tests_per_1000_last_year_smoothed,
                                 dx_testing_capacity, date_tests_last_reported, days_since_tests_reported, pct_cases_sequenced_in_last_year,
-                                sequences_per_100k_last_year, sars_cov_2_sequencing, ngs_capacity, facility_access, cases_per_100k_last_7_days, 
+                                sequences_per_100k_last_year, sars_cov_2_sequencing, ngs_capacity, facility_access,
                                 old_archetype, archetype_orig,
                                 archetype_orig_w_HICs, archetype_new, world_bank_economies)
 
@@ -567,8 +559,7 @@ find_map<-find_map%>% mutate(
   TPR_pct = paste0(round(100*tpr_year_smoothed_truncated, 1), ' %'),
   daily_tests_per_1000 = paste0(round(avg_daily_tests_per_1000_last_year_smoothed,2), ' per 1000 persons'),
   pct_seq = paste0(round(pct_cases_sequenced_in_last_year,2), ' %'),
-  seq_per_100k = paste0(round(sequences_per_100k_last_year,1), ' per 100k persons'),
-  cases_per_100k = paste0(round(cases_per_100k_last_7_days, 1), ' per 100k persons')
+  seq_per_100k = paste0(round(sequences_per_100k_last_year,1), ' per 100k persons')
   )
 
 # Replace NAs with language
@@ -576,7 +567,6 @@ find_map$TPR_pct[find_map$TPR_pct == "NA %"]<- 'Insufficient Data'
 find_map$daily_tests_per_1000[find_map$daily_tests_per_1000 == "NA per 1000 persons"]<- 'Insufficient Data'
 find_map$pct_seq[find_map$pct_seq == "NA %" | find_map$pct_seq == "NaN %"]<-'Insufficient Data'
 find_map$seq_per_100k[find_map$seq_per_100k == "NA per 100k persons"]<- 'Insufficient Data'
-find_map$cases_per_100k[find_map$cases_per_100k == "NA per 100k persons"]<- 'Insufficient Data'
 
 # Make column headers look nice
 find_map<-find_map%>%rename(
@@ -587,8 +577,7 @@ find_map<-find_map%>%rename(
   `Date tests last reported` = date_tests_last_reported,
   `Days since tests were reported` = days_since_tests_reported,
   `% of cases sequenced in past year` = pct_seq,
-  `Number of sequences in past year` = seq_per_100k,
-  `Cases in the last 7 days` = cases_per_100k
+  `Number of sequences in past year` = seq_per_100k
 )
 
 stopifnot('More than 3 countries missing archetype at final step' = sum(find_map$Archetype == "NaN" |is.na(find_map$Archetype)) <=3)
