@@ -8,7 +8,7 @@ Since February 2020, FIND & PPI has maintain NGS Capacity map and continues to u
 
 
 ### **Methods**
-To get started with the NGS Capacity project, review the NGS methodologies. A deep-dive of the NGS Capacity map methodologies can be found under the ```NGS_Methods``` repository. A more conciser version of the methodologies can be found at the following links:
+To get started with the NGS Capacity project, review the NGS methodologies. A deep-dive of the NGS Capacity map methodologies can be found under the ```methods``` repository. A more conciser version of the methodologies can be found at the following links:
 <br> [Overview of NGS Capacity concepts, data, methods, and metrics](https://public.flourish.studio/visualisation/8647680/)
 <br> [Classification Scheme](https://public.flourish.studio/visualisation/8604436/)
 
