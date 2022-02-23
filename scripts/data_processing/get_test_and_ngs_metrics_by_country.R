@@ -2,16 +2,18 @@
 # Updated: Briana Thrift & Zach Susswein
 # Current Author: Kaitlyn Johnson
 
-# Date updated: 11-29-2021
 
-# This script takes in the GISAID metadata and OWID and find data and finds the recent cases, tests, and sequences
-# It will be used to put the Omicron sequencing data in context
+
+# This script takes in the GISAID metadata, OWID and FIND testing data and computes a number of metrics that will be used
+# to define country archetypes to assess surveillance capacity.
+
 rm(list = ls())
 USE_CASE = Sys.getenv("USE_CASE")
 if(USE_CASE == ""){
   USE_CASE<-'local'
 }
-#USE_CASE = 'domino' # options: 'local' or 'domino'
+# USE_CASE = domino used for automatic update
+
 
 
 
@@ -49,42 +51,33 @@ library(scales) # comma formatting
 today <- substr(lubridate::now('EST'), 1, 13)
 today <- chartr(old = ' ', new = '-', today)
 today_date<-lubridate::today('EST')
-#today<-"2021-12-22-13"
+
 ## Set filepaths
-ALL_DATA_PATH<- url("https://raw.githubusercontent.com/dsbbfinddx/FINDCov19TrackerData/master/processed/data_all.csv")
-OLD_FIND_MAP_PATH<-url("https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/NGS_Data_Tables/November_2021/find_map_11.30.2021.csv")
+ALL_DATA_PATH<- url("https://raw.githubusercontent.com/dsbbfinddx/FINDCov19TrackerData/master/processed/data_all.csv") # FIND data
+OLD_FIND_MAP_PATH<-url("https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/NGS_Data_Tables/November_2021/find_map_11.30.2021.csv") # November 2021 Capacity Map
 
 if (USE_CASE == 'domino'){
-
 GISAID_DAILY_PATH<-'/mnt/data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
-SHAPEFILES_FOR_FLOURISH_PATH <- '/mnt/data/static/geometric_country_code_name_master_file.txt'
-LAT_LONG_FOR_FLOURISH_PATH<-'/mnt/data/static/country_lat_long_names.csv'
-WHO_REGIONS_PATH<-'/mnt/data/static/who_regions.csv'
+SHAPEFILES_FOR_FLOURISH_PATH <- '/mnt/data/static/geometric_country_code_name_master_file.txt' # shapefiles for mapping
+WHO_REGIONS_PATH<-'/mnt/data/static/who_regions.csv' # WHO country list
 ECONOMY_PATH<-'/mnt/data/static/CLASS.xls'
-FIND_TESTING_SEQ_RAW_PATH<- '/mnt/data/static/2021_04_04_FIND_capacity_mapping_data_sources.xlsx'
+FIND_TESTING_SEQ_RAW_PATH<- '/mnt/data/static/2021_04_04_FIND_capacity_mapping_data_sources.xlsx' # NGS capacity data
 }
 
 if (USE_CASE == 'local'){
 
 GISAID_DAILY_PATH<-'../../data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
-SHAPEFILES_FOR_FLOURISH_PATH <- '../../data/Geospatial_Data/geometric_country_code_name_master_file.txt'
-WHO_REGIONS_PATH<-'../../data/NGS_Data_Tables/February_2022/who_regions.csv'
-ECONOMY_PATH<-'../../data/NGS_Data_Tables/February_2022/CLASS.xls'
-FIND_TESTING_SEQ_RAW_PATH<- '../../data/NGS_Data_Tables/February_2022/2021_04_04_FIND_capacity_mapping_data_sources.xlsx'
+SHAPEFILES_FOR_FLOURISH_PATH <- '../../data/Geospatial_Data/geometric_country_code_name_master_file.txt' # shapefiles for mapping
+WHO_REGIONS_PATH<-'../../data/NGS_Data_Tables/February_2022/who_regions.csv' # WHO country list
+ECONOMY_PATH<-'../../data/NGS_Data_Tables/February_2022/CLASS.xls' # World Bank Economy data
+FIND_TESTING_SEQ_RAW_PATH<- '../../data/NGS_Data_Tables/February_2022/2021_04_04_FIND_capacity_mapping_data_sources.xlsx' # NGS capacity data
 }
 
 LAST_DATA_PULL_DATE<-as.Date(substr(lubridate::now('EST'), 1, 10))-days(1) # Make this based off of yesterday!
-FIRST_DATE<-"2019-12-01"
-TIME_WINDOW <- 29 # since we will include the reference data
-TIME_WINDOW_WEEK<- 6 # since will include the reference date
-TIME_SERIES_WINDOW<- 89 # last 90 days?
-TIME_WINDOW_MAX_PREV<-89
+FIRST_DATE<-"2019-12-01" # First data that we would expect to see SARS-CoV-2 genomes/cases/tests
 TIME_WINDOW_YEAR<-364
-CONF_LEVEL<-0.95 # confidence we want to be that a variant is not greater than our estimated prevalence
-# that has been detected at least once (i.e. what variant prevalence would we be able to detect?)
 
-# adjusted script so that _clean refers to data sets that are in the format country and the metric (i.e. do not contain time series)
-# intermediates with time series are designated with _t
+
 
 
 
@@ -103,7 +96,7 @@ find_clean <- read.csv(WHO_REGIONS_PATH) %>%
 
 
 
-# ------ Categorical testing and sequencing capacity data -------------------------------------
+# ------ Categorical sequencing capacity data -------------------------------------
 
 test_seq_raw <- read_excel(FIND_TESTING_SEQ_RAW_PATH,
                            sheet = "Country classification",
@@ -117,18 +110,12 @@ test_seq_raw <- read_excel(FIND_TESTING_SEQ_RAW_PATH,
   # remove rows with country code " "
   filter(country_code != " ")
 
-# select only testing or sequencing capacity data
-testing_clean <- test_seq_raw %>%
-  # drop all columns except iso code and WHO testing capacity
-  select(contains("code"), starts_with("testing_capacity_"))
 ngs_clean <- test_seq_raw %>%
   # drop all columns except iso code and NGS capacity
   select(contains("code"), starts_with("ngs_capacity_"))
 
 # define  capacity column for later reference
 ngs_capacity_column <- colnames(ngs_clean)[max(ncol(ngs_clean))]
-testing_column <- colnames(testing_clean)[max(ncol(testing_clean))]
-
 
 
 # assign ngs_capacity variable a label
@@ -143,7 +130,7 @@ ngs_clean$ngs_capacity <- case_when(
   ngs_clean[ , ngs_capacity_column] == 2 ~ 2,
   ngs_clean[ , ngs_capacity_column] == "2 - >3 NGS facilities or equivalent" ~ 2
 )
-
+# Make a binary facility access variable
 ngs_clean<-ngs_clean%>%mutate(
   facility_access = case_when(
     ngs_capacity ==0 ~ "No NGS facilities",
@@ -151,42 +138,21 @@ ngs_clean<-ngs_clean%>%mutate(
   
 ))
 
-# Convert to binary testing capacity
-testing_clean$who_testing_capacity <- case_when(
-  # 0: "0 - No reliable testing capacity" or 0
-  # 1: "1 - Reliable testing capacity" or 1
-  testing_clean[ , testing_column] == 0 ~ 0,
-  testing_clean[ , testing_column] == "0 - No reliable testing capacity" ~ 0,
-  testing_clean[ , testing_column] == 1 ~ 1,
-  testing_clean[ , testing_column] == "1 - Reliable testing capacity" ~ 1
-) 
-
 
 # select only code and capacity variables
 ngs_clean <- ngs_clean %>%
   select(contains("code"),  ngs_capacity, facility_access)
-testing_clean <- testing_clean %>%
-  select(contains("code"), matches("who_testing_capacity"))
 
 # find_clean: merge testing and sequencing capacity data into template
 find_clean <- left_join(find_clean, ngs_clean, by = c("code" = "country_code"))
-find_clean <- left_join(find_clean, testing_clean, by = c("code" = "country_code"))
 
-
-# ------- Sequencing Capacity Classifier variable
-
-# create Sequencing Capacity Classifier variable
+# Make a cleaned sequencing_capacity variable to give more granular data on number of facilities
 # Variable indicating evidence of Sequencing Capacity
 # Variable is based on WHO slides on facilities, GISRS data for extraction of capacity & testing data
 # Variable is based on confidential manufacturer data on install bases
 find_clean <- find_clean %>%
-  # create new variable for Sequencing Capacity based on:
-  # WHO slides, GISRS data
-  # confidential manufacturer data on install bases
   mutate(
-    # "0 NGS facilities or equivalent": 0 ngs_capacity
-    # "1-3 NGS facilities or equivalent": 1 ngs_capacity
-    # "4+ NGS facilities or equivalent": 2 ngs_capacity
+    # just recoding what is in raw data
     sequencing_capacity = case_when(
       ngs_capacity == 0 ~ "0 NGS facilities or equivalent",
       ngs_capacity == 1 ~ "1-3 NGS facilities or equivalent",
@@ -202,21 +168,24 @@ find_clean <- find_clean %>%
 # import csv from FIND containing country, date, population size, tests, 
 find_raw <- read.csv(ALL_DATA_PATH) %>%clean_names()
  
-# select and rename necessary columns, selecting only those related to testing
+# select and rename necessary columns
 find_testing_t <- find_raw %>%
   # filter for country set
   filter(set == "country") %>%
-  # select time, code, new_tests_corrected, pop_100k, cap_new_tests, all_new_tests, all_cum_cases
-  select(name, time, unit, pop_100k, all_new_tests, all_cum_tests, all_cum_cases, all_new_cases, 
+  # select the smoothed and raw test and case data by day (case data is also from OWID)
+  select(name, time, unit, pop_100k, all_new_tests, all_new_cases, 
          pos, new_tests_orig, new_cases_orig) %>%
   # rename columns as date, code, pop_100k, new_tests_smoothed, cum_tests, cum_cases, new_cases_smoothed
   rename(country = name, date = time, code= unit, new_tests_smoothed = all_new_tests, 
-           cum_tests = all_cum_tests, cum_cases = all_cum_cases, new_cases_smoothed = all_new_cases) %>%
+           new_cases_smoothed = all_new_cases) %>%
   # parse date as date class
   mutate(date = as.Date(date, format = "%Y-%m-%d"),
          pop = pop_100k*100000, # get full pop
-         code = countrycode(country, origin = 'country.name', destination = 'iso3c')) # make country code
+         code = countrycode(country, origin = 'country.name', destination = 'iso3c')) # make country code column for joining
 
+# new_tests_smoothed runs only up until the most recent date of test reporting. Therefore, we need cases to also be truncated
+# at this point to calculate the test positivity rate properly. We replace all case data after the data of tests last being reported
+# as NA (last day of smoothed test data)
 
 # Add a column that has the new cases smoothed with NA entries when new_tests_smoothed is NA
 find_testing_t['new_cases_smoothed_truncated']<-find_testing_t$new_cases_smoothed
@@ -227,7 +196,7 @@ find_testing_t$new_cases_smoothed_truncated[is.na(find_testing_t$new_tests_smoot
 find_testing_t$code[find_testing_t$country == "Kosovo"] <- "XKX"
 find_testing_t$code[find_testing_t$country == "Namibia"] <- "NAM"
 
-# FILL IN MISSING DATES
+# FILL IN MISSING DATES (just in case any are)
 # set start date
 first_date<-min(find_testing_t$date, na.rm = TRUE)
 date <- seq.Date(first_date, LAST_DATA_PULL_DATE, by = "day")
@@ -235,7 +204,7 @@ code <-unique(find_testing_t$code)
 date_country<-expand_grid(date, code)
 find_testing_t<-left_join(date_country,find_testing_t, by = c("code", "date"))
 
-
+# Find 7 day average of cases and tests
 find_testing_t <- find_testing_t %>%
   # group rows by country code
   group_by(code) %>%
@@ -263,7 +232,7 @@ stopifnot('last reported date is more recent than data pull date' = sum(as.Date(
                                                                           as.Date(LAST_DATA_PULL_DATE), na.rm = TRUE)== 0)
 
 
-# Add in recent testing capacity metrics ie average test positivity over past 90 days
+# Compute the testing metrics over the past year
 find_testing_last_year<- find_testing_t %>% filter(date>=(LAST_DATA_PULL_DATE -TIME_WINDOW_YEAR) & 
                                                      date<= LAST_DATA_PULL_DATE)%>%
   group_by(code) %>%
@@ -272,41 +241,35 @@ find_testing_last_year<- find_testing_t %>% filter(date>=(LAST_DATA_PULL_DATE -T
             tests_in_last_year_smoothed = sum(new_tests_smoothed, na.rm = TRUE),
             cases_in_last_year_smoothed = sum(new_cases_smoothed, na.rm = TRUE),
             cases_in_last_year_smoothed_truncated = sum(new_cases_smoothed_truncated, na.rm = TRUE),
-            avg_tpr_find = mean(pos, na.rm = TRUE),
-            tpr_year_raw = cases_in_last_year_raw/tests_in_last_year_raw,
-            tpr_year_smoothed = cases_in_last_year_smoothed/tests_in_last_year_smoothed,
-            tpr_year_smoothed_truncated = cases_in_last_year_smoothed_truncated/tests_in_last_year_smoothed,
+            avg_tpr_find = mean(pos, na.rm = TRUE), # The way that FIND calculates TPR (average over a daily value)
+            # We calculate TPR as a cumulative of cases over tests in the past year 
+            tpr_year_raw = cases_in_last_year_raw/tests_in_last_year_raw, # uses only raw data, overestimates because of delayed test reporting
+            tpr_year_smoothed = cases_in_last_year_smoothed/tests_in_last_year_smoothed, # overestimates because doesn't account for truncation 
+            tpr_year_smoothed_truncated = cases_in_last_year_smoothed_truncated/tests_in_last_year_smoothed, # used for archetype definition
             avg_daily_test_per_1000_last_year_raw = 1000*mean(new_tests_orig/max(pop), na.rm = TRUE),
-            avg_daily_tests_per_1000_last_year_smoothed = 1000*mean(new_tests_smoothed/max(pop), na.rm = TRUE),
-            population_size = max(pop))%>%
+            avg_daily_tests_per_1000_last_year_smoothed = 1000*mean(new_tests_smoothed/max(pop), na.rm = TRUE), # Used for archetype definition
+            population_size = max(pop))%>% # pops should all be the same
   filter(!is.na(code))
 
 
-# Find the countries where they have no tests, missing average TPR
+# Find the countries where they haven't reported tests in the past year
 no_avg_tpr<-find_testing_last_year%>%filter(is.na(avg_tpr_find))
-
-# add unit test around this 
 no_avg_daily_tests<-find_testing_last_year%>%filter(is.na(avg_daily_tests_per_1000_last_year_smoothed))
 
 # Join last year with data on test updating
 find_testing_clean<-left_join(find_test_update_date, find_testing_last_year, by = "code")
+# Number of countries that haven't reported tests in past 6 months but have in past year 
 n_not_rept_6_mos= nrow(find_testing_clean%>%filter(!is.na(avg_tpr_find) & rept_tests_within_last_6_months == FALSE))
+find_not_reported<-find_testing_clean%>%filter(rept_tests_within_last_6_months==FALSE & !is.na(avg_tpr_find))
 
-# unit test on test per 100k per day
+# Add some unit tests
 stopifnot('Countries reporting greater than a test per person per day' = sum(find_testing_clean$avg_daily_tests_per_1000_last_year_smoothed>1000,na.rm = T)== 0)
-
-# unit test for number of countries with test data over 6 months old
 stopifnot('More than 25 countries with data havent reported tests in 6 months' = n_not_rept_6_mos<=25)
-
-# unit test for number of countries that will be removed because avg tpr is NA
 stopifnot('More than 35 countries are missing average daily TPR from FIND' = nrow(no_avg_tpr)<=35)
-
 
 # remove any -Inf
 find_testing_clean$avg_daily_tests_per_1000_last_year_smoothed<- ifelse(find_testing_clean$avg_daily_tests_per_1000_last_year_smoothed < 0, NA, 
                                                                    find_testing_clean$avg_daily_tests_per_1000_last_year_smoothed)
-
-# remove any Inf
 find_testing_clean$tpr_year_smoothed_truncated <- ifelse(find_testing_clean$tpr_year_smoothed_truncated < 0 | find_testing_clean$tpr_year_smoothed_truncated > 1, NA, 
                                                find_testing_clean$tpr_year_smoothed_truncated)
 
@@ -317,14 +280,14 @@ find_clean<-left_join(find_clean, find_testing_clean, by = "code")
 
 #------Dx Testing Capacity Classifier------------------
 
-# create Dx Testing Capacity Classifier variable (WILL EDIT THIS!)
-# Variable indicating highest level of diagnostic throughput (Low testing capacity, Medium testing capacity, High testing capacity)
-# Variable is based on FIND testing dashboard
-# If FIND source missing for that country, take source OWD
+# Create Dx Testing Capacity Classifier variable, labeled as binary of has or has not demonstrated testing capacity
+# based on the truncated TPR and average daily tests per 1000 last year using smoothed cases and test data
+# If countries have not reported in 6 months or are missing tpr in FIND, get labeled as having insufficient data to 
+#assess test capacity
 find_clean <- find_clean %>%
   # create new variable for Dx testing capacity based on:
   # TPR over the past year >=0.15
-  # Unless average daily tests per 1000 >1
+  # Unless average daily tests per 1000 >1 (ACT-A testing target)
   mutate(
     dx_testing_capacity = case_when(
       (is.na(avg_tpr_find)  | rept_tests_within_last_6_months ==FALSE | avg_tpr_find == "NaN") ~ "Insufficient data",
@@ -343,7 +306,7 @@ gisaid_raw <- read.csv(GISAID_DAILY_PATH) %>% # raw refers to all variants, by c
   # standardize names with this janitor function
   clean_names()
 
-# parse collection dates as dates (note this uses the imputed day 15 from metadata processing script)
+# Replaces with collection date and parse as date
 gisaid_raw$collection_date <- as.Date(as.character(gisaid_raw$gisaid_collect_date), format = "%Y-%m-%d")
 
 gisaid_t <- gisaid_raw%>%
@@ -352,7 +315,7 @@ gisaid_t <- gisaid_raw%>%
   filter(collection_date>=FIRST_DATE &
            collection_date<= LAST_DATA_PULL_DATE)
 
-# Make sure that the most recent date is yesterday
+# Make sure that the most recent date is yesterday (only relevant if we are updating)
 #stopifnot("GISAID metadata run isnt up to date" = max(gisaid_t$collection_date) == LAST_DATA_PULL_DATE)
 
 
@@ -361,16 +324,14 @@ gisaid_t <- gisaid_raw%>%
 gisaid_last_year<-gisaid_t%>%filter(collection_date>=(LAST_DATA_PULL_DATE -TIME_WINDOW_YEAR) & 
                                       collection_date<= LAST_DATA_PULL_DATE)%>%
   group_by(country_code)%>%
-  summarise(cases_in_last_year = sum(owid_new_cases),
-            sequences_in_last_year= sum(n_new_sequences),
-            pct_cases_sequenced_in_last_year = round(100*(sequences_in_last_year/cases_in_last_year),2),
-            sequences_per_100k_last_year = round(100000*sequences_in_last_year/max(owid_population),3))
+  summarise(cases_in_last_year = sum(owid_new_cases), # total cases in past year from OWID
+            sequences_in_last_year= sum(n_new_sequences), # total sequences collected and submitted to GISAID in past year 
+            pct_cases_sequenced_in_last_year = round(100*(sequences_in_last_year/cases_in_last_year),2), # pct cases sequenced
+            sequences_per_100k_last_year = round(100000*sequences_in_last_year/max(owid_population),3)) # total sequences per capita
 
 
 # Join both sets of metrics 
 find_clean <- left_join(find_clean, gisaid_last_year, by = c("code" = "country_code"))
-
-
 
 
 
@@ -389,30 +350,14 @@ find_clean<-find_clean%>%filter(name != "West Bank and Gaza")%>%
   filter(code != "UMI") # 237 countries
 n_codes <- length(unique(find_clean$code))
 
-# Unit tests!
+# Unit tests
 stopifnot('Incorrect number of countries'= n_codes<=237 | n_codes>=236)
-# Subset to LMICs
 find_clean_LMICs<-find_clean%>%filter(old_test_archetype != 'High Income*')
-# unit test for number of LMICs total
 stopifnot('Incorrect number of LMICs' = nrow(find_clean_LMICs)==152)
-
-# unit test for number of LMICs with any FIND data
 stopifnot('Incorrect number of LMICs with FIND data' = nrow(find_clean_LMICs%>%filter(!is.na(avg_tpr_find)))==109)
-
 stopifnot('Less than 90 LMICs with avg daily TPR not NA & with tests reported in last 6 months' = 
             nrow(find_clean_LMICs%>%filter(!is.na(avg_tpr_find))%>%filter(rept_tests_within_last_6_months == TRUE)) >= 90)
 
-
-
-
-# Output dataset with the countries that haven't reported tests in 6 months
-find_not_reported<-find_clean%>%filter(rept_tests_within_last_6_months==FALSE & !is.na(avg_tpr_find))
-if (USE_CASE == "local"){
-  write.csv(find_not_reported, '../../data/processed/find_delayed_test_reporting.csv')
-}
-if (USE_CASE == "domino"){
-  write.csv(find_not_reported, '/mnt/data/processed/find_delayed_test_reporting.csv')
-}
 
 
 # ------ World Bank Economy classifier ------------------------------------------------
@@ -444,7 +389,7 @@ find_clean<-find_clean%>%mutate( LMIC_status = case_when(
 
 
 # -------- SARS-CoV-2 sequencing capacity classifier original -----------------------
-# Variable indicating how many submissions from each country appear in GISAID
+# Variable assessing if country has demosntrated sequencing capacity via GISAID sequences
 find_clean <- find_clean %>%
   # create new variable for SARS-CoV-2 Sequencing based on:
   # % of cases sequenced in the past year > 0.5%
@@ -465,21 +410,21 @@ find_clean <- find_clean %>%
 # Archetype_orig indicates the original archetype names (Strengthen, Connect, Leverage, Test but with the new definitions)
 find_clean<-find_clean%>%mutate(
   archetype_orig = case_when(
-    old_archetype == "High Income*" ~ "High Income*",
+    old_archetype == "High Income*" ~ "High Income*", #excludes HICs
     dx_testing_capacity == "Insufficient data" ~ "Insufficient Data",
     dx_testing_capacity == "Has not demonstrated testing capacity" ~ "Test",
     dx_testing_capacity == "Has demonstrated testing capacity" & sars_cov_2_sequencing == "Has demonstrated sequencing capacity" ~ "Strengthen",
     (dx_testing_capacity == "Has demonstrated testing capacity" & sars_cov_2_sequencing == "Has not demonstrated sequencing capacity" &
     (ngs_capacity == 2 | ngs_capacity == 1)) ~ "Leverage",
     dx_testing_capacity == "Has demonstrated testing capacity" & sars_cov_2_sequencing == "Has not demonstrated sequencing capacity" & ngs_capacity == 0 ~ "Connect"),
-  archetype_orig_w_HICs = case_when(
+  archetype_orig_w_HICs = case_when( # classifies HICs
     dx_testing_capacity == "Insufficient data" ~ "Insufficient Data",
     dx_testing_capacity == "Has not demonstrated testing capacity" ~ "Test",
     dx_testing_capacity == "Has demonstrated testing capacity" & sars_cov_2_sequencing == "Has demonstrated sequencing capacity" ~ "Strengthen",
     (dx_testing_capacity == "Has demonstrated testing capacity" & sars_cov_2_sequencing == "Has not demonstrated sequencing capacity" &
        (ngs_capacity == 2 | ngs_capacity == 1)) ~ "Leverage",
     dx_testing_capacity == "Has demonstrated testing capacity" & sars_cov_2_sequencing == "Has not demonstrated sequencing capacity" & ngs_capacity == 0 ~ "Connect"),
-  archetype_new = case_when(
+  archetype_new = case_when( # Lumps together Leverage & Connect if we don't want to use ngs facility access data
     old_archetype == "High Income*" ~ "High Income*",
     dx_testing_capacity == "Insufficient data" ~ "Insufficient Data",
     dx_testing_capacity == "Has not demonstrated testing capacity" ~ "Test",
@@ -487,7 +432,7 @@ find_clean<-find_clean%>%mutate(
     dx_testing_capacity == "Has demonstrated testing capacity" & sars_cov_2_sequencing == "Has not demonstrated sequencing capacity" ~ "Sequence")
 )
 
-# Edit the date variable so that it is in a universal format
+# Edit the date variable so that it is in a universally readable format
 test<-find_clean%>%separate(date_tests_last_reported,
                             into = c("year", "month", "day"),
                             sep = "-")
@@ -497,7 +442,7 @@ test$date_tests_last_reported[test$date_tests_last_reported == "NA NA, NA"]<-"No
 find_clean$date_tests_last_reported<-test$date_tests_last_reported
 
 
-
+# Internal troubleshooting, generates dataset that groups by archetype for easy validation
 find_clean_LMICs<-find_clean%>%filter(!old_archetype == "High Income*")
 n_insufficient_data<- sum(find_clean_LMICs$archetype_orig == "Insufficient Data")
 n_not_tests<-sum(find_clean_LMICs$dx_testing_capacity == "Reliable testing capacity")
@@ -526,8 +471,10 @@ if (USE_CASE == 'domino') {
 
 n_given_archetypes = n_Test + n_Strengthen + n_Sequence
 
+# unit test
 stopifnot("Number given archetypes other than insufficient data is less than 90 (should be around 95)"= n_given_archetypes>=90)
 
+# Select necessary variables only
 find_map<- find_clean %>%select(name, code, population_size, sequencing_capacity, tpr_year_smoothed_truncated, avg_daily_tests_per_1000_last_year_smoothed,
                                 dx_testing_capacity, date_tests_last_reported, days_since_tests_reported, pct_cases_sequenced_in_last_year,
                                 sequences_per_100k_last_year, sars_cov_2_sequencing, ngs_capacity, facility_access,
@@ -642,6 +589,7 @@ clean_dataset<-find_map%>%select(name, `Date tests last reported`, `Test positiv
 
 
 if (USE_CASE == 'local'){
+  write.csv(find_not_reported, '../../data/NGS_region_data/February_2022/find_delayed_test_reporting.csv')
   write.csv(full_dataset, "../../data/NGS_region_data/February_2022/full_dataset.csv", na = "NaN", row.names = FALSE)
   write.csv(find_clean_flourish, "../../data/NGS_region_data/February_2022/find_map.csv", na = "NaN", row.names = FALSE)
   write.csv(clean_dataset, "../../data/NGS_Region_data/February_2022/clean_dataset.csv", na = "NaN", row.names = FALSE)
@@ -649,6 +597,7 @@ if (USE_CASE == 'local'){
 }
 
 if (USE_CASE == 'domino'){
+  write.csv(find_not_reported, '/mnt/data/processed/find_delayed_test_reporting.csv')
   write.csv(full_dataset, "/mnt/data/processed/full_dataset.csv", na = "NaN", row.names = FALSE)
   write.csv(find_clean_flourish, "/mnt/data/processed/find_map.csv", na = "NaN", row.names = FALSE)
   write.csv(clean_dataset, "/mnt/data/processed/clean_dataset.csv", na = "NaN", row.names = FALSE)
@@ -656,22 +605,7 @@ if (USE_CASE == 'domino'){
 }
 
 
-# Stats for Rick
-n_countries_no_sequencing<-sum((find_map$sequences_per_100k_last_year == 0) | is.na(find_map$sequences_per_100k_last_year))
-find_map$pct_cases_sequenced_in_last_year[is.na(find_map$pct_cases_sequenced_in_last_year)]<-0
-find_map_rm<-find_map%>%filter(!is.na(population_size))%>%filter(!population_size == -Inf)%>%filter(!population_size == Inf)%>%
-  filter(!pct_cases_sequenced_in_last_year == Inf)
-summary_df<-find_map_rm%>%summarise(
-  mean_pct_cases = mean(pct_cases_sequenced_in_last_year*population_size)/sum(population_size))
 
-summary<-find_clean%>%filter(!population_size == Inf)%>%filter(!population_size == -Inf)%>%group_by(LMIC_status)%>%
-  summarise(
-    mean_pct_cases_sequenced_in_last_year = sum(sequences_in_last_year,na.rm = T)/sum(cases_in_last_year, na.rm = T),
-    population = sum(population_size, na.rm = T),
-    sequences = sum(sequences_in_last_year, na.rm = T))%>%mutate(
-      pct_pop = 100*population/sum(population),
-      pct_seq = 100*sequences/sum(sequences)
-    )
 
 
 
