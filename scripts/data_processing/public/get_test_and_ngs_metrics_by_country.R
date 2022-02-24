@@ -58,7 +58,7 @@ OLD_FIND_MAP_PATH<-url("https://raw.githubusercontent.com/PandemicPreventionInst
 
 if (USE_CASE == 'domino'){
 GISAID_DAILY_PATH<-'/mnt/data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
-SHAPEFILES_FOR_FLOURISH_PATH <- '/mnt/data/static/geometric_country_code_name_master_file.txt' # shapefiles for mapping
+SHAPEFILES_FOR_FLOURISH_PATH <- '/mnt/data/static/geometric_polygons_country.txt' # shapefiles for mapping
 WHO_REGIONS_PATH<-'/mnt/data/static/who_regions.csv' # WHO country list
 ECONOMY_PATH<-'/mnt/data/static/CLASS.xls'
 FIND_TESTING_SEQ_RAW_PATH<- '/mnt/data/static/2021_04_04_FIND_capacity_mapping_data_sources.xlsx' # NGS capacity data
