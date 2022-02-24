@@ -67,7 +67,7 @@ FIND_TESTING_SEQ_RAW_PATH<- '/mnt/data/static/2021_04_04_FIND_capacity_mapping_d
 if (USE_CASE == 'local'){
 
 GISAID_DAILY_PATH<-'../../data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
-SHAPEFILES_FOR_FLOURISH_PATH <- '../../data/Geospatial_Data/geometric_country_code_name_master_file.txt' # shapefiles for mapping
+SHAPEFILES_FOR_FLOURISH_PATH <- '../../data/Geospatial_Data/geometric_polygons_country.txt' # shapefiles for mapping
 WHO_REGIONS_PATH<-'../../data/NGS_Data_Tables/February_2022/who_regions.csv' # WHO country list
 ECONOMY_PATH<-'../../data/NGS_Data_Tables/February_2022/CLASS.xls' # World Bank Economy data
 FIND_TESTING_SEQ_RAW_PATH<- '../../data/NGS_Data_Tables/February_2022/2021_04_04_FIND_capacity_mapping_data_sources.xlsx' # NGS capacity data
@@ -133,8 +133,8 @@ ngs_clean$ngs_capacity <- case_when(
 # Make a binary facility access variable
 ngs_clean<-ngs_clean%>%mutate(
   facility_access = case_when(
-    ngs_capacity ==0 ~ "No NGS facilities",
-    (ngs_capacity ==1 | ngs_capacity == 2) ~ "1 or more NGS facilities"
+    ngs_capacity ==0 ~ "Does not have access to sequencing facilities",
+    (ngs_capacity ==1 | ngs_capacity == 2) ~ "Has access to sequencing facilities"
   
 ))
 
@@ -460,12 +460,14 @@ find_clean_LMICs%>%filter(archetype_orig == "Leverage" | archetype_orig == "Conn
   write.csv('../../data/processed/countries_in_Lev_or_Connect.csv')
 }
 
+
 if (USE_CASE == 'domino') {
   find_clean_LMICs%>%filter(archetype_orig == "Insufficient Data")%>%write.csv('/mnt/data/processed/countries_in_insufficient_data.csv')
   find_clean_LMICs%>%filter(archetype_orig == "Test")%>%write.csv('/mnt/data/processed/countries_in_test.csv')
   find_clean_LMICs%>%filter(archetype_orig == "Strengthen")%>%write.csv('/mnt/data/processed/countries_in_strengthen.csv')
   find_clean_LMICs%>%filter(archetype_orig == "Leverage" | archetype_orig == "Connect")%>%
     write.csv('/mnt/data/processed/countries_in_Lev_or_Connect.csv')
+  find_clean%>%filter(old_archetype != archetype_orig)%>%write.csv('/mnt/data/processed/countries_w_new_archetype.csv')
 }
 
 
@@ -480,6 +482,10 @@ find_map<- find_clean %>%select(name, code, population_size, sequencing_capacity
                                 sequences_per_100k_last_year, sars_cov_2_sequencing, ngs_capacity, facility_access,
                                 old_archetype, archetype_orig,
                                 archetype_orig_w_HICs, archetype_new, world_bank_economies)
+# Find the countries with new archetypes
+find_changed_archetypes <-find_map%>%filter(old_archetype != archetype_orig_w_HICs)%>%
+  select(!archetype_orig, !archetype_new)
+  
 
 
 # Make pretty with rounded numbers, and add in the potential new names
@@ -511,9 +517,11 @@ find_map<-find_map%>% mutate(
 
 # Replace NAs with language
 find_map$TPR_pct[find_map$TPR_pct == "NA %"]<- 'Insufficient Data'
+find_map$TPR_pct[find_map$TPR_pct == "0 %"]<- 'No cases reported'
 find_map$daily_tests_per_1000[find_map$daily_tests_per_1000 == "NA per 1000 persons"]<- 'Insufficient Data'
 find_map$pct_seq[find_map$pct_seq == "NA %" | find_map$pct_seq == "NaN %"]<-'Insufficient Data'
 find_map$seq_per_100k[find_map$seq_per_100k == "NA per 100k persons"]<- 'Insufficient Data'
+find_map$facility_access[is.na(find_map$facility_access)]<-"No data on sequencing facilities"
 
 # Make column headers look nice
 find_map<-find_map%>%rename(
@@ -544,16 +552,28 @@ find_map<-find_map%>%mutate(
 
 # Join shapefiles! 
 shapefile <- read_delim(SHAPEFILES_FOR_FLOURISH_PATH, delim = "\t") %>%
-  rename(code = `3-letter ISO code`,
-         name = Name) %>%
-  select(geometry, code)
+  select(geometry, code, country)
 # Need to deduplicate?? 
 
 duplicates<-shapefile[duplicated(shapefile$code),] 
 
 
-find_clean_flourish<-left_join(shapefile,find_map, by = "code")
-find_clean_flourish<-find_clean_flourish%>%filter(!is.na("code"))
+find_map_small<-find_map%>%select(-name) # remove name and replace with country from shapefile
+find_clean_flourish<-left_join(shapefile,find_map_small, by = "code")
+
+
+find_clean_flourish$`Test positivity rate (%) in past year`[is.na(find_clean_flourish$`Test positivity rate (%) in past year`)]<- 'Insufficient Data'
+find_clean_flourish$`Average daily tests in past year`[is.na(find_clean_flourish$`Average daily tests in past year`)]<- 'Insufficient Data'
+find_clean_flourish$`% of cases sequenced in past year`[is.na(find_clean_flourish$`% of cases sequenced in past year`)]<-'Insufficient Data'
+find_clean_flourish$`Number of sequences in past year`[is.na(find_clean_flourish$`Number of sequences in past year`)]<- 'Insufficient Data'
+find_clean_flourish$facility_access[is.na(find_clean_flourish$facility_access)]<-"Insufficient Data"
+find_clean_flourish$sequencing_capacity[is.na(find_clean_flourish$facility_access)]<-"Insufficient Data"
+find_clean_flourish$dx_testing_capacity[is.na(find_clean_flourish$dx_testing_capacity)]<-"Insufficient Data"
+find_clean_flourish$sars_cov_2_sequencing[is.na(find_clean_flourish$sars_cov_2_sequencing)]<-"Insufficient Data"
+find_clean_flourish$archetype_orig_w_HICs[is.na(find_clean_flourish$archetype_orig_w_HICs)]<-"Insufficient Data"
+find_clean_flourish$`Archetype*`[is.na(find_clean_flourish$`Archetype*`)]<-"Insufficient Data - Missing key diagnostic or case metrics"
+
+
 
 find_insufficient_test_but_have_seq<-left_join(shapefile, find_insuff_test_but_have_seq, by = "code")
 
@@ -589,14 +609,16 @@ clean_dataset<-find_map%>%select(name, `Date tests last reported`, `Test positiv
 
 
 if (USE_CASE == 'local'){
-  write.csv(find_not_reported, '../../data/NGS_region_data/February_2022/find_delayed_test_reporting.csv')
-  write.csv(full_dataset, "../../data/NGS_region_data/February_2022/full_dataset.csv", na = "NaN", row.names = FALSE)
-  write.csv(find_clean_flourish, "../../data/NGS_region_data/February_2022/find_map.csv", na = "NaN", row.names = FALSE)
-  write.csv(clean_dataset, "../../data/NGS_Region_data/February_2022/clean_dataset.csv", na = "NaN", row.names = FALSE)
-  write.csv(find_insuff_test_but_have_seq, "../../data/NGS_region_data/February_2022/test_but_suff_seq.csv", na = "NaN", row.names = FALSE )
+  write.csv(find_changed_archetypes, '../../data/NGS_Data_Tables/February_2022/find_changed_archetypes.csv')
+  write.csv(find_not_reported, '../../data/NGS_Data_Tables/February_2022/find_delayed_test_reporting.csv')
+  write.csv(full_dataset, "../../data/NGS_Data_Tables/February_2022/full_dataset.csv", na = "NaN", row.names = FALSE)
+  write.csv(find_clean_flourish, "../../data/NGS_Data_Tables/February_2022/find_map.csv", na = "NaN", row.names = FALSE)
+  write.csv(clean_dataset, "../../data/NGS_Data_Tables/February_2022/clean_dataset.csv", na = "NaN", row.names = FALSE)
+  write.csv(find_insuff_test_but_have_seq, "../../data/NGS_Data_Tables/February_2022/test_but_suff_seq.csv", na = "NaN", row.names = FALSE )
 }
 
 if (USE_CASE == 'domino'){
+  write.csv(find_changed_archetypes, '/mnt/data/processed/find_changed_archetypes.csv')
   write.csv(find_not_reported, '/mnt/data/processed/find_delayed_test_reporting.csv')
   write.csv(full_dataset, "/mnt/data/processed/full_dataset.csv", na = "NaN", row.names = FALSE)
   write.csv(find_clean_flourish, "/mnt/data/processed/find_map.csv", na = "NaN", row.names = FALSE)
