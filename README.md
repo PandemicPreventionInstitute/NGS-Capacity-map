@@ -9,8 +9,8 @@ Since May 2021, FIND & PPI have maintained the NGS Capacity map and continus to 
 
 ### **Methods**
 To get started with the NGS Capacity project, review the NGS methodologies. A deep-dive of the NGS Capacity map methodologies can be found under the ```methods``` repository. A more concise version of the methodologies can be found at the following links:
-<br> [Overview of NGS Capacity concepts, data, methods, and metrics](https://public.flourish.studio/visualisation/8647680/)
-<br> [Classification Scheme](https://public.flourish.studio/visualisation/8604436/)
+- [Overview of NGS Capacity concepts, data, methods, and metrics](https://public.flourish.studio/visualisation/8647680/)
+- [Classification Scheme](https://public.flourish.studio/visualisation/8604436/)
 
 #### Data
 The NGS Capacity project integrated COVID-19 case data from [FIND github](https://github.com/dsbbfinddx/FINDCov19TrackerData/blob/master/processed/data_all.csv) and [Our World in Data (OWID) github](https://github.com/owid/covid-19-data/blob/master/public/data/owid-covid-data.csv). Hosted in the ```data``` repo are four nested repos. The ```FIND_partner_support_maps``` contain data describing the footprint of projects funded through the [Access to COVID-19 Tools Accelerator Diagnostics Pillar (ACT-A Dx) genomic surveillance working group.](https://www.finddx.org/sequencing/mapping-act-a-sequencing-activities/) The ```Geospatial_Data``` repo consists of various geospatial data, such as geometric polygons, latitude/longitude, and iso3 codes for US states and international countries. The ```NGS_EDA``` contains data necessary for the exploratory data analysis phase. 
