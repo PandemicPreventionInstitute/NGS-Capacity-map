@@ -13,7 +13,9 @@ To get started with the NGS Capacity project, review the NGS methodologies. A de
 - [Classification Scheme](https://public.flourish.studio/visualisation/8604436/)
 
 #### Data
-The NGS Capacity project integrated COVID-19 case data from [FIND github](https://github.com/dsbbfinddx/FINDCov19TrackerData/blob/master/processed/data_all.csv) and [Our World in Data (OWID) github](https://github.com/owid/covid-19-data/blob/master/public/data/owid-covid-data.csv). Hosted in the ```data``` repo are four nested repos. The ```FIND_partner_support_maps``` contain data describing the footprint of projects funded by partners of the [Access to COVID-19 Tools Accelerator Diagnostics Pillar (ACT-A Dx) genomic surveillance working group.](https://www.finddx.org/sequencing/mapping-act-a-sequencing-activities/) The ```Geospatial_Data``` repo consists of various geospatial data, such as geometric polygons, latitude/longitude, and iso3 codes for US states and international countries. The ```NGS_EDA``` contains data necessary for the exploratory data analysis phase. 
+The NGS Capacity project integrated COVID-19 case data from [FIND github](https://github.com/dsbbfinddx/FINDCov19TrackerData/blob/master/processed/data_all.csv) and [Our World in Data (OWID) github](https://github.com/owid/covid-19-data/blob/master/public/data/owid-covid-data.csv), SARS-CoV-2 RNA genomic sequencing data from [GISAID](gisaid.org), and sequencing labs data from WHO. 
+
+Hosted in the ```data``` repo are four nested repos. The ```FIND_partner_support_maps``` contain data describing the footprint of projects funded by partners of the [Access to COVID-19 Tools Accelerator Diagnostics Pillar (ACT-A Dx) genomic surveillance working group.](https://www.finddx.org/sequencing/mapping-act-a-sequencing-activities/) The ```Geospatial_Data``` repo consists of various geospatial data, such as geometric polygons, latitude/longitude, and iso3 codes per country, world-wide. The ```NGS_EDA``` contains data necessary for the exploratory data analysis phase. 
 
 In the```NGS_Data_Tables``` the ```public``` repo compromises of NGS Capacity data, both ```full_dataset``` and a ```clean_dataset```, with associated codebooks. Additionally, ```additional_sources``` repo includes integrated static sequencing facility access data from WHO, World Bank socio-economic data, and WHO regional data. 
 
@@ -26,6 +28,7 @@ Our Github repository also hosts further information regarding the NGS explorato
 If you are intersted in learning more, please follow the associated links.
 - FIND & PPI NGS Capacity map project, please visit the [PPI & FIND webpage](https://www.finddx.org/sequencing/ngs-capacity-mapping/)
 - Next-Generation Sequencing, visit the [FIND and PHG Foundation landscape](https://www.finddx.org/wp-content/uploads/2021/05/2021_04_21_NGS-for-sars-cov-2-compr.pdf)
+- GISAID global genomi sequencing repository, please visit the [GISAID website](gisaid.org)
 - The Pandemic Prevention Institute, visit the [PPI website](https://www.rockefellerfoundation.org/pandemicpreventioninstitute/)
 - FIND, visit the [FIND website](https://www.finddx.org/about/)
 
