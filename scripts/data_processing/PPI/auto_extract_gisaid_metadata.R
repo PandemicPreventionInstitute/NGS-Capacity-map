@@ -71,7 +71,13 @@ clade<-first_row[6]
 pango_lineage<-first_row[7]
 first_seq<-data.frame(accession_id, country, location, submission_date, collection_date, clade, pango_lineage)
 #rename colnames
+if (ncol(gisaid_metadata) == 7){
 colnames(gisaid_metadata)<- c("accession_id", "country", "location", "submission_date", "collection_date", "clade", "pango_lineage")
+}
+if (ncol(gisaid_metadata) == 8){
+    colnames(gisaid_metadata)<- c("accession_id", "country", "location", "submission_date", "collection_date", "clade", "pango_lineage", "variant")
+    gisaid_metadata<-gisaid_metadata%>%select(!variant)
+}
 gisaid_metadata<-rbind(first_seq, gisaid_metadata)
 
 #6. Write both files to csvs
