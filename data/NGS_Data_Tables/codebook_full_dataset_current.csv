@@ -1,0 +1,21 @@
+﻿"metric	",data_type,description
+name,character,name of country/territory
+code,character,iso3 code
+population_size,numeric,population size
+date_tests_last_reported,numeric,dates testing data were last reported
+rept_tests_within_last_6_months,character,binary of if country reported testing data in last 6 months (True/False)
+days_since_tests_reported,numeric,number of days since testing data were last reported
+cases_in_last_year_smoothed_truncated,numeric,"number of cases reported in the last year, smoothed & truncated on the last day testing data were reported"
+tests_in_last_year_smoothed,numeric,"number of tests reported in the last year, smoothed"
+tpr_year_smoothed_truncated,numeric,"test positivity rate in the last year, smoothed and truncted on the last day testing data were reported"
+avg_daily_tests_per_1000_last_year_smoothed,numeric,"average number of daily tests reported, per 1000 persons in the last year, smoothed"
+cases_in_last_year,numeric,number of crude cases reported in the last year
+sequences_in_last_year,numeric,number of crude sequences reported in the last year
+pct_cases_sequenced_in_last_year,numeric,percent of cases sequence in the last year
+sequences_per_100k_last_year,numeric,"number of sequences per 100,000 persons reported in the last year"
+dx_testing_capacity,character,binary of diagnostic & testing capacity (has demonstrated capacity/has not demonstrated capacity)
+ngs_capacity,character,"numeric representative category of ngs facility access (0 facilities, 1-3 faciliites, 4+ faciliites)"
+sequencing_capacity,character,"category of ngs facility access (0 facilities, 1-3 faciliites, 4+ faciliites)"
+sars_cov_2_sequencing,character,binary of sequencing capacity (has demonstrated capacity/has not demonstrated capacity)
+world_bank_economies,character,World Bank socio-economic status by country
+archetype,character,Surveillance Capacity assigned archetype
