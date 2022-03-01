@@ -80,11 +80,8 @@ if (USE_CASE == 'local'){
 
 GISAID_DAILY_PATH<-'../../data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
 SHAPEFILES_FOR_FLOURISH_PATH <- '../../data/Geospatial_Data/geometric_polygons_country.txt' # shapefiles for mapping
-WHO_REGIONS_PATH<-'../../data/NGS_Data_Tables/February_2022/who_regions.csv' # WHO country list
 WHO_REGIONS_PATH<-'../../data/additional_sources/WHO_region_data.csv' # WHO country list
-ECONOMY_PATH<-'../../data/NGS_Data_Tables/February_2022/CLASS.xls' # World Bank Economy data
 ECONOMY_PATH<-'../../data/additional_sources/WB_class_data.xls'
-FIND_TESTING_SEQ_RAW_PATH<- '../../data/NGS_Data_Tables/2021_04_04_FIND_capacity_mapping_data_sources.xlsx'
 FIND_TESTING_SEQ_RAW_PATH<- '../../data/additional_sources/Sequencing_Labs_Data.xlsx' # NGS capacity data
 }
 
@@ -641,15 +638,10 @@ clean_dataset<-find_map%>%select(name, `Date tests last reported`, `Test positiv
 
 
 if (USE_CASE == 'local'){
-  write.csv(find_not_reported, paste0('../../data/NGS_Data_Tables/February_2022/find_delayed_test_reporting.csv'), row.names = F)
   write.csv(find_not_reported, paste0('../../data/NGS_Data_Tables/', current_folder, '/find_delayed_test_reporting.csv'), row.names = F)
-  write.csv(full_dataset, "../../data/NGS_Data_Tables/February_2022/full_dataset.csv", na = "NaN", row.names = FALSE)
   write.csv(full_dataset, paste0('../../data/NGS_Data_Tables/', current_folder, '/full_dataset.csv'), na = "NaN", row.names = FALSE)
-  write.csv(find_clean_flourish, "../../data/NGS_Data_Tables/February_2022/find_map.csv", na = "NaN", row.names = FALSE)
   write.csv(find_clean_flourish, paste0('../../data/NGS_Data_Tables/', current_folder, '/find_map.csv'), na = "NaN", row.names = FALSE)
-  write.csv(clean_dataset, "../../data/NGS_Data_Tables/February_2022/clean_dataset.csv", na = "NaN", row.names = FALSE)
   write.csv(clean_dataset, paste0('../../data/NGS_Data_Tables/', current_folder, '/clean_dataset.csv'), na = "NaN", row.names = FALSE)
-  write.csv(find_insufficient_test_but_have_seq, "../../data/NGS_Data_Tables/February_2022/test_but_suff_seq.csv", na = "NaN", row.names = FALSE )
   write.csv(find_insufficient_test_but_have_seq, paste0('../../data/NGS_Data_Tables/', current_folder,'/test_but_suff_seq.csv'), na = "NaN", row.names = FALSE )
 }
 
