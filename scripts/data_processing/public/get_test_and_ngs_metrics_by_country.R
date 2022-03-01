@@ -51,17 +51,29 @@ library(scales) # comma formatting
 today <- substr(lubridate::now('EST'), 1, 13)
 today <- chartr(old = ' ', new = '-', today)
 today_date<-lubridate::today('EST')
+current_month<-month.name[month(today_date)]
+current_year<-year(today_date)
+current_folder<-str_c(current_month, current_year, sep = '_')
+last_update_date<-today_date - months(1)
+prev_month<-month.name[month(last_update_date)]
+prev_year<-year(last_update_date)
+# currently, set prev month and year to Nov_2021
+prev_month <- "November"
+prev_year <- "2021"
+prev_folder<-str_c(prev_month, prev_year, sep = '_')
+
 
 ## Set filepaths
 ALL_DATA_PATH<- url("https://raw.githubusercontent.com/dsbbfinddx/FINDCov19TrackerData/master/processed/data_all.csv") # FIND data
+#OLD_FIND_MAP_PATH<-url(paste0("https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/NGS_Data_Tables/", prev_folder, "/PPI/find_map_11.30.2021.csv")) # Prev month Capacity Map
 OLD_FIND_MAP_PATH<-url("https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/NGS_Data_Tables/November_2021/PPI/find_map_11.30.2021.csv") # November 2021 Capacity Map
 
 if (USE_CASE == 'domino'){
 GISAID_DAILY_PATH<-'/mnt/data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
-SHAPEFILES_FOR_FLOURISH_PATH <- '/mnt/data/static/geometric_polygons_country.txt' # shapefiles for mapping
-WHO_REGIONS_PATH<-'/mnt/data/static/who_regions.csv' # WHO country list
-ECONOMY_PATH<-'/mnt/data/static/CLASS.xls'
-FIND_TESTING_SEQ_RAW_PATH<- '/mnt/data/static/2021_04_04_FIND_capacity_mapping_data_sources.xlsx' # NGS capacity data
+SHAPEFILES_FOR_FLOURISH_PATH <- '/mnt/data/Geospatial_Data/geometric_polygons_country.txt' # shapefiles for mapping
+WHO_REGIONS_PATH<-'/mnt/data/additional_sources/WHO_region_data.csv' # WHO country list
+ECONOMY_PATH<-'/mnt/data/additional_sources/WB_class_data.xls'
+FIND_TESTING_SEQ_RAW_PATH<- '/mnt/data/additional_sources/Sequencing_Labs_Data.xlsx' # NGS capacity data
 }
 
 if (USE_CASE == 'local'){
@@ -69,8 +81,11 @@ if (USE_CASE == 'local'){
 GISAID_DAILY_PATH<-'../../data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
 SHAPEFILES_FOR_FLOURISH_PATH <- '../../data/Geospatial_Data/geometric_polygons_country.txt' # shapefiles for mapping
 WHO_REGIONS_PATH<-'../../data/NGS_Data_Tables/February_2022/who_regions.csv' # WHO country list
+WHO_REGIONS_PATH<-'../../data/additional_sources/WHO_region_data.csv' # WHO country list
 ECONOMY_PATH<-'../../data/NGS_Data_Tables/February_2022/CLASS.xls' # World Bank Economy data
-FIND_TESTING_SEQ_RAW_PATH<- '../../data/NGS_Data_Tables/February_2022/2021_04_04_FIND_capacity_mapping_data_sources.xlsx' # NGS capacity data
+ECONOMY_PATH<-'../../data/additional_sources/WB_class_data.xls'
+FIND_TESTING_SEQ_RAW_PATH<- '../../data/NGS_Data_Tables/2021_04_04_FIND_capacity_mapping_data_sources.xlsx'
+FIND_TESTING_SEQ_RAW_PATH<- '../../data/additional_sources/Sequencing_Labs_Data.xlsx' # NGS capacity data
 }
 
 LAST_DATA_PULL_DATE<-as.Date(substr(lubridate::now('EST'), 1, 10))-days(1) # Make this based off of yesterday!
@@ -336,10 +351,19 @@ find_clean <- left_join(find_clean, gisaid_last_year, by = c("code" = "country_c
 
 
 #------- Add in old archetype ------------------------------------------------------
+if( prev_month == "November" & prev_year == "2021"){
 old_find<-read.csv(OLD_FIND_MAP_PATH)%>%select(code,country,dx_testing_capacity_clean, sars_cov_2_sequencing, archetype)%>%
-  rename(old_test_archetype = dx_testing_capacity_clean,
-         old_archetype = archetype,
-         old_sequencing_archetype = sars_cov_2_sequencing)%>%filter(!is.na(code))%>%filter(country != "West Bank and Gaza") # 237 coountries
+  rename(old_test_archetype = dx_testing_capacity_clean, # dx_testing_capacity
+         old_archetype = archetype, # archetype_orig_w_HICs
+         old_sequencing_archetype = sars_cov_2_sequencing)%>%filter(!is.na(code))%>%filter(country != "West Bank and Gaza") # 237 countries
+}
+
+elseif{ # for all other months except for the first new iteration
+  old_find<-read.csv(OLD_FIND_MAP_PATH)%>%select(code,country,dx_testing_capacity, sars_cov_2_sequencing, archetype_orig_w_HICs)%>%
+    rename(old_test_archetype = dx_testing_capacity, 
+           old_archetype = archetype_orig_w_HICs,
+           old_sequencing_archetype = sars_cov_2_sequencing)
+  }
 old_codes<-unique(old_find$code) # 237 of them
 
 # filter to only codes in old data
@@ -452,25 +476,6 @@ n_Leverage <- sum(find_clean_LMICs$archetype_orig == "Leverage")
 n_Connect <- sum(find_clean_LMICs$archetype_orig == "Connect")
 n_Sequence<- sum(find_clean_LMICs$archetype_new == "Sequence")
 
-if (USE_CASE == 'local') {
-find_clean_LMICs%>%filter(archetype_orig == "Insufficient data")%>%write.csv('../../data/processed/countries_in_insufficient_data.csv')
-find_clean_LMICs%>%filter(archetype_orig == "Test")%>%write.csv('../../data/processed/countries_in_test.csv')
-find_clean_LMICs%>%filter(archetype_orig == "Strengthen")%>%write.csv('../../data/processed/countries_in_strengthen.csv')
-find_clean_LMICs%>%filter(archetype_orig == "Leverage" | archetype_orig == "Connect")%>%
-  write.csv('../../data/processed/countries_in_Lev_or_Connect.csv')
-}
-
-
-if (USE_CASE == 'domino') {
-  find_clean_LMICs%>%filter(archetype_orig == "Insufficient data")%>%write.csv('/mnt/data/processed/countries_in_insufficient_data.csv')
-  find_clean_LMICs%>%filter(archetype_orig == "Test")%>%write.csv('/mnt/data/processed/countries_in_test.csv')
-  find_clean_LMICs%>%filter(archetype_orig == "Strengthen")%>%write.csv('/mnt/data/processed/countries_in_strengthen.csv')
-  find_clean_LMICs%>%filter(archetype_orig == "Leverage" | archetype_orig == "Connect")%>%
-    write.csv('/mnt/data/processed/countries_in_Lev_or_Connect.csv')
-  find_clean%>%filter(old_archetype != archetype_orig)%>%write.csv('/mnt/data/processed/countries_w_new_archetype.csv')
-}
-
-
 n_given_archetypes = n_Test + n_Strengthen + n_Sequence
 
 # unit test
@@ -485,6 +490,29 @@ find_map<- find_clean %>%select(name, code, population_size, sequencing_capacity
 # Find the countries with new archetypes
 find_changed_archetypes <-find_map%>%filter(old_archetype != archetype_orig_w_HICs)%>%
   select(!archetype_orig, !archetype_new)
+
+# Make internal validation data sets 
+if (USE_CASE == 'local') {
+find_clean_LMICs%>%filter(archetype_orig == "Insufficient data")%>%write.csv('../../data/processed/countries_in_insufficient_data.csv')
+find_clean_LMICs%>%filter(archetype_orig == "Test")%>%write.csv('../../data/processed/countries_in_test.csv')
+find_clean_LMICs%>%filter(archetype_orig == "Strengthen")%>%write.csv('../../data/processed/countries_in_strengthen.csv')
+find_clean_LMICs%>%filter(archetype_orig == "Leverage" | archetype_orig == "Connect")%>%
+  write.csv('../../data/processed/countries_in_Lev_or_Connect.csv')
+write.csv(find_changed_archetypes, paste0('../../data/processed/find_changed_archetypes', prev_month, '_to_', current_month, '.csv'))
+}
+
+
+if (USE_CASE == 'domino') {
+  find_clean_LMICs%>%filter(archetype_orig == "Insufficient data")%>%write.csv('/mnt/data/processed/countries_in_insufficient_data.csv')
+  find_clean_LMICs%>%filter(archetype_orig == "Test")%>%write.csv('/mnt/data/processed/countries_in_test.csv')
+  find_clean_LMICs%>%filter(archetype_orig == "Strengthen")%>%write.csv('/mnt/data/processed/countries_in_strengthen.csv')
+  find_clean_LMICs%>%filter(archetype_orig == "Leverage" | archetype_orig == "Connect")%>%
+    write.csv('/mnt/data/processed/countries_in_Lev_or_Connect.csv')
+  write.csv(find_changed_archetypes, paste0('/mnt/data/processed/find_changed_archetypes', prev_month, '_to_', current_month, '.csv'))
+}
+
+
+
   
 
 
@@ -570,12 +598,16 @@ find_clean_flourish$facility_access[is.na(find_clean_flourish$facility_access)]<
 find_clean_flourish$sequencing_capacity[is.na(find_clean_flourish$facility_access)]<-"Insufficient data"
 find_clean_flourish$dx_testing_capacity[is.na(find_clean_flourish$dx_testing_capacity)]<-"Insufficient data"
 find_clean_flourish$sars_cov_2_sequencing[is.na(find_clean_flourish$sars_cov_2_sequencing)]<-"Insufficient data"
+find_clean_flourish$sequencing_capacity[is.na(find_clean_flourish$sequencing_capacity)]<-"Insufficient data"
 find_clean_flourish$archetype_orig_w_HICs[is.na(find_clean_flourish$archetype_orig_w_HICs)]<-"Insufficient data"
 find_clean_flourish$`Archetype*`[is.na(find_clean_flourish$`Archetype*`)]<-"Insufficient data - Missing key diagnostic or case metrics"
 
 
+find_clean_flourish<-find_clean_flourish%>%mutate(
+  ngs_capacity_binary = ifelse(
+    (ngs_capacity == 0 | is.na(ngs_capacity)), "No", "Yes"))
 
-find_insufficient_test_but_have_seq<-left_join(shapefile, find_insuff_test_but_have_seq, by = "code")
+find_insufficient_test_but_have_seq<-left_join(find_insuff_test_but_have_seq, shapefile, by = "code")
 
 # Remove the extraneous columns from the full_dataset
 full_dataset<-find_clean%>%select(name, code, population_size, date_tests_last_reported,
@@ -609,16 +641,20 @@ clean_dataset<-find_map%>%select(name, `Date tests last reported`, `Test positiv
 
 
 if (USE_CASE == 'local'){
-  write.csv(find_changed_archetypes, '../../data/NGS_Data_Tables/February_2022/find_changed_archetypes.csv')
-  write.csv(find_not_reported, '../../data/NGS_Data_Tables/February_2022/find_delayed_test_reporting.csv')
+  write.csv(find_not_reported, paste0('../../data/NGS_Data_Tables/February_2022/find_delayed_test_reporting.csv'), row.names = F)
+  write.csv(find_not_reported, paste0('../../data/NGS_Data_Tables/', current_folder, '/find_delayed_test_reporting.csv'), row.names = F)
   write.csv(full_dataset, "../../data/NGS_Data_Tables/February_2022/full_dataset.csv", na = "NaN", row.names = FALSE)
+  write.csv(full_dataset, paste0('../../data/NGS_Data_Tables/', current_folder, '/full_dataset.csv'), na = "NaN", row.names = FALSE)
   write.csv(find_clean_flourish, "../../data/NGS_Data_Tables/February_2022/find_map.csv", na = "NaN", row.names = FALSE)
+  write.csv(find_clean_flourish, paste0('../../data/NGS_Data_Tables/', current_folder, '/find_map.csv'), na = "NaN", row.names = FALSE)
   write.csv(clean_dataset, "../../data/NGS_Data_Tables/February_2022/clean_dataset.csv", na = "NaN", row.names = FALSE)
-  write.csv(find_insuff_test_but_have_seq, "../../data/NGS_Data_Tables/February_2022/test_but_suff_seq.csv", na = "NaN", row.names = FALSE )
+  write.csv(clean_dataset, paste0('../../data/NGS_Data_Tables/', current_folder, '/clean_dataset.csv'), na = "NaN", row.names = FALSE)
+  write.csv(find_insufficient_test_but_have_seq, "../../data/NGS_Data_Tables/February_2022/test_but_suff_seq.csv", na = "NaN", row.names = FALSE )
+  write.csv(find_insufficient_test_but_have_seq, paste0('../../data/NGS_Data_Tables/', current_folder,'/test_but_suff_seq.csv'), na = "NaN", row.names = FALSE )
 }
 
 if (USE_CASE == 'domino'){
-  write.csv(find_changed_archetypes, '/mnt/data/processed/find_changed_archetypes.csv')
+  write.csv(find_not_reported, '/mnt/data/processed/find_delayed_test_reporting.csv')
   write.csv(find_not_reported, '/mnt/data/processed/find_delayed_test_reporting.csv')
   write.csv(full_dataset, "/mnt/data/processed/full_dataset.csv", na = "NaN", row.names = FALSE)
   write.csv(find_clean_flourish, "/mnt/data/processed/find_map.csv", na = "NaN", row.names = FALSE)
