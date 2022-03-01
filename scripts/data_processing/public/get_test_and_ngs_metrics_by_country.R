@@ -73,7 +73,7 @@ GISAID_DAILY_PATH<-'/mnt/data/processed/gisaid_owid_merged.csv' # output from gi
 SHAPEFILES_FOR_FLOURISH_PATH <- '/mnt/data/Geospatial_Data/geometric_polygons_country.txt' # shapefiles for mapping
 WHO_REGIONS_PATH<-'/mnt/data/additional_sources/WHO_region_data.csv' # WHO country list
 ECONOMY_PATH<-'/mnt/data/additional_sources/WB_class_data.xls'
-FIND_TESTING_SEQ_RAW_PATH<- '/mnt/data/additional_sources/Sequencing_Labs_Data.xlsx' # NGS capacity data
+FIND_TESTING_SEQ_RAW_PATH<- '/mnt/data/additional_sources/Sequencing_labs_data.xlsx' # NGS capacity data
 }
 
 if (USE_CASE == 'local'){
@@ -81,10 +81,9 @@ GISAID_DAILY_PATH<-'../../data/processed/gisaid_owid_merged.csv' # output from g
 SHAPEFILES_FOR_FLOURISH_PATH <- '../../data/Geospatial_Data/geometric_polygons_country.txt' # shapefiles for mapping
 WHO_REGIONS_PATH<-'../../data/NGS_Data_Tables/February_2022/who_regions.csv' # WHO country list
 ECONOMY_PATH<-'../../data/NGS_Data_Tables/February_2022/CLASS.xls' # World Bank Economy data
-FIND_TESTING_SEQ_RAW_PATH<- '../../data/NGS_Data_Tables/February_2022/2021_04_04_FIND_capacity_mapping_data_sources.xlsx' # NGS capacity data
 WHO_REGIONS_PATH<-'../../data/additional_sources/WHO_region_data.csv' # WHO country list
 ECONOMY_PATH<-'../../data/additional_sources/WB_class_data.xls'
-FIND_TESTING_SEQ_RAW_PATH<- '../../data/additional_sources/Sequencing_Labs_Data.xlsx' # NGS capacity data
+FIND_TESTING_SEQ_RAW_PATH<- '../../data/additional_sources/Sequencing_labs_data.xlsx' # NGS capacity data
 }
 
 LAST_DATA_PULL_DATE<-as.Date(substr(lubridate::now('EST'), 1, 10))-days(1) # Make this based off of yesterday!
@@ -646,12 +645,12 @@ clean_dataset<-find_map%>%select(name, `Date tests last reported`, `Test positiv
 
 
 if (USE_CASE == 'local'){
-  write.csv(find_changed_archetypes, paste0('../../data/NGS_Data_Tables/', current_folder, '/data/processed/find_changed_archetypes.csv'), row.names = F)
-  write.csv(find_not_reported, paste0('../../data/NGS_Data_Tables/', current_folder, '/find_delayed_test_reporting.csv'), row.names = F)
-  write.csv(full_dataset, paste0('../../data/NGS_Data_Tables/', current_folder, '/full_dataset.csv'), na = "NaN", row.names = FALSE)
-  write.csv(find_clean_flourish, paste0('../../data/NGS_Data_Tables/', current_folder, '/find_map.csv'), na = "NaN", row.names = FALSE)
-  write.csv(clean_dataset, paste0('../../data/NGS_Data_Tables/', current_folder, '/clean_dataset.csv'), na = "NaN", row.names = FALSE)
-  write.csv(find_insufficient_test_but_have_seq, paste0('../../data/NGS_Data_Tables/', current_folder,'/test_but_suff_seq.csv'), na = "NaN", row.names = FALSE )
+  write.csv(find_changed_archetypes, paste0('../../data/NGS_Data_Tables/', current_folder, '/PPI/find_changed_archetypes.csv'), row.names = F)
+  write.csv(find_not_reported, paste0('../../data/NGS_Data_Tables/', current_folder, '/PPI/find_delayed_test_reporting.csv'), row.names = F)
+  write.csv(full_dataset, paste0('../../data/NGS_Data_Tables/', current_folder, '/public/full_dataset.csv'), na = "NaN", row.names = FALSE)
+  write.csv(find_clean_flourish, paste0('../../data/NGS_Data_Tables/', current_folder, '/PPI/find_map.csv'), na = "NaN", row.names = FALSE)
+  write.csv(clean_dataset, paste0('../../data/NGS_Data_Tables/', current_folder, '/public/clean_dataset.csv'), na = "NaN", row.names = FALSE)
+  write.csv(find_insufficient_test_but_have_seq, paste0('../../data/NGS_Data_Tables/', current_folder,'/PPI/test_but_suff_seq.csv'), na = "NaN", row.names = FALSE )
 }
 
 if (USE_CASE == 'domino'){
