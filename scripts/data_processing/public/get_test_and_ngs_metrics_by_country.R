@@ -28,7 +28,6 @@ install.packages("readxl", dependencies=TRUE, repos='http://cran.us.r-project.or
 install.packages("zoo", dependencies=TRUE, repos='http://cran.us.r-project.org')
 install.packages("R.utils", dependencies=TRUE, repos='http://cran.us.r-project.org')
 install.packages("stringr", dependencies=TRUE, repos='http://cran.us.r-project.org')
-install.packages("tsoutliers", dependencies=TRUE, repos='http://cran.us.r-project.org')
 install.packages("dplyr", dependencies=TRUE, repos='http://cran.us.r-project.org')
 install.packages("scales", dependencies=TRUE, repos='http://cran.us.r-project.org')
 }
@@ -43,7 +42,6 @@ library(readxl) # excel import
 library(zoo) # calculate rolling averages
 library(R.utils) # R utilities
 library(stringr) # to parse strings in R
-library(tsoutliers) # remove outliers
 library(dplyr) # data wrangling
 library(scales) # comma formatting
  
@@ -57,16 +55,13 @@ current_folder<-str_c(current_month, current_year, sep = '_')
 last_update_date<-today_date - months(1)
 prev_month<-month.name[month(last_update_date)]
 prev_year<-year(last_update_date)
-# currently, set prev month and year to Nov_2021
-#prev_month <- "November"
-#prev_year <- "2021"
 prev_folder<-str_c(prev_month, prev_year, sep = '_')
 
 
 ## Set filepaths
 ALL_DATA_PATH<- url("https://raw.githubusercontent.com/dsbbfinddx/FINDCov19TrackerData/master/processed/data_all.csv") # FIND data
-#OLD_FIND_MAP_PATH<-url(paste0("https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/NGS_Data_Tables/", prev_folder, "/PPI/find_map_11.30.2021.csv")) # Prev month Capacity Map
-OLD_FIND_MAP_PATH<-url("https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/NGS_Data_Tables/November_2021/PPI/find_map_11.30.2021.csv") # November 2021 Capacity Map
+OLD_FIND_MAP_PATH<-url(paste0("https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/NGS_Data_Tables/", prev_folder, "/PPI/find_map.csv")) # Prev month Capacity Map
+
 
 if (USE_CASE == 'domino'){
 GISAID_DAILY_PATH<-'/mnt/data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
@@ -79,8 +74,6 @@ FIND_TESTING_SEQ_RAW_PATH<- '/mnt/data/additional_sources/Sequencing_labs_data.x
 if (USE_CASE == 'local'){
 GISAID_DAILY_PATH<-'../../data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
 SHAPEFILES_FOR_FLOURISH_PATH <- '../../data/Geospatial_Data/geometric_polygons_country.txt' # shapefiles for mapping
-WHO_REGIONS_PATH<-'../../data/NGS_Data_Tables/February_2022/who_regions.csv' # WHO country list
-ECONOMY_PATH<-'../../data/NGS_Data_Tables/February_2022/CLASS.xls' # World Bank Economy data
 WHO_REGIONS_PATH<-'../../data/additional_sources/WHO_region_data.csv' # WHO country list
 ECONOMY_PATH<-'../../data/additional_sources/WB_class_data.xls'
 FIND_TESTING_SEQ_RAW_PATH<- '../../data/additional_sources/Sequencing_labs_data.xlsx' # NGS capacity data
@@ -110,21 +103,17 @@ find_clean <- read.csv(WHO_REGIONS_PATH) %>%
 
 
 # ------ Categorical sequencing capacity data -------------------------------------
-
+# Reading in countries and subsetting to countries with valid names
 test_seq_raw <- read_excel(FIND_TESTING_SEQ_RAW_PATH,
                            sheet = "Country classification",
                            skip = 1) %>%
-  # standardize names with this janitor function
   clean_names()%>%
-  # remove rows with country code x
   filter(country_code != "x") %>%
-  # remove rows with country code ""
   filter(country_code != "") %>%
-  # remove rows with country code " "
   filter(country_code != " ")
 
+# get only ngs facility data
 ngs_clean <- test_seq_raw %>%
-  # drop all columns except iso code and NGS capacity
   select(contains("code"), starts_with("ngs_capacity_"))
 
 # define  capacity column for later reference
@@ -156,7 +145,7 @@ ngs_clean<-ngs_clean%>%mutate(
 ngs_clean <- ngs_clean %>%
   select(contains("code"),  ngs_capacity, facility_access)
 
-# find_clean: merge testing and sequencing capacity data into template
+# find_clean: merge sequencing capacity data into template
 find_clean <- left_join(find_clean, ngs_clean, by = c("code" = "country_code"))
 
 # Make a cleaned sequencing_capacity variable to give more granular data on number of facilities
@@ -179,7 +168,7 @@ find_clean <- find_clean %>%
 # ------ FIND testing data to estimate testing metric -------------------------------------
  
 # import csv from FIND containing country, date, population size, tests, 
-find_raw <- read.csv(ALL_DATA_PATH) %>%clean_names()
+find_raw <- read.csv(ALL_DATA_PATH) %>% clean_names()
  
 # select and rename necessary columns
 find_testing_t <- find_raw %>%
@@ -217,16 +206,7 @@ code <-unique(find_testing_t$code)
 date_country<-expand_grid(date, code)
 find_testing_t<-left_join(date_country,find_testing_t, by = c("code", "date"))
 
-# Find 7 day average of cases and tests
-find_testing_t <- find_testing_t %>%
-  # group rows by country code
-  group_by(code) %>%
-  # create column for 7 day rolling average from raw FIND data
-  mutate(
-    #new_tests_cap_avg = round(zoo::rollmean(100000*new_tests_orig/pop, 30, fill = NA),2), 
-    cases_7d_avg = round(zoo::rollmean(new_cases_orig, 7, fill = NA),2),
-    tests_7d_avg = round(zoo::rollmean(new_tests_orig, 7, fill = NA), 2)
-  )
+
 
 # For each country, find the date they last reported raw new tests
 find_test_update_date<-find_testing_t%>%
@@ -260,7 +240,7 @@ find_testing_last_year<- find_testing_t %>% filter(date>=(LAST_DATA_PULL_DATE -T
             tpr_year_smoothed = cases_in_last_year_smoothed/tests_in_last_year_smoothed, # overestimates because doesn't account for truncation 
             tpr_year_smoothed_truncated = cases_in_last_year_smoothed_truncated/tests_in_last_year_smoothed, # used for archetype definition
             avg_daily_test_per_1000_last_year_raw = 1000*mean(new_tests_orig/max(pop), na.rm = TRUE),
-            avg_daily_tests_per_1000_last_year_smoothed = 1000*mean(new_tests_smoothed/max(pop), na.rm = TRUE), # Used for archetype definition
+            avg_daily_tests_per_1000_last_year_smoothed = 1000*mean(new_tests_smoothed/max(pop), na.rm = TRUE), # used for archetype definition
             population_size = max(pop))%>% # pops should all be the same
   filter(!is.na(code))
 
@@ -280,7 +260,7 @@ stopifnot('Countries reporting greater than a test per person per day' = sum(fin
 stopifnot('More than 25 countries with data havent reported tests in 6 months' = n_not_rept_6_mos<=25)
 stopifnot('More than 35 countries are missing average daily TPR from FIND' = nrow(no_avg_tpr)<=35)
 
-# remove any -Inf
+# remove any negative daily tests or impossible TPRs
 find_testing_clean$avg_daily_tests_per_1000_last_year_smoothed<- ifelse(find_testing_clean$avg_daily_tests_per_1000_last_year_smoothed < 0, NA, 
                                                                    find_testing_clean$avg_daily_tests_per_1000_last_year_smoothed)
 find_testing_clean$tpr_year_smoothed_truncated <- ifelse(find_testing_clean$tpr_year_smoothed_truncated < 0 | find_testing_clean$tpr_year_smoothed_truncated > 1, NA, 
@@ -303,7 +283,7 @@ find_clean <- find_clean %>%
   # Unless average daily tests per 1000 >1 (ACT-A testing target)
   mutate(
     dx_testing_capacity = case_when(
-      (is.na(avg_tpr_find)  | rept_tests_within_last_6_months ==FALSE | avg_tpr_find == "NaN") ~ "Insufficient data",
+      (is.na(avg_tpr_find)  | rept_tests_within_last_6_months ==FALSE | is.infinite(avg_tpr_find)) ~ "Insufficient data",
       tpr_year_smoothed_truncated >= 0.15 & avg_daily_tests_per_1000_last_year_smoothed <= 1 ~"Has not demonstrated testing capacity",
       tpr_year_smoothed_truncated >=0.15 & avg_daily_tests_per_1000_last_year_smoothed > 1 ~"Has demonstrated testing capacity",
       tpr_year_smoothed_truncated < 0.15 ~ "Has demonstrated testing capacity",
@@ -316,7 +296,6 @@ find_clean <- find_clean %>%
 # -------- GISAID data on SARS-CoV-2 sequences by country and time --------------------------------
 
 gisaid_raw <- read.csv(GISAID_DAILY_PATH) %>% # raw refers to all variants, by country, by day
-  # standardize names with this janitor function
   clean_names()
 
 # Replaces with collection date and parse as date
@@ -324,14 +303,12 @@ gisaid_raw$collection_date <- as.Date(as.character(gisaid_raw$gisaid_collect_dat
 
 gisaid_t <- gisaid_raw%>%
   select(collection_date, gisaid_country, n_new_sequences,
-         owid_new_cases, owid_population, country_code, owid_location)%>%
-  filter(collection_date>=FIRST_DATE &
-           collection_date<= LAST_DATA_PULL_DATE)
+         owid_new_cases, owid_population, country_code, owid_location)
 
 # Make sure that the most recent date is yesterday (only relevant if we are updating)
-#stopifnot("GISAID metadata run isnt up to date" = max(gisaid_t$collection_date) == LAST_DATA_PULL_DATE)
-
-
+if ((max(gisaid_t$collection_date) != LAST_DATA_PULL_DATE)){
+  warning("GISAID metadata not updated")
+}
 
 # Subset GISAID data to the last  year
 gisaid_last_year<-gisaid_t%>%filter(collection_date>=(LAST_DATA_PULL_DATE -TIME_WINDOW_YEAR) & 
