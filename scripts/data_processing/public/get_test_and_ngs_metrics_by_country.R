@@ -402,6 +402,8 @@ find_clean <- find_clean %>%
   # cases sequenced per 100k in the past year >= 50
   mutate(
     sars_cov_2_sequencing = case_when(
+      ((cases_in_last_year == 0 | is.na(cases_in_last_year)) & (sequences_per_100k_last_year< 30 | is.na(sequences_per_100k_last_year))) ~ "Insufficient data",
+      ((cases_in_last_year == 0 | is.na(cases_in_last_year)) & sequences_per_100k_last_year> 30) ~ "Has demonstrated sequencing capacity",
       is.na(sequences_per_100k_last_year) ~ "Has not demonstrated sequencing capacity",
       pct_cases_sequenced_in_last_year >= 0.5  ~ "Has demonstrated sequencing capacity",
       pct_cases_sequenced_in_last_year < 0.5 & sequences_per_100k_last_year >= 30 ~ "Has demonstrated sequencing capacity",
