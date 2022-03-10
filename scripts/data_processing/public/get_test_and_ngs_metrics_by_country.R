@@ -54,12 +54,15 @@ current_year<-year(today_date)
 current_folder<-str_c(current_month, current_year, sep = '_')
 last_update_date<-today_date - months(1)
 prev_month<-month.name[month(last_update_date)]
+#prev_month<-"November"
 prev_year<-year(last_update_date)
+#prev_year<-"2021"
 prev_folder<-str_c(prev_month, prev_year, sep = '_')
 
 
 ## Set filepaths
 ALL_DATA_PATH<- url("https://raw.githubusercontent.com/dsbbfinddx/FINDCov19TrackerData/master/processed/data_all.csv") # FIND data
+#ALL_DATA_PATH<-'../../data/raw/find_testing_Mar_1.csv'
 OLD_FIND_MAP_PATH<-url(paste0("https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/NGS_Data_Tables/", prev_folder, "/PPI/find_map.csv")) # Prev month Capacity Map
 
 
@@ -80,6 +83,7 @@ FIND_TESTING_SEQ_RAW_PATH<- '../../data/additional_sources/Sequencing_labs_data.
 }
 
 LAST_DATA_PULL_DATE<-as.Date(substr(lubridate::now('EST'), 1, 10))-days(1) # Make this based off of yesterday!
+LAST_DATA_PULL_DATE<-as.Date("2022-03-01")-days(1)
 FIRST_DATE<-"2019-12-01" # First data that we would expect to see SARS-CoV-2 genomes/cases/tests
 TIME_WINDOW_YEAR<-364
 
@@ -283,10 +287,16 @@ find_clean <- find_clean %>%
   # Unless average daily tests per 1000 >1 (ACT-A testing target)
   mutate(
     dx_testing_capacity = case_when(
-      (is.na(avg_tpr_find)  | rept_tests_within_last_6_months ==FALSE | is.infinite(avg_tpr_find)) ~ "Insufficient data",
+      (is.na(avg_tpr_find)  | rept_tests_within_last_6_months ==FALSE | is.infinite(avg_tpr_find)) ~ "Insufficient testing data",
       tpr_year_smoothed_truncated >= 0.15 & avg_daily_tests_per_1000_last_year_smoothed <= 1 ~"Has not demonstrated testing capacity",
       tpr_year_smoothed_truncated >=0.15 & avg_daily_tests_per_1000_last_year_smoothed > 1 ~"Has demonstrated testing capacity",
       tpr_year_smoothed_truncated < 0.15 ~ "Has demonstrated testing capacity",
+    ),
+    dx_testing_rec = case_when(
+      (is.na(avg_tpr_find)  | rept_tests_within_last_6_months ==FALSE | is.infinite(avg_tpr_find)) ~ "Insufficient testing data",
+      tpr_year_smoothed_truncated >= 0.15 & avg_daily_tests_per_1000_last_year_smoothed <= 1 ~"Test - Increase diagnostic testing capacity",
+      tpr_year_smoothed_truncated >=0.15 & avg_daily_tests_per_1000_last_year_smoothed > 1 ~"Sustain - Sustain diagnostic testing capacity",
+      tpr_year_smoothed_truncated < 0.15 ~ "Sustain - Sustain diagnostic testing capacity",
     )
   )
 
@@ -327,16 +337,16 @@ find_clean <- left_join(find_clean, gisaid_last_year, by = c("code" = "country_c
 
 #------- Add in old archetype ------------------------------------------------------
 if (prev_month == "November" & prev_year == "2021"){
-  old_find<-read.csv(OLD_FIND_MAP_PATH)%>%select(code,country,dx_testing_capacity_clean, sars_cov_2_sequencing, archetype)%>%
-  rename(old_test_archetype = dx_testing_capacity_clean, # dx_testing_capacity
+  old_find<-read.csv(url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/NGS_Data_Tables/November_2021/PPI/find_map_11.30.2021.csv'))%>%
+  select(code,country,dx_testing_capacity_clean, sars_cov_2_sequencing, archetype)%>%
+  rename(prev_test_rec = dx_testing_capacity_clean, # dx_testing_capacity
          old_archetype = archetype, # archetype_orig_w_HICs
          old_sequencing_archetype = sars_cov_2_sequencing)%>%filter(!is.na(code))%>%filter(country != "West Bank and Gaza") # 237 countries
     }
 if (prev_month!= "November" & prev_year != "2021"){ # for all other months except for the first new iteration
-  old_find<-read.csv(OLD_FIND_MAP_PATH)%>%select(code,country,dx_testing_capacity, sars_cov_2_sequencing, archetype_orig_w_HICs)%>%
-    rename(old_test_archetype = dx_testing_capacity, 
-           old_archetype = archetype_orig_w_HICs,
-           old_sequencing_archetype = sars_cov_2_sequencing)
+  old_find<-read.csv(OLD_FIND_MAP_PATH)%>%select(code,country,dx_testing_rec, sars_cov_2_sequencing, archetype_orig_w_HICs)%>%
+    rename(prev_test_rec = dx_testing_rec, 
+           old_archetype = archetype_orig_w_HICs)
   }
 old_codes<-unique(old_find$code) # 237 of them
 
@@ -348,13 +358,6 @@ find_clean<-find_clean%>%filter(name != "West Bank and Gaza")%>%
   filter(code != "UMI") # 237 countries
 n_codes <- length(unique(find_clean$code))
 
-# Unit tests
-stopifnot('Incorrect number of countries'= n_codes<=237 | n_codes>=236)
-find_clean_LMICs<-find_clean%>%filter(old_test_archetype != 'High Income*')
-stopifnot('Incorrect number of LMICs' = nrow(find_clean_LMICs)==152)
-stopifnot('Incorrect number of LMICs with FIND data' = nrow(find_clean_LMICs%>%filter(!is.na(avg_tpr_find)))==109)
-stopifnot('Less than 90 LMICs with avg daily TPR not NA & with tests reported in last 6 months' = 
-            nrow(find_clean_LMICs%>%filter(!is.na(avg_tpr_find))%>%filter(rept_tests_within_last_6_months == TRUE)) >= 90)
 
 
 
@@ -380,6 +383,11 @@ find_clean<-find_clean%>%mutate( LMIC_status = case_when(
   world_bank_economies == 'High income' ~'High Income',
   world_bank_economies != 'High income' ~'LMIC'))
 
+# Unit tests
+stopifnot('Incorrect number of countries'= n_codes<=237 | n_codes>=236)
+find_clean_LMICs<-find_clean%>%filter(LMIC_status != 'High Income')
+stopifnot('Less than 90 LMICs with avg daily TPR not NA & with tests reported in last 6 months' = 
+            nrow(find_clean_LMICs%>%filter(!is.na(avg_tpr_find))%>%filter(rept_tests_within_last_6_months == TRUE)) >= 90)
 
 
 
@@ -397,9 +405,11 @@ find_clean <- find_clean %>%
       is.na(sequences_per_100k_last_year) ~ "Has not demonstrated sequencing capacity",
       pct_cases_sequenced_in_last_year >= 0.5  ~ "Has demonstrated sequencing capacity",
       pct_cases_sequenced_in_last_year < 0.5 & sequences_per_100k_last_year >= 30 ~ "Has demonstrated sequencing capacity",
-      pct_cases_sequenced_in_last_year < 0.5 & sequences_per_100k_last_year <30 ~ "Has not demonstrated sequencing capacity"
+      pct_cases_sequenced_in_last_year < 0.5 & sequences_per_100k_last_year <30 ~ "Has not demonstrated sequencing capacity",
+      (cases_in_last_year == 0 | is.na(cases_in_last_year)) ~ "Insufficient data"
     )
   )
+
 
 
 
@@ -409,70 +419,71 @@ find_clean <- find_clean %>%
 find_clean<-find_clean%>%mutate(
   archetype_orig = case_when(
     old_archetype == "High Income*" ~ "High Income*", #excludes HICs
-    dx_testing_capacity == "Insufficient data" ~ "Insufficient data",
-    dx_testing_capacity == "Has not demonstrated testing capacity" ~ "Test",
-    dx_testing_capacity == "Has demonstrated testing capacity" & sars_cov_2_sequencing == "Has demonstrated sequencing capacity" ~ "Strengthen",
-    (dx_testing_capacity == "Has demonstrated testing capacity" & sars_cov_2_sequencing == "Has not demonstrated sequencing capacity" &
+   (sars_cov_2_sequencing == "Insufficient data") ~ "Insufficient data",
+    sars_cov_2_sequencing == "Has demonstrated sequencing capacity" ~ "Strengthen",
+    (sars_cov_2_sequencing == "Has not demonstrated sequencing capacity" &
     (ngs_capacity == 2 | ngs_capacity == 1)) ~ "Leverage",
-    dx_testing_capacity == "Has demonstrated testing capacity" & sars_cov_2_sequencing == "Has not demonstrated sequencing capacity" & ngs_capacity == 0 ~ "Connect"),
-  archetype_orig_w_HICs = case_when( # classifies HICs
-    dx_testing_capacity == "Insufficient data" ~ "Insufficient data",
-    dx_testing_capacity == "Has not demonstrated testing capacity" ~ "Test",
-    dx_testing_capacity == "Has demonstrated testing capacity" & sars_cov_2_sequencing == "Has demonstrated sequencing capacity" ~ "Strengthen",
-    (dx_testing_capacity == "Has demonstrated testing capacity" & sars_cov_2_sequencing == "Has not demonstrated sequencing capacity" &
+     sars_cov_2_sequencing == "Has not demonstrated sequencing capacity" & (ngs_capacity == 0 |is.na(ngs_capacity))~ "Connect"),
+  archetype_orig_w_HICs = case_when( # classifies HICs as well 
+    (sars_cov_2_sequencing == "Insufficient data") ~ "Insufficient data",
+   sars_cov_2_sequencing == "Has demonstrated sequencing capacity" ~ "Strengthen",
+    (sars_cov_2_sequencing == "Has not demonstrated sequencing capacity" &
        (ngs_capacity == 2 | ngs_capacity == 1)) ~ "Leverage",
-    dx_testing_capacity == "Has demonstrated testing capacity" & sars_cov_2_sequencing == "Has not demonstrated sequencing capacity" & ngs_capacity == 0 ~ "Connect"),
+    sars_cov_2_sequencing == "Has not demonstrated sequencing capacity" & (ngs_capacity == 0 |is.na(ngs_capacity)) ~ "Connect"),
   archetype_new = case_when( # Lumps together Leverage & Connect if we don't want to use ngs facility access data
     old_archetype == "High Income*" ~ "High Income*",
-    dx_testing_capacity == "Insufficient data" ~ "Insufficient data",
-    dx_testing_capacity == "Has not demonstrated testing capacity" ~ "Test",
-    dx_testing_capacity == "Has demonstrated testing capacity" & sars_cov_2_sequencing == "Has demonstrated sequencing capacity" ~ "Sustain",
-    dx_testing_capacity == "Has demonstrated testing capacity" & sars_cov_2_sequencing == "Has not demonstrated sequencing capacity" ~ "Sequence")
+    sars_cov_2_sequencing == "Insufficient data" ~ "Insufficient data",
+    sars_cov_2_sequencing == "Has demonstrated sequencing capacity" ~ "Sustain",
+    sars_cov_2_sequencing == "Has not demonstrated sequencing capacity" ~ "Sequence")
 )
 
 # Edit the date variable so that it is in a universally readable format
-test<-find_clean%>%separate(date_tests_last_reported,
+date_df<-find_clean%>%separate(date_tests_last_reported,
                             into = c("year", "month", "day"),
                             sep = "-")
-test$month<-month.name[as.numeric(test$month)]
-test$date_tests_last_reported<-paste0(test$month, ' ', test$day, ', ', test$year)
-test$date_tests_last_reported[test$date_tests_last_reported == "NA NA, NA"]<-"No tests reported"
-find_clean$date_tests_last_reported<-test$date_tests_last_reported
+date_df$month<-month.name[as.numeric(date_df$month)]
+date_df$date_tests_last_reported<-paste0(date_df$month, ' ', date_df$day, ', ', date_df$year)
+date_df$date_tests_last_reported[date_df$date_tests_last_reported == "NA NA, NA"]<-"No tests reported"
+find_clean$date_tests_last_reported<-date_df$date_tests_last_reported
 
 
 # Internal troubleshooting, generates dataset that groups by archetype for easy validation
 find_clean_LMICs<-find_clean%>%filter(!old_archetype == "High Income*")
 n_insufficient_data<- sum(find_clean_LMICs$archetype_orig == "Insufficient data")
-n_not_tests<-sum(find_clean_LMICs$dx_testing_capacity == "Reliable testing capacity")
-n_Test<- sum(find_clean_LMICs$archetype_orig == "Test")
+n_not_tests<-sum(find_clean_LMICs$dx_testing_capacity == "Has demonstrated testing capacity")
+n_Test<- sum(find_clean_LMICs$dx_testing_capacity == "Has not demonstrated testing capacity")
 n_Strengthen <-sum(find_clean_LMICs$archetype_orig == "Strengthen")
 n_Leverage <- sum(find_clean_LMICs$archetype_orig == "Leverage")
 n_Connect <- sum(find_clean_LMICs$archetype_orig == "Connect")
 n_Sequence<- sum(find_clean_LMICs$archetype_new == "Sequence")
 
-n_given_archetypes = n_Test + n_Strengthen + n_Sequence
+n_given_archetypes =  n_Strengthen + n_Sequence
 
 # unit test
 stopifnot("Number given archetypes other than insufficient data is less than 90 (should be around 95)"= n_given_archetypes>=90)
 
-# Select necessary variables only
+# Select necessary variables for Flourish map only
 find_map<- find_clean %>%select(name, code, population_size, sequencing_capacity, tpr_year_smoothed_truncated, avg_daily_tests_per_1000_last_year_smoothed,
                                 dx_testing_capacity, date_tests_last_reported, days_since_tests_reported, pct_cases_sequenced_in_last_year,
                                 sequences_per_100k_last_year, sars_cov_2_sequencing, ngs_capacity, facility_access,
                                 old_archetype, archetype_orig,
-                                archetype_orig_w_HICs, archetype_new, world_bank_economies)
+                                archetype_orig_w_HICs, archetype_new, world_bank_economies, prev_test_rec, dx_testing_rec)
 # Find the countries with new archetypes
-find_changed_archetypes <-find_map%>%filter(old_archetype != archetype_orig_w_HICs)%>%
+if (prev_month != "November" & prev_year!= "2021"){
+find_changed_archetypes <-find_map%>%filter(old_archetype != archetype_orig_w_HICs, prev_test_rec != dx_testing_rec)%>%
   select(!archetype_orig, !archetype_new)
+}
 
 # Make internal validation data sets 
 if (USE_CASE == 'local') {
-find_clean_LMICs%>%filter(archetype_orig == "Insufficient data")%>%write.csv('../../data/processed/countries_in_insufficient_data.csv')
-find_clean_LMICs%>%filter(archetype_orig == "Test")%>%write.csv('../../data/processed/countries_in_test.csv')
-find_clean_LMICs%>%filter(archetype_orig == "Strengthen")%>%write.csv('../../data/processed/countries_in_strengthen.csv')
-find_clean_LMICs%>%filter(archetype_orig == "Leverage" | archetype_orig == "Connect")%>%
-  write.csv('../../data/processed/countries_in_Lev_or_Connect.csv')
-write.csv(find_changed_archetypes, paste0('../../data/processed/find_changed_archetypes', prev_month, '_to_', current_month, '.csv'))
+  find_clean_LMICs%>%filter(archetype_orig == "Insufficient data")%>%write.csv('../../data/processed/countries_in_insufficient_data.csv')
+  find_clean_LMICs%>%filter(archetype_orig == "Test")%>%write.csv('../../data/processed/countries_in_test.csv')
+  find_clean_LMICs%>%filter(archetype_orig == "Strengthen")%>%write.csv('../../data/processed/countries_in_strengthen.csv')
+  find_clean_LMICs%>%filter(archetype_orig == "Leverage" | archetype_orig == "Connect")%>%
+    write.csv('../../data/processed/countries_in_Lev_or_Connect.csv')
+  if (prev_month != "November" & prev_year!= "2021"){
+    write.csv(find_changed_archetypes, paste0('../../data/processed/find_changed_archetypes', prev_month, '_to_', current_month, '.csv'))
+  }
 }
 
 
@@ -483,17 +494,6 @@ if (USE_CASE == 'domino') {
   find_clean_LMICs%>%filter(archetype_orig == "Leverage" | archetype_orig == "Connect")%>%write.csv('/mnt/data/processed/countries_in_Lev_or_Connect.csv')
 }
 
-
-
-# Select necessary variables only
-find_map<- find_clean %>%select(name, code, population_size, sequencing_capacity, tpr_year_smoothed_truncated, avg_daily_tests_per_1000_last_year_smoothed,
-                                dx_testing_capacity, date_tests_last_reported, days_since_tests_reported, pct_cases_sequenced_in_last_year,
-                                sequences_per_100k_last_year, sars_cov_2_sequencing, ngs_capacity, facility_access,
-                                old_archetype, archetype_orig,
-                                archetype_orig_w_HICs, archetype_new, world_bank_economies)
-# Find the countries with new archetypes
-find_changed_archetypes <-find_map%>%filter(old_archetype != archetype_orig_w_HICs)%>%
-  select(!archetype_orig, !archetype_new)
   
 
 
@@ -502,24 +502,21 @@ find_map<-find_map%>% mutate(
   archetype_full_orig = case_when(
     archetype_orig == "Insufficient data" ~ "Insufficient data - Missing key diagnostic or case metrics",
     archetype_orig == "High Income*" ~ "High Income*",
-    archetype_orig == "Test" ~ "Test - Increase diagnostic testing capacity",
     archetype_orig == "Strengthen" ~ "Strengthen - Build additional NGS capacity for scale-up",
     archetype_orig == "Leverage" ~ "Leverage - Leverage existing NGS capacity",
     archetype_orig == "Connect" ~ "Connect - Connect to countries with NGS capacity or build NGS capacity from scratch"),
   archetype_full_new = case_when(
-    archetype_new == "Insufficient data" ~ "Insufficient data- Missing key diagnostic or case metrics",
+    archetype_new == "Insufficient data" ~ "Insufficient data - Missing key diagnostic or case metrics",
     archetype_new == "High Income*" ~ "High Income*",
-    archetype_new == "Test" ~ "Test - Increase diagnostic testing capacity",
     archetype_new == "Sustain" ~ "Sustain - Sustain diagnostic & sequencing levels",
     archetype_new == "Sequence" ~ "Sequence - Improve sequencing levels"),
   archetype_full_orig_w_HICs = case_when(
     archetype_orig_w_HICs == "Insufficient data" ~ "Insufficient data - Missing key diagnostic or case metrics",
-    archetype_orig_w_HICs == "Test" ~ "Test - Increase diagnostic testing capacity",
     archetype_orig_w_HICs == "Strengthen" ~ "Strengthen - Build additional NGS capacity for scale-up",
     archetype_orig_w_HICs == "Leverage" ~ "Leverage - Leverage existing NGS capacity",
     archetype_orig_w_HICs == "Connect" ~ "Connect - Connect to countries with NGS capacity or build NGS capacity from scratch"),
   TPR_pct = paste0(round(100*tpr_year_smoothed_truncated, 1), ' %'),
-  daily_tests_per_1000 = paste0(round(avg_daily_tests_per_1000_last_year_smoothed,2), ' per 1000 persons'),
+  daily_tests_per_1000 = paste0(round(avg_daily_tests_per_1000_last_year_smoothed,2), ' per 1,000 persons'),
   pct_seq = paste0(round(pct_cases_sequenced_in_last_year,2), ' %'),
   seq_per_100k = paste0(round(sequences_per_100k_last_year,1), ' per 100k persons')
   )
@@ -527,7 +524,7 @@ find_map<-find_map%>% mutate(
 
 find_map$TPR_pct[find_map$TPR_pct == "NA %"]<- 'Insufficient data'
 find_map$TPR_pct[find_map$TPR_pct == "0 %"]<- 'No cases reported'
-find_map$daily_tests_per_1000[find_map$daily_tests_per_1000 == "NA per 1000 persons"]<- 'Insufficient data'
+find_map$daily_tests_per_1000[find_map$daily_tests_per_1000 == "NA per 1,000 persons"]<- 'Insufficient data'
 find_map$pct_seq[find_map$pct_seq == "NA %" | find_map$pct_seq == "NaN %"]<-'Insufficient data'
 find_map$seq_per_100k[find_map$seq_per_100k == "NA per 100k persons"]<- 'Insufficient data'
 find_map$facility_access[is.na(find_map$facility_access)]<-"Insufficient data"
@@ -537,6 +534,7 @@ find_map$facility_access[is.na(find_map$facility_access)]<-"Insufficient data"
 find_map<-find_map%>%rename(
   Archetype = archetype_full_orig,
   `Archetype*` = archetype_full_orig_w_HICs,
+  `Test recommendation` = dx_testing_rec,
   `Test positivity rate (%) in past year` = TPR_pct,
   `Average daily tests in past year` = daily_tests_per_1000,
   `Date tests last reported` = date_tests_last_reported,
@@ -547,10 +545,10 @@ find_map<-find_map%>%rename(
 
 stopifnot('More than 3 countries missing archetype at final step' = sum(find_map$Archetype == "NaN" |is.na(find_map$Archetype)) <=3)
 
-# Generate datasets for the countries that have sufficient sequencing but insufficient testing 
-find_insuff_test_but_have_seq<-find_map%>%filter(old_archetype!= "High Income*")%>%
-  filter(dx_testing_capacity == "Has not demonstrated testing capacity")%>%
-  filter(sars_cov_2_sequencing == "Has demonstrated sequencing capacity")
+# Generates a dataset with all the countries that need to improve testing
+find_rec_test<-find_map%>%
+  filter(dx_testing_capacity == "Has not demonstrated testing capacity")
+  
 
 find_map<-find_map%>%mutate(
   seq_but_no_test_flag = ifelse(
@@ -564,8 +562,6 @@ find_map<-find_map%>%mutate(
 shapefile <- read_delim(SHAPEFILES_FOR_FLOURISH_PATH, delim = "\t") %>%
   select(geometry, code, country)
 # Need to deduplicate?? 
-
-duplicates<-shapefile[duplicated(shapefile$code),] 
 
 
 find_map_small<-find_map%>%select(-name) # remove name and replace with country from shapefile
@@ -588,7 +584,7 @@ find_clean_flourish<-find_clean_flourish%>%mutate(
   ngs_capacity_binary = ifelse(
     (ngs_capacity == 0 | is.na(ngs_capacity)), "No", "Yes"))
 
-find_insufficient_test_but_have_seq<-left_join(find_insuff_test_but_have_seq, shapefile, by = "code")
+find_rec_test<-left_join(find_rec_test, shapefile, by = "code")
 
 # Remove the extraneous columns from the full_dataset
 full_dataset<-find_clean%>%select(name, code, population_size, date_tests_last_reported,
@@ -598,7 +594,8 @@ full_dataset<-find_clean%>%select(name, code, population_size, date_tests_last_r
                                   cases_in_last_year, sequences_in_last_year,
                                   pct_cases_sequenced_in_last_year, sequences_per_100k_last_year,
                                   dx_testing_capacity,ngs_capacity, sequencing_capacity,
-                                  sars_cov_2_sequencing, world_bank_economies, archetype_orig_w_HICs)%>%
+                                  sars_cov_2_sequencing, world_bank_economies, archetype_orig_w_HICs, prev_test_rec,
+                                  dx_testing_rec, old_archetype)%>%
   rename(archetype = archetype_orig_w_HICs)
 
 
@@ -610,24 +607,28 @@ find_clean_flourish<-find_clean_flourish%>%select(-old_archetype, -archetype_ori
 clean_dataset<-find_map%>%select(name, `Date tests last reported`, `Test positivity rate (%) in past year`,
                                  `Average daily tests in past year`, `% of cases sequenced in past year`,
                                  `Number of sequences in past year`, world_bank_economies,dx_testing_capacity, 
+                                 `Test recommendation`,
                                  sars_cov_2_sequencing,facility_access, archetype_orig_w_HICs)%>%
   rename(
-    `World Bank Economic Status` = world_bank_economies,
-    `COVID-19 Diagnostic Testing Capacity` = dx_testing_capacity,
-    `SARS-CoV-2 Sequencing Capacity` = sars_cov_2_sequencing,
-    `NGS Facility Access` = facility_access,
+    `Country` = name,
+    `World Bank economic status` = world_bank_economies,
+    `COVID-19 diagnostic testing capacity` = dx_testing_capacity,
+    `SARS-CoV-2 sequencing capacity` = sars_cov_2_sequencing,
+    `NGS facility access` = facility_access,
     `Archetype` = archetype_orig_w_HICs)
 
 
 
 
 if (USE_CASE == 'local'){
-  write.csv(find_changed_archetypes, paste0('../../data/NGS_Data_Tables/', current_folder, '/PPI/find_changed_archetypes.csv'), row.names = F)
+  if(prev_month!= 'November' & prev_year != '2021'){
+    write.csv(find_changed_archetypes, paste0('../../data/NGS_Data_Tables/', current_folder, '/PPI/find_changed_archetypes.csv'), row.names = F)
+  }
   write.csv(find_not_reported, paste0('../../data/NGS_Data_Tables/', current_folder, '/PPI/find_delayed_test_reporting.csv'), row.names = F)
   write.csv(full_dataset, paste0('../../data/NGS_Data_Tables/', current_folder, '/public/full_dataset.csv'), na = "NaN", row.names = FALSE)
   write.csv(find_clean_flourish, paste0('../../data/NGS_Data_Tables/', current_folder, '/PPI/find_map.csv'), na = "NaN", row.names = FALSE)
   write.csv(clean_dataset, paste0('../../data/NGS_Data_Tables/', current_folder, '/public/clean_dataset.csv'), na = "NaN", row.names = FALSE)
-  write.csv(find_insufficient_test_but_have_seq, paste0('../../data/NGS_Data_Tables/', current_folder,'/PPI/test_but_suff_seq.csv'), na = "NaN", row.names = FALSE )
+  write.csv(find_rec_test, paste0('../../data/NGS_Data_Tables/', current_folder,'/PPI/countries_in_test.csv'), na = "NaN", row.names = FALSE )
 }
 
 if (USE_CASE == 'domino'){
