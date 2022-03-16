@@ -54,9 +54,9 @@ current_year<-year(today_date)
 current_folder<-str_c(current_month, current_year, sep = '_')
 last_update_date<-today_date - months(1)
 prev_month<-month.name[month(last_update_date)]
-#prev_month<-"November"
+prev_month<-"November"
 prev_year<-year(last_update_date)
-#prev_year<-"2021"
+prev_year<-"2021"
 prev_folder<-str_c(prev_month, prev_year, sep = '_')
 
 
@@ -75,11 +75,11 @@ FIND_TESTING_SEQ_RAW_PATH<- '/mnt/data/additional_sources/Sequencing_labs_data.x
 }
 
 if (USE_CASE == 'local'){
-GISAID_DAILY_PATH<-'../../data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
-SHAPEFILES_FOR_FLOURISH_PATH <- '../../data/Geospatial_Data/geometric_polygons_country.txt' # shapefiles for mapping
-WHO_REGIONS_PATH<-'../../data/additional_sources/WHO_region_data.csv' # WHO country list
-ECONOMY_PATH<-'../../data/additional_sources/WB_class_data.xls'
-FIND_TESTING_SEQ_RAW_PATH<- '../../data/additional_sources/Sequencing_labs_data.xlsx' # NGS capacity data
+GISAID_DAILY_PATH<-'../../../data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
+SHAPEFILES_FOR_FLOURISH_PATH <- '../../../data/Geospatial_Data/geometric_polygons_country.txt' # shapefiles for mapping
+WHO_REGIONS_PATH<-'../../../data/additional_sources/WHO_region_data.csv' # WHO country list
+ECONOMY_PATH<-'../../../data/additional_sources/WB_class_data.xls'
+FIND_TESTING_SEQ_RAW_PATH<- '../../../data/additional_sources/Sequencing_labs_data.xlsx' # NGS capacity data
 }
 
 LAST_DATA_PULL_DATE<-as.Date(substr(lubridate::now('EST'), 1, 10))-days(1) # Make this based off of yesterday!
@@ -281,6 +281,8 @@ find_clean<-left_join(find_clean, find_testing_clean, by = "code")
 # based on the truncated TPR and average daily tests per 1000 last year using smoothed cases and test data
 # If countries have not reported in 6 months or are missing tpr in FIND, get labeled as having insufficient data to 
 #assess test capacity
+daily_tests_thres<- 0.15
+TPR_thres<- 0.15
 find_clean <- find_clean %>%
   # create new variable for Dx testing capacity based on:
   # TPR over the past year >=0.15
@@ -288,15 +290,16 @@ find_clean <- find_clean %>%
   mutate(
     dx_testing_capacity = case_when(
       (is.na(avg_tpr_find)  | rept_tests_within_last_6_months ==FALSE | is.infinite(avg_tpr_find)) ~ "Insufficient testing data",
-      tpr_year_smoothed_truncated >= 0.15 & avg_daily_tests_per_1000_last_year_smoothed <= 1 ~"Has not demonstrated testing capacity",
-      tpr_year_smoothed_truncated >=0.15 & avg_daily_tests_per_1000_last_year_smoothed > 1 ~"Has demonstrated testing capacity",
-      tpr_year_smoothed_truncated < 0.15 ~ "Has demonstrated testing capacity",
+      # define the 4 quadrants of daily tests vs TPR, only the upper left is NOT in test (i.e. must have <15% TPR & >0.15 test per 1000)
+      tpr_year_smoothed_truncated >= TPR_thres & avg_daily_tests_per_1000_last_year_smoothed <= daily_tests_thres ~ "Has not demonstrated testing capacity", #bottom right
+      tpr_year_smoothed_truncated >=TPR_thres & avg_daily_tests_per_1000_last_year_smoothed > daily_tests_thres ~ "Has not demonstrated testing capacity", # upper right
+      tpr_year_smoothed_truncated < TPR_thres & avg_daily_tests_per_1000_last_year_smoothed <= daily_tests_thres ~ "Has not demonstrated testing capacity", # bottom left
+      tpr_year_smoothed_truncated < TPR_thres & avg_daily_tests_per_1000_last_year_smoothed > daily_tests_thres ~ "Has demonstrated testing capacity" # upper left
     ),
     dx_testing_rec = case_when(
-      (is.na(avg_tpr_find)  | rept_tests_within_last_6_months ==FALSE | is.infinite(avg_tpr_find)) ~ "Insufficient testing data",
-      tpr_year_smoothed_truncated >= 0.15 & avg_daily_tests_per_1000_last_year_smoothed <= 1 ~"Test - Increase diagnostic testing capacity",
-      tpr_year_smoothed_truncated >=0.15 & avg_daily_tests_per_1000_last_year_smoothed > 1 ~"Sustain - Sustain diagnostic testing capacity",
-      tpr_year_smoothed_truncated < 0.15 ~ "Sustain - Sustain diagnostic testing capacity",
+       dx_testing_capacity == "Insufficient testing data" ~ "Insufficient testing data",
+       dx_testing_capacity == "Has not demonstrated testing capacity" ~ "Test - Increase diagnostic testing capacity",
+       dx_testing_capacity == "Has demonstrated testing capacity" ~ "Sustain - Sustain diagnostic testing capacity"
     )
   )
 
@@ -328,6 +331,10 @@ gisaid_last_year<-gisaid_t%>%filter(collection_date>=(LAST_DATA_PULL_DATE -TIME_
             sequences_in_last_year= sum(n_new_sequences), # total sequences collected and submitted to GISAID in past year 
             pct_cases_sequenced_in_last_year = round(100*(sequences_in_last_year/cases_in_last_year),2), # pct cases sequenced
             sequences_per_100k_last_year = round(100000*sequences_in_last_year/max(owid_population),3)) # total sequences per capita
+# Add a metric of cumulative sequences (to the end)
+gisaid_cumulative<-gisaid_t%>%group_by(country_code)%>%
+  summarise(cum_seq = sum(n_new_sequences))
+
 
 
 # Join both sets of metrics 
@@ -396,19 +403,23 @@ stopifnot('Less than 90 LMICs with avg daily TPR not NA & with tests reported in
 
 # -------- SARS-CoV-2 sequencing capacity classifier original -----------------------
 # Variable assessing if country has demosntrated sequencing capacity via GISAID sequences
+pct_seq_thres<-0.5
+seq_per_cap_thres<- 30
+
 find_clean <- find_clean %>%
   # create new variable for SARS-CoV-2 Sequencing based on:
   # % of cases sequenced in the past year > 0.5%
   # cases sequenced per 100k in the past year >= 50
   mutate(
     sars_cov_2_sequencing = case_when(
-      ((cases_in_last_year == 0 | is.na(cases_in_last_year)) & (sequences_per_100k_last_year< 30 | is.na(sequences_per_100k_last_year))) ~ "Insufficient data",
-      ((cases_in_last_year == 0 | is.na(cases_in_last_year)) & sequences_per_100k_last_year> 30) ~ "Has demonstrated sequencing capacity",
+      ((cases_in_last_year == 0 | is.na(cases_in_last_year)) & (sequences_per_100k_last_year< seq_per_cap_thres | is.na(sequences_per_100k_last_year))) ~ "Insufficient data",
+      ((cases_in_last_year == 0 | is.na(cases_in_last_year)) & sequences_per_100k_last_year> seq_per_cap_thres) ~ "Insufficient data", #"Has demonstrated sequencing capacity",
       is.na(sequences_per_100k_last_year) ~ "Has not demonstrated sequencing capacity",
-      pct_cases_sequenced_in_last_year >= 0.5  ~ "Has demonstrated sequencing capacity",
-      pct_cases_sequenced_in_last_year < 0.5 & sequences_per_100k_last_year >= 30 ~ "Has demonstrated sequencing capacity",
-      pct_cases_sequenced_in_last_year < 0.5 & sequences_per_100k_last_year <30 ~ "Has not demonstrated sequencing capacity",
-      (cases_in_last_year == 0 | is.na(cases_in_last_year)) ~ "Insufficient data"
+      pct_cases_sequenced_in_last_year >= pct_seq_thres & sequences_per_100k_last_year >= seq_per_cap_thres  ~ "Has demonstrated sequencing capacity", # upper right
+      pct_cases_sequenced_in_last_year < pct_seq_thres & sequences_per_100k_last_year >= seq_per_cap_thres ~ "Has not demonstrated sequencing capacity", #upper left
+      pct_cases_sequenced_in_last_year < pct_seq_thres & sequences_per_100k_last_year < seq_per_cap_thres ~ "Has not demonstrated sequencing capacity", # bottom left
+      pct_cases_sequenced_in_last_year >= pct_seq_thres & sequences_per_100k_last_year < seq_per_cap_thres ~ "Has not demonstrated sequencing capacity", # bottom right
+
     )
   )
 
@@ -450,7 +461,7 @@ find_clean$date_tests_last_reported<-date_df$date_tests_last_reported
 
 
 # Internal troubleshooting, generates dataset that groups by archetype for easy validation
-find_clean_LMICs<-find_clean%>%filter(!old_archetype == "High Income*")
+find_clean_LMICs<-find_clean%>%filter(LMIC_status != 'High Income')
 n_insufficient_data<- sum(find_clean_LMICs$archetype_orig == "Insufficient data")
 n_not_tests<-sum(find_clean_LMICs$dx_testing_capacity == "Has demonstrated testing capacity")
 n_Test<- sum(find_clean_LMICs$dx_testing_capacity == "Has not demonstrated testing capacity")
@@ -478,22 +489,25 @@ find_changed_archetypes <-find_map%>%filter(old_archetype != archetype_orig_w_HI
 
 # Make internal validation data sets 
 if (USE_CASE == 'local') {
-  find_clean_LMICs%>%filter(archetype_orig == "Insufficient data")%>%write.csv('../../data/processed/countries_in_insufficient_data.csv')
-  find_clean_LMICs%>%filter(archetype_orig == "Test")%>%write.csv('../../data/processed/countries_in_test.csv')
-  find_clean_LMICs%>%filter(archetype_orig == "Strengthen")%>%write.csv('../../data/processed/countries_in_strengthen.csv')
+  find_clean_LMICs%>%filter(archetype_orig == "Insufficient data")%>%write.csv(paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/countries_in_insufficient_data.csv'))
+  find_clean_LMICs%>%filter(dx_testing_rec == "Test - Increase diagnostic testing capacity")%>%write.csv(paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/countries_in_test.csv'))
+  find_clean_LMICs%>%filter(archetype_orig == "Strengthen")%>%write.csv(paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/countries_in_strengthen.csv'))
   find_clean_LMICs%>%filter(archetype_orig == "Leverage" | archetype_orig == "Connect")%>%
-    write.csv('../../data/processed/countries_in_Lev_or_Connect.csv')
+    write.csv(paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/countries_in_insufficient_data.csv'))
   if (prev_month != "November" & prev_year!= "2021"){
-    write.csv(find_changed_archetypes, paste0('../../data/processed/find_changed_archetypes', prev_month, '_to_', current_month, '.csv'))
+    write.csv(find_changed_archetypes, paste0('../../../data/NGS_Data_Tables/PPI/find_changed_archetypes', prev_month, '_to_', current_month, '.csv'))
   }
 }
 
 
 if (USE_CASE == 'domino') {
   find_clean_LMICs%>%filter(archetype_orig == "Insufficient data")%>%write.csv('/mnt/data/processed/countries_in_insufficient_data.csv')
-  find_clean_LMICs%>%filter(archetype_orig == "Test")%>%write.csv('/mnt/data/processed/countries_in_test.csv')
+  find_clean_LMICs%>%filter(dx_testing_rec == "Test - Increase diagnostic testing capacity")%>%write.csv('/mnt/data/processed/countries_in_test.csv')
   find_clean_LMICs%>%filter(archetype_orig == "Strengthen")%>%write.csv('/mnt/data/processed/countries_in_strengthen.csv')
   find_clean_LMICs%>%filter(archetype_orig == "Leverage" | archetype_orig == "Connect")%>%write.csv('/mnt/data/processed/countries_in_Lev_or_Connect.csv')
+  if (prev_month != "November" & prev_year!= "2021"){
+    write.csv(find_changed_archetypes, paste0('../../../data/NGS_Data_Tables/PPI/find_changed_archetypes', prev_month, '_to_', current_month, '.csv'))
+  }
 }
 
   
@@ -531,6 +545,8 @@ find_map$pct_seq[find_map$pct_seq == "NA %" | find_map$pct_seq == "NaN %"]<-'Ins
 find_map$seq_per_100k[find_map$seq_per_100k == "NA per 100k persons"]<- 'Insufficient data'
 find_map$facility_access[is.na(find_map$facility_access)]<-"Insufficient data"
 
+# Add in the cumulative number of sequences
+find_map<-left_join(find_map, gisaid_cumulative, by= c("code" = "country_code"))
 
 # Make column headers look nice
 find_map<-find_map%>%rename(
@@ -542,7 +558,8 @@ find_map<-find_map%>%rename(
   `Date tests last reported` = date_tests_last_reported,
   `Days since tests were reported` = days_since_tests_reported,
   `% of cases sequenced in past year` = pct_seq,
-  `Number of sequences in past year` = seq_per_100k
+  `Number of sequences in past year` = seq_per_100k,
+  `Cumulative number of sequences entire pandemic` = cum_seq
 )
 
 stopifnot('More than 3 countries missing archetype at final step' = sum(find_map$Archetype == "NaN" |is.na(find_map$Archetype)) <=3)
@@ -563,7 +580,7 @@ find_map<-find_map%>%mutate(
 # Join shapefiles! 
 shapefile <- read_delim(SHAPEFILES_FOR_FLOURISH_PATH, delim = "\t") %>%
   select(geometry, code, country)
-# Need to deduplicate?? 
+
 
 
 find_map_small<-find_map%>%select(-name) # remove name and replace with country from shapefile
@@ -584,7 +601,10 @@ find_clean_flourish$`Archetype*`[is.na(find_clean_flourish$`Archetype*`)]<-"Insu
 
 find_clean_flourish<-find_clean_flourish%>%mutate(
   ngs_capacity_binary = ifelse(
-    (ngs_capacity == 0 | is.na(ngs_capacity)), "No", "Yes"))
+    (ngs_capacity == 0 | is.na(ngs_capacity)), "No", "Yes"),
+  test_binary = ifelse(
+    `Test recommendation` == "Test - Increase diagnostic testing capacity", 1, NA
+  ))
 
 find_rec_test<-left_join(find_rec_test, shapefile, by = "code")
 
@@ -598,7 +618,7 @@ full_dataset<-find_clean%>%select(name, code, population_size, date_tests_last_r
                                   dx_testing_capacity,ngs_capacity, sequencing_capacity,
                                   sars_cov_2_sequencing, world_bank_economies, archetype_orig_w_HICs, prev_test_rec,
                                   dx_testing_rec, old_archetype)%>%
-  rename(archetype = archetype_orig_w_HICs)
+  rename(archetype = archetype_orig_w_HICs)%>%left_join(gisaid_cumulative, by = c("code" = "country_code"))
 
 
 # Remove extraneous columns from the map dataset 
@@ -608,7 +628,8 @@ find_clean_flourish<-find_clean_flourish%>%select(-old_archetype, -archetype_ori
 # Make clean dataset
 clean_dataset<-find_map%>%select(name, `Date tests last reported`, `Test positivity rate (%) in past year`,
                                  `Average daily tests in past year`, `% of cases sequenced in past year`,
-                                 `Number of sequences in past year`, world_bank_economies,dx_testing_capacity, 
+                                 `Number of sequences in past year`, `Cumulative number of sequences entire pandemic`,
+                                 world_bank_economies,dx_testing_capacity, 
                                  `Test recommendation`,
                                  sars_cov_2_sequencing,facility_access, archetype_orig_w_HICs)%>%
   rename(
@@ -624,13 +645,13 @@ clean_dataset<-find_map%>%select(name, `Date tests last reported`, `Test positiv
 
 if (USE_CASE == 'local'){
   if(prev_month!= 'November' & prev_year != '2021'){
-    write.csv(find_changed_archetypes, paste0('../../data/NGS_Data_Tables/', current_folder, '/PPI/find_changed_archetypes.csv'), row.names = F)
+    write.csv(find_changed_archetypes, paste0('../../../data/NGS_Data_Tables/', current_folder, '/PPI/find_changed_archetypes.csv'), row.names = F)
   }
-  write.csv(find_not_reported, paste0('../../data/NGS_Data_Tables/', current_folder, '/PPI/find_delayed_test_reporting.csv'), row.names = F)
-  write.csv(full_dataset, paste0('../../data/NGS_Data_Tables/', current_folder, '/public/full_dataset.csv'), na = "NaN", row.names = FALSE)
-  write.csv(find_clean_flourish, paste0('../../data/NGS_Data_Tables/', current_folder, '/PPI/find_map.csv'), na = "NaN", row.names = FALSE)
-  write.csv(clean_dataset, paste0('../../data/NGS_Data_Tables/', current_folder, '/public/clean_dataset.csv'), na = "NaN", row.names = FALSE)
-  write.csv(find_rec_test, paste0('../../data/NGS_Data_Tables/', current_folder,'/PPI/countries_in_test.csv'), na = "NaN", row.names = FALSE )
+  write.csv(find_not_reported, paste0('../../../data/NGS_Data_Tables/', current_folder, '/PPI/find_delayed_test_reporting.csv'), row.names = F)
+  write.csv(full_dataset, paste0('../../../data/NGS_Data_Tables/', current_folder, '/public/full_dataset.csv'), na = "NaN", row.names = FALSE)
+  write.csv(find_clean_flourish, paste0('../../../data/NGS_Data_Tables/', current_folder, '/PPI/find_map.csv'), na = "NaN", row.names = FALSE)
+  write.csv(clean_dataset, paste0('../../../data/NGS_Data_Tables/', current_folder, '/public/clean_dataset.csv'), na = "NaN", row.names = FALSE)
+  write.csv(find_rec_test, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/countries_in_test.csv'), na = "NaN", row.names = FALSE )
 }
 
 if (USE_CASE == 'domino'){
