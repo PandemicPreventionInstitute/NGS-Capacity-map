@@ -13,3 +13,4 @@ seq_per_100k,numerical,"Number of sequences per 100,000 persons",
 cases_per_100k,numerical,"Number of cases per 100,000 persons",
 archetype,character,Country archetype based on LMIC metric thresholds,
 archetype_description,character,Description of country archetypes,
+cum_seq,numerical,Cumulative sequences submitted during the entire pandemic
