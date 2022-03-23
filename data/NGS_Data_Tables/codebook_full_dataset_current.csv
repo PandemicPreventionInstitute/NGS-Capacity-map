@@ -19,3 +19,4 @@ sequencing_capacity,character,"category of ngs facility access (0 facilities, 1-
 sars_cov_2_sequencing,character,binary of sequencing capacity (has demonstrated capacity/has not demonstrated capacity)
 world_bank_economies,character,World Bank socio-economic status by country
 archetype,character,Surveillance Capacity assigned archetype
+cum_seq,numerical,Cumulative sequences submitted during the entire pandemic
