@@ -356,6 +356,8 @@ gisaid_last_year<-gisaid_t%>%filter(collection_date>=(LAST_DATA_PULL_DATE -TIME_
 gisaid_cumulative<-gisaid_t%>%group_by(country_code)%>%
   summarise(cum_seq = sum(n_new_sequences))
 
+gisaid_last_year$pct_cases_sequenced_in_last_year[is.infinite(gisaid_last_year$pct_cases_sequenced_in_last_year)]<-NA
+
 
 
 # Join both sets of metrics 
