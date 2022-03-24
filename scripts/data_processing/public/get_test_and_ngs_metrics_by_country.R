@@ -607,7 +607,8 @@ shapefile <- read_delim(SHAPEFILES_FOR_FLOURISH_PATH, delim = "\t") %>%
   select(geometry, code, country)
 lat_long<-read.csv(LAT_LONG_DATA)%>%clean_names()%>%
   select(alpha_3_code, latitude, longitude)%>%
-  rename(code = alpha_3_code)
+  rename(code = alpha_3_code)%>%
+    mutate(code = trim_ws(as.character(code)))
 
 
 
