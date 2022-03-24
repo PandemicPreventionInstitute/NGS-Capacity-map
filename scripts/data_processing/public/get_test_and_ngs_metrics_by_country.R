@@ -81,7 +81,7 @@ SHAPEFILES_FOR_FLOURISH_PATH <- '../../../data/Geospatial_Data/geometric_polygon
 WHO_REGIONS_PATH<-'../../../data/additional_sources/WHO_region_data.csv' # WHO country list
 ECONOMY_PATH<-'../../../data/additional_sources/WB_class_data.xls'
 FIND_TESTING_SEQ_RAW_PATH<- '../../../data/additional_sources/Sequencing_labs_data.xlsx' # NGS capacity data
-LAT_LONG_DATA <- '../../../data/Geospatial_data/country_lat_long_names.csv'
+LAT_LONG_DATA <- '../../../data/Geospatial_data/iso_3_centroids.csv'
 }
 
 LAST_DATA_PULL_DATE<-as.Date(substr(lubridate::now('EST'), 1, 10))-days(1) # Make this based off of yesterday!
@@ -606,8 +606,8 @@ find_map<-find_map%>%mutate(
 shapefile <- read_delim(SHAPEFILES_FOR_FLOURISH_PATH, delim = "\t") %>%
   select(geometry, code, country)
 lat_long<-read.csv(LAT_LONG_DATA)%>%clean_names()%>%
-  select(x3_letter_iso_code, latitude, longitude)%>%
-  rename(code = x3_letter_iso_code)
+  select(alpha_3_code, latitude, longitude)%>%
+  rename(code = alpha_3_code)
 
 
 
