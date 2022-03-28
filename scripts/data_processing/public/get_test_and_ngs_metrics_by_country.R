@@ -575,8 +575,11 @@ find_map$facility_access[is.na(find_map$facility_access)]<-"Insufficient data"
 # Add in the cumulative number of sequences
 find_map<-left_join(find_map, gisaid_cumulative, by= c("code" = "country_code"))
 
-# Make column headers look nice
-find_map<-find_map%>%rename(
+# Make column headers look nice and add commas
+#find_map$cum_seq<-comma_format()(round(find_map$cum_seq, 0))
+#find_map$seq_per_100k<-comma_format()find_map$seq_per_100k
+find_map<-find_map%>%
+    rename(
   Archetype = archetype_full_orig,
   `Archetype*` = archetype_full_orig_w_HICs,
   `Test recommendation` = dx_testing_rec,
