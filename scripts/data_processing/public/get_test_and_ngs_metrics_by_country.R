@@ -661,6 +661,8 @@ full_dataset<-find_clean%>%select(name, code, population_size, date_tests_last_r
 # Remove extraneous columns from the map dataset 
 find_clean_flourish<-find_clean_flourish%>%select(-old_archetype, -archetype_orig, -`Archetype`, 
                                                   -archetype_full_new, -archetype_new)
+# Add a column for TPR that is in % but without the tacked on percent!
+find_clean_flourish<-find_clean_flourish%>%mutate(tpr_pct = 100*tpr_year_smoothed_truncated)
 
 # Make clean dataset
 clean_dataset<-find_map%>%select(name, `Date tests last reported`, `Test positivity rate (%) in past year`,
