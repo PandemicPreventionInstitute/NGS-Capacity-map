@@ -686,8 +686,10 @@ seq_scatterplot<-full_dataset%>%select(name, code, population_size,
                                        world_bank_economies)%>%
     filter(sars_cov_2_sequencing != "Insufficient data")
 
-test_scatterplot<-full_dataset%>%select(name, code, population_size,
-                                       date_tests_last_reported, tpr_year_smoothed_truncated,
+test_scatterplot<-full_dataset%>%mutate(
+    TPR_pct = 100*tpr_year_smoothed_truncated)%>%
+    select(name, code, population_size,
+                                       date_tests_last_reported, TPR_pct,
                                        avg_daily_tests_per_1000_last_year_smoothed, dx_testing_capacity,
                                        world_bank_economies)%>%
     filter(dx_testing_capacity != "Insufficient testing data")
