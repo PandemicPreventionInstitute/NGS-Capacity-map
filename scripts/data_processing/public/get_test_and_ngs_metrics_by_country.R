@@ -77,7 +77,7 @@ LAT_LONG_DATA <- '/mnt/data/Geospatial_data/country_lat_long_names.csv'
 
 if (USE_CASE == 'local'){
 GISAID_DAILY_PATH<-'../../../data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
-SHAPEFILES_FOR_FLOURISH_PATH <- '../../../data/Geospatial_Data/geometric_polygons_country.txt' # shapefiles for mapping
+SHAPEFILES_FOR_FLOURISH_PATH <- '../../../data/Geospatial_Data/geometric_polygons_country.txt' # shapefiles for mapping+
 WHO_REGIONS_PATH<-'../../../data/additional_sources/WHO_region_data.csv' # WHO country list
 ECONOMY_PATH<-'../../../data/additional_sources/WB_class_data.xls'
 FIND_TESTING_SEQ_RAW_PATH<- '../../../data/additional_sources/Sequencing_labs_data.xlsx' # NGS capacity data
@@ -680,7 +680,17 @@ clean_dataset<-find_map%>%select(name, `Date tests last reported`, `Test positiv
     `Archetype` = archetype_orig_w_HICs)
 
 
+seq_scatterplot<-full_dataset%>%select(name, code, population_size,
+                                       pct_cases_sequenced_in_last_year,
+                                       sequences_per_100k_last_year, sars_cov_2_sequencing,
+                                       world_bank_economies)%>%
+    filter(sars_cov_2_sequencing != "Insufficient data")
 
+test_scatterplot<-full_dataset%>%select(name, code, population_size,
+                                       date_tests_last_reported, tpr_year_smoothed_truncated,
+                                       avg_daily_tests_per_1000_last_year_smoothed, dx_testing_capacity,
+                                       world_bank_economies)%>%
+    filter(dx_testing_capacity != "Insufficient testing data")
 
 if (USE_CASE == 'local'){
   if(prev_month!= 'November' & prev_year != '2021'){
@@ -691,7 +701,9 @@ if (USE_CASE == 'local'){
   write.csv(find_clean_flourish, paste0('../../../data/NGS_Data_Tables/', current_folder, '/PPI/find_map.csv'), na = "NaN", row.names = FALSE)
   write.csv(clean_dataset, paste0('../../../data/NGS_Data_Tables/', current_folder, '/public/clean_dataset.csv'), na = "NaN", row.names = FALSE)
   write.csv(find_rec_test, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/countries_in_test.csv'), na = "NaN", row.names = FALSE )
-}
+  write.csv(seq_scatterplot, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/seq_data.csv'), na = "NaN", row.names = FALSE )
+  write.csv(test_scatterplot, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/test_data.csv'), na = "NaN", row.names = FALSE )
+  }
 
 if (USE_CASE == 'domino'){
   write.csv(find_changed_archetypes, '/mnt/data/processed/find_changed_archetypes.csv')
@@ -701,7 +713,9 @@ if (USE_CASE == 'domino'){
   write.csv(find_clean_flourish, "/mnt/data/processed/find_map.csv", na = "NaN", row.names = FALSE)
   write.csv(clean_dataset, "/mnt/data/processed/clean_dataset.csv", na = "NaN", row.names = FALSE)
   write.csv(find_insufficient_test_but_have_seq, "/mnt/data/processed/test_but_suff_seq.csv", na = "NaN", row.names = FALSE )
-}
+  write.csv(seq_scatterplot, "/mnt/data/processed/seq_data.csv", na = "NaN", row.names = FALSE )
+  write.csv(test_scatterplot, "/mnt/data/processed/test_data.csv", na = "NaN", row.names = FALSE )
+  }
 
 
 

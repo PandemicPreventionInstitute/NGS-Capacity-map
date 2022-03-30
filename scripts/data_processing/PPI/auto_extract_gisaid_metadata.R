@@ -35,7 +35,7 @@ if (USE_CASE =='domino'){
 secrets <- read.csv("/mnt/data/secrets_gisaid.csv", header = FALSE) #a file with the username on the first row and password on the second row. No header
 }
 if (USE_CASE =='local'){
-    secrets <- read.csv("../../data/secrets_gisaid.csv", header = FALSE) #a file with the username on the first row and password on the second row. No header
+    secrets <- read.csv("../../../data/secrets_gisaid.csv", header = FALSE) #a file with the username on the first row and password on the second row. No header
 }
 user <- as.character(secrets[1,1])
 pw <- as.character(secrets[2,1])
