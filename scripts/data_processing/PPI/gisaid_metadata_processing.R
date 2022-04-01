@@ -60,7 +60,6 @@ FIRST_DATE<-"2019-12-01" # earliest date we want COVID cases for
 today_date<-lubridate::today('EST')
 current_month<-month(today_date)
 current_year<-year(today_date)
-current_folder<-str_c(current_month, current_year, sep = '_')
 UPDATE_DATE<- str_c(current_year, current_month, "01", sep = '-')# we want to exclude sequences submitted after the first of the month
 
 #-----Download and process------

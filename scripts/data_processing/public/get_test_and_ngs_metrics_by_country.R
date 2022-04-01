@@ -52,12 +52,17 @@ today_date<-lubridate::today('EST')
 current_month<-month.name[month(today_date)]
 current_year<-year(today_date)
 current_folder<-str_c(current_month, current_year, sep = '_')
+current_month<-month(today_date)
+current_year<-year(today_date)
+LAST_DATA_PULL_DATE<-ymd(str_c(current_year, current_month, "01", sep = '-'))
 last_update_date<-today_date - months(1)
 prev_month<-month.name[month(last_update_date)]
 #prev_month<-"November"
 prev_year<-year(last_update_date)
 #prev_year<-"2021"
 prev_folder<-str_c(prev_month, prev_year, sep = '_')
+FIRST_DATE<-"2019-12-01" # First data that we would expect to see SARS-CoV-2 genomes/cases/tests
+TIME_WINDOW_YEAR<-364
 
 
 ## Set filepaths
@@ -84,10 +89,7 @@ FIND_TESTING_SEQ_RAW_PATH<- '../../../data/additional_sources/Sequencing_labs_da
 LAT_LONG_DATA <- '../../../data/Geospatial_data/iso_3_centroids.csv'
 }
 
-LAST_DATA_PULL_DATE<-as.Date(substr(lubridate::now('EST'), 1, 10))-days(1) # Make this based off of yesterday!
-LAST_DATA_PULL_DATE<-as.Date("2022-03-01")-days(1)
-FIRST_DATE<-"2019-12-01" # First data that we would expect to see SARS-CoV-2 genomes/cases/tests
-TIME_WINDOW_YEAR<-364
+
 
 
 
