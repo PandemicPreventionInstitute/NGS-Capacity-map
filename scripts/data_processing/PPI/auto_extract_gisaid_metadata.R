@@ -87,7 +87,7 @@ write_csv(gisaid_metadata, '/mnt/data/raw/metadata.csv')
 }
 # local
 if (USE_CASE == 'local'){
-write_csv(gisaid_metadata, '../../data/raw/metadata.csv')
+write_csv(gisaid_metadata, '../../../data/raw/metadata.csv')
 }
 
 

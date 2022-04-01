@@ -54,9 +54,9 @@ current_year<-year(today_date)
 current_folder<-str_c(current_month, current_year, sep = '_')
 last_update_date<-today_date - months(1)
 prev_month<-month.name[month(last_update_date)]
-prev_month<-"November"
+#prev_month<-"November"
 prev_year<-year(last_update_date)
-prev_year<-"2021"
+#prev_year<-"2021"
 prev_folder<-str_c(prev_month, prev_year, sep = '_')
 
 
