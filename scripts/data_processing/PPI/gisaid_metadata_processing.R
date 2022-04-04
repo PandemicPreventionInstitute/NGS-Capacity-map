@@ -57,6 +57,12 @@ OWID_PATH<-url('https://raw.githubusercontent.com/owid/covid-19-data/master/publ
 #FUTURE_DATE_PATH<-'/mnt/data/suspect_date.csv'
 }
 FIRST_DATE<-"2019-12-01" # earliest date we want COVID cases for 
+
+today_date<-lubridate::today('EST')
+current_month<-month(today_date)
+current_year<-year(today_date)
+UPDATE_DATE<- str_c(current_year, current_month, "01", sep = '-')# we want to exclude sequences submitted after the first of the month
+
 #-----Download and process------
 
 
@@ -103,6 +109,8 @@ metadata$submission_date<-ymd(metadata$submission_date)
 metadata<- metadata[metadata$collection_date >= as.Date(FIRST_DATE, format = "%Y-%m-%d"),]
 # exclude submissions dated to the future
 metadata <- metadata[metadata$collection_date <= as.Date(Sys.Date(), format = "%Y-%m-%d"),]
+# exclude submissions dated after the update date (first of the month)
+metadata <- metadata[metadata$submission_date <= as.Date(UPDATE_DATE, format = "%Y-%m-%d"),]
 # create masterlist of sequences with collection date in future of when they were submitted
 
 # 5. Exclude sequences in Next Strain exclusion list by assession ID

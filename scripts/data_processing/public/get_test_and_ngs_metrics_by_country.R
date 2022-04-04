@@ -63,14 +63,19 @@ today_date<-lubridate::today('EST')
 current_month<-month.name[month(today_date)]
 current_year<-year(today_date)
 current_folder<-str_c(current_month, current_year, sep = '_')
+current_month<-month(today_date)
+current_year<-year(today_date)
+LAST_DATA_PULL_DATE<-ymd(str_c(current_year, current_month, "01", sep = '-'))
 last_update_date<-today_date - months(1)
 
 #?????: Does this prev_month of November overwrite the other prev_month definition?
 prev_month<-month.name[month(last_update_date)]
-prev_month<-"November"
+#prev_month<-"November"
 prev_year<-year(last_update_date)
-prev_year<-"2021"
+#prev_year<-"2021"
 prev_folder<-str_c(prev_month, prev_year, sep = '_')
+FIRST_DATE<-"2019-12-01" # First data that we would expect to see SARS-CoV-2 genomes/cases/tests
+TIME_WINDOW_YEAR<-364
 
 
 ## Set filepaths
@@ -95,24 +100,14 @@ LAT_LONG_DATA <- '/mnt/data/Geospatial_data/country_lat_long_names.csv' #lat/lon
 
 #if running locally, run the following local pathways to ingets data from local folders (pulled from github)
 if (USE_CASE == 'local'){
-GISAID_DAILY_PATH<-'../../../../data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
-SHAPEFILES_FOR_FLOURISH_PATH <- '../../../../data/Geospatial_Data/geometric_polygons_country.txt' # shapefiles for mapping
-WHO_REGIONS_PATH<-'../../../../data/additional_sources/WHO_region_data.csv' # WHO country list
-ECONOMY_PATH<-'../../../../data/additional_sources/WB_class_data.xls' #World Bank socioeconomic class data
-FIND_TESTING_SEQ_RAW_PATH<- '../../../../data/additional_sources/Sequencing_labs_data.xlsx' # WHO NGS facility data
-LAT_LONG_DATA <- '../../../../data/Geospatial_data/iso_3_centroids.csv' #lat/long coordinates data
+
+GISAID_DAILY_PATH<-'../../../data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
+SHAPEFILES_FOR_FLOURISH_PATH <- '../../../data/Geospatial_Data/geometric_polygons_country.txt' # shapefiles for mapping+
+WHO_REGIONS_PATH<-'../../../data/additional_sources/WHO_region_data.csv' # WHO country list
+ECONOMY_PATH<-'../../../data/additional_sources/WB_class_data.xls'
+FIND_TESTING_SEQ_RAW_PATH<- '../../../data/additional_sources/Sequencing_labs_data.xlsx' # NGS capacity data
+LAT_LONG_DATA <- '../../../data/Geospatial_data/iso_3_centroids.csv'
 }
-
-#Create last-data pull dates and make sure that the time window for the data pull is within 364 days
-LAST_DATA_PULL_DATE<-as.Date(substr(lubridate::now('EST'), 1, 10))-days(1) #Make this based off of yesterday! Because of data lag
-LAST_DATA_PULL_DATE<-as.Date("2022-04-01")-days(1) #Change this per month of data update
-FIRST_DATE<-"2019-12-01" # First data that we would expect to see SARS-CoV-2 genomes/cases/tests
-TIME_WINDOW_YEAR<-364 #Pull within the last 12 months, so 364 days (minus one from 365 days)
-
-
-
-
-
 
 # ------ WHO countries, regions, and code ---------------------------------------------
 
@@ -754,7 +749,19 @@ clean_dataset<-find_map%>%select(name, `Date tests last reported`, `Test positiv
     `Archetype` = archetype_orig_w_HICs)
 
 
+seq_scatterplot<-full_dataset%>%select(name, code, population_size,
+                                       pct_cases_sequenced_in_last_year,
+                                       sequences_per_100k_last_year, sars_cov_2_sequencing,
+                                       world_bank_economies)%>%
+    filter(sars_cov_2_sequencing != "Insufficient data")
 
+test_scatterplot<-full_dataset%>%mutate(
+    TPR_pct = 100*tpr_year_smoothed_truncated)%>%
+    select(name, code, population_size,
+                                       date_tests_last_reported, TPR_pct,
+                                       avg_daily_tests_per_1000_last_year_smoothed, dx_testing_capacity,
+                                       world_bank_economies)%>%
+    filter(dx_testing_capacity != "Insufficient testing data")
 
 if (USE_CASE == 'local'){
   if(prev_month!= 'November' & prev_year != '2021'){
@@ -765,7 +772,9 @@ if (USE_CASE == 'local'){
   write.csv(find_clean_flourish, paste0('../../../data/NGS_Data_Tables/', current_folder, '/PPI/find_map.csv'), na = "NaN", row.names = FALSE)
   write.csv(clean_dataset, paste0('../../../data/NGS_Data_Tables/', current_folder, '/public/clean_dataset.csv'), na = "NaN", row.names = FALSE)
   write.csv(find_rec_test, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/countries_in_test.csv'), na = "NaN", row.names = FALSE )
-}
+  write.csv(seq_scatterplot, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/seq_data.csv'), na = "NaN", row.names = FALSE )
+  write.csv(test_scatterplot, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/test_data.csv'), na = "NaN", row.names = FALSE )
+  }
 
 if (USE_CASE == 'domino'){
   write.csv(find_changed_archetypes, '/mnt/data/processed/find_changed_archetypes.csv')
@@ -775,7 +784,9 @@ if (USE_CASE == 'domino'){
   write.csv(find_clean_flourish, "/mnt/data/processed/find_map.csv", na = "NaN", row.names = FALSE)
   write.csv(clean_dataset, "/mnt/data/processed/clean_dataset.csv", na = "NaN", row.names = FALSE)
   write.csv(find_insufficient_test_but_have_seq, "/mnt/data/processed/test_but_suff_seq.csv", na = "NaN", row.names = FALSE )
-}
+  write.csv(seq_scatterplot, "/mnt/data/processed/seq_data.csv", na = "NaN", row.names = FALSE )
+  write.csv(test_scatterplot, "/mnt/data/processed/test_data.csv", na = "NaN", row.names = FALSE )
+  }
 
 
 
