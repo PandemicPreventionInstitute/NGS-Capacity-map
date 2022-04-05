@@ -174,7 +174,7 @@ gisaid_t <- metadata %>%
          gisaid_collect_date = collection_date)
 
 # Add in code to complete through yesterday with 0s for each country 
-gisaid_collect_date <- seq.Date(as.Date(FIRST_DATE), today()-1, by = "day")
+gisaid_collect_date <- seq.Date(as.Date(FIRST_DATE), ymd(UPDATE_DATE) - days(1), by = "day")
 country_code <-unique(gisaid_t$country_code)
 n_gisaid_codes<-length(country_code)
 date_country<-expand_grid(gisaid_collect_date, country_code)
