@@ -12,6 +12,8 @@ if(USE_CASE == ""){
 }
 #USE_CASE = 'domino' # 'domino' or 'local'
 
+FROM_FEED <- FALSE
+
 #------Libraries------------
 if (USE_CASE== 'domino'){
 install.packages("tidyverse", dependencies = TRUE, repos = 'http://cran.us.r-project.org')
@@ -46,6 +48,7 @@ library(readr) # read_csv
 #local
 if (USE_CASE == 'local'){
 GISAID_METADATA_PATH<-"../../../data/raw/metadata.csv" # from extracted datastream
+GISAID_METADATA_PATH_DWNLD<- "../../../data/raw/metadata.tsv" # from download 
 OWID_PATH<-url('https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv')
 FUTURE_DATE_PATH<-'../../data/suspect_date.csv'
 }
@@ -66,8 +69,15 @@ UPDATE_DATE<- str_c(current_year, current_month, "01", sep = '-')# we want to ex
 
 
 #1. Download data
-metadata<-read.csv(GISAID_METADATA_PATH)
+if (FROM_FEED == TRUE){
+    metadata<-read.csv(GISAID_METADATA_PATH)
+}
 owid_raw<-read_csv(OWID_PATH)
+if (FROM_FEED == FALSE){
+    metadata<-read.delim(GISAID_METADATA_PATH_DWNLD)%>%clean_names()%>%
+        filter(host == "Human", type == "betacoronavirus")%>%
+        select(accession_id, location, submission_date, collection_date, clade, pango_lineage)
+}
 
 
 
