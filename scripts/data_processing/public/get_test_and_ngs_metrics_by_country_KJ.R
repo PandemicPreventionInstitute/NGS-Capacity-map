@@ -52,7 +52,7 @@ library(R.utils) # R utilities
 library(stringr) # to parse strings in R
 library(dplyr) # data wrangling
 library(scales) # comma formatting
-library(bpa) 
+library(bpa) # To get the trim_ws working, which will allow you to join the lat and long files
  
 # ------ Name data paths and set parameters -------------------------------------------
 
@@ -66,6 +66,8 @@ current_year<-year(today_date)
 current_folder<-str_c(current_month, current_year, sep = '_')
 current_month<-month(today_date)
 current_year<-year(today_date)
+
+#Creating last date pulled and previous month variables
 LAST_DATA_PULL_DATE<-ymd(str_c(current_year, current_month, "01", sep = '-'))
 # Compares to last published archetype definitions
 prev_month<-month.name[month(ymd(LAST_DATA_PULL_DATE) - months(1))]
@@ -75,6 +77,8 @@ prev_year<-year(ymd(LAST_DATA_PULL_DATE) - months(1))
 prev_folder<-str_c(prev_month, prev_year, sep = '_')
 FIRST_DATE<-"2019-12-01" # First data that we would expect to see SARS-CoV-2 genomes/cases/tests
 TIME_WINDOW_YEAR<-364
+#include for weekly aggregation of cases
+TIME_WINDOW_WEEK<- 6
 
 
 ## Set filepaths
@@ -84,13 +88,15 @@ ALL_DATA_PATH<- url("https://raw.githubusercontent.com/dsbbfinddx/FINDCov19Track
 
 #Out-dated FIND NGS map methodologies that were lives/updated in November.
 if (prev_folder == "November_2021"){
-    OLD_FIND_MAP_PATH<-url(paste0("https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/NGS_Data_Tables/", prev_folder, "/PPI/find_map_11.30.2021.csv"))
+  OLD_FIND_MAP_PATH<-url(paste0("https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/NGS_Data_Tables/", prev_folder, "/PPI/find_map_11.30.2021.csv"))
 }
 if(prev_folder != "November_2021"){
-    OLD_FIND_MAP_PATH<-url(paste0("https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/NGS_Data_Tables/", prev_folder, "/PPI/find_map.csv"))
+  OLD_FIND_MAP_PATH<-url(paste0("https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/NGS_Data_Tables/", prev_folder, "/PPI/find_map.csv"))
 }
 #Lat/long github repo
 LAT_LONG_DATA<-url("https://gist.githubusercontent.com/tadast/8827699/raw/f5cac3d42d16b78348610fc4ec301e9234f82821/countries_codes_and_coordinates.csv")
+
+
 
 #if running in domino, run the following pathways to ingest this data from Domino folders:
 if (USE_CASE == 'domino'){
@@ -396,7 +402,6 @@ gisaid_last_year<-gisaid_t%>%filter(collection_date>=(LAST_DATA_PULL_DATE -TIME_
 gisaid_cumulative<-gisaid_t%>%group_by(country_code)%>%
   summarise(cum_seq = sum(n_new_sequences), #cumulative number of sequences collected and submitted over the entire pandemic
             cum_cases = sum(owid_new_cases), #cumulative number of cases over the entire pandemic
-            cum_cases_per_100k = round(100000 *cum_cases/max(owid_population), 3)
             )
 
 gisaid_last_year$pct_cases_sequenced_in_last_year[is.infinite(gisaid_last_year$pct_cases_sequenced_in_last_year)]<-NA
@@ -407,30 +412,35 @@ gisaid_last_year$pct_cases_sequenced_in_last_year[is.infinite(gisaid_last_year$p
 # Join both sets of metrics 
 find_clean <- left_join(find_clean, gisaid_last_year, by = c("code" = "country_code")) 
 find_clean <- left_join(find_clean, gisaid_cumulative, by = c("code" = "country_code"))
-#does this mean one df has "code" and another has "country_code"? YES
+
+#add in cumulative cases per 100K metric:
+find_clean <- find_clean%>%
+  mutate(
+    cum_cases_per_100k = round(100000 *cum_cases/max(population_size),3)
+         )
 
 
 
 #------- Add in old archetype ------------------------------------------------------
 if (prev_month == "November" & prev_year == "2021")
-  {
+{
   old_find<-read.csv(url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/NGS_Data_Tables/November_2021/PPI/find_map_11.30.2021.csv'))%>%
-  select(code,country,dx_testing_capacity_clean, sars_cov_2_sequencing, archetype)%>%
-
-#when renaming, does order of variables matter?
-  rename(prev_test_rec = dx_testing_capacity_clean, # dx_testing_capacity
-         old_archetype = archetype, # archetype_orig_w_HICs
-         old_sequencing_archetype = sars_cov_2_sequencing)%>%filter(!is.na(code))%>%filter(country != "West Bank and Gaza") # 237 countries, filter out Palastine 2 country  names
-  }
+    select(code,country,dx_testing_capacity_clean, sars_cov_2_sequencing, archetype)%>%
+    
+    #when renaming, does order of variables matter?
+    rename(prev_test_rec = dx_testing_capacity_clean, # dx_testing_capacity
+           old_archetype = archetype, # archetype_orig_w_HICs
+           old_sequencing_archetype = sars_cov_2_sequencing)%>%filter(!is.na(code))%>%filter(country != "West Bank and Gaza") # 237 countries, filter out Palastine 2 country  names
+}
 
 # for following months, after first new methodologies iteration
 if (prev_month!= "November" & prev_year != "2021")
-  { 
+{ 
   old_find<-read.csv(OLD_FIND_MAP_PATH)%>%
     select(code,country,dx_testing_capacity, sars_cov_2_sequencing, archetype_orig_w_HICs)%>%
     rename(prev_test_rec = dx_testing_capacity, 
            old_archetype = archetype_orig_w_HICs)
-  }
+}
 #subset all unique code values from this old FIND NGS data into "old_codes" dataframe
 old_codes<-unique(old_find$code) # 237 of them
 
@@ -632,12 +642,10 @@ find_map$pct_seq[find_map$pct_seq == "NA %" | find_map$pct_seq == "NaN %"]<-'Ins
 find_map$seq_per_100k[find_map$seq_per_100k == "NA per 100k persons"]<- 'Insufficient data'
 find_map$facility_access[is.na(find_map$facility_access)]<-"Insufficient data"
 
-# Add in the cumulative number of sequences
-find_map<-left_join(find_map, gisaid_cumulative, by= c("code" = "country_code"))
-
 # Make column headers look nice and add commas
 #find_map$cum_seq<-comma_format()(round(find_map$cum_seq, 0))
 #find_map$seq_per_100k<-comma_format()find_map$seq_per_100k
+
 find_map<-find_map%>%
     rename(
   Archetype = archetype_full_orig,
@@ -649,7 +657,7 @@ find_map<-find_map%>%
   `Days since tests were reported` = days_since_tests_reported,
   `% of cases sequenced in past year` = pct_seq,
   `Number of sequences in past year` = seq_per_100k,
-  `Cumulative number of sequences entire pandemic` = cum_seq
+#  `Cumulative number of sequences entire pandemic` = cum_seq
 )
 
 stopifnot('More than 3 countries missing archetype at final step' = sum(find_map$Archetype == "NaN" |is.na(find_map$Archetype)) <=3)
@@ -668,7 +676,7 @@ find_map<-find_map%>%mutate(
 
 
 # Join shapefiles! 
-shapefile <- read_delim(SHAPEFILES_FOR_FLOURISH_PATH, delim = "\t") %>%
+shapefile <- read_delim(SHAPEFILES_FOR_FLOURISH_PATH, delim = "\t", show_col_types = FALSE) %>%
   select(geometry, code, country)
 lat_long<-read.csv(LAT_LONG_DATA)%>%clean_names()%>%
   select(alpha_3_code, latitude, longitude)%>%
@@ -710,24 +718,26 @@ full_dataset<-find_clean%>%select(name, code, population_size, date_tests_last_r
                                   rept_tests_within_last_6_months, days_since_tests_reported,
                                   cases_in_last_year_smoothed_truncated, tests_in_last_year_smoothed,
                                   tpr_year_smoothed_truncated, avg_daily_tests_per_1000_last_year_smoothed,
-                                  cases_in_last_year, sequences_in_last_year,
+                                  cases_in_last_year, sequences_in_last_year, cases_per_100k_last_year,
                                   pct_cases_sequenced_in_last_year, sequences_per_100k_last_year,
                                   dx_testing_capacity,ngs_capacity, sequencing_capacity,
                                   sars_cov_2_sequencing, world_bank_economies, archetype_orig_w_HICs, prev_test_rec,
                                   dx_testing_rec, old_archetype)%>%
   rename(archetype = archetype_orig_w_HICs)%>%left_join(gisaid_cumulative, by = c("code" = "country_code"))
 
-
 # Remove extraneous columns from the map dataset 
-find_clean_flourish<-find_clean_flourish%>%select(-old_archetype, -archetype_orig, -`Archetype`, 
-                                                  -archetype_full_new, -archetype_new)
+#find_clean_flourish<-find_clean_flourish%>%select(
+# -old_archetype, 
+# -archetype_orig, 
+# -`Archetype`)
+  
 # Add a column for TPR that is in % but without the tacked on percent!
 find_clean_flourish<-find_clean_flourish%>%mutate(tpr_pct = 100*tpr_year_smoothed_truncated)
 
 # Make clean dataset
 clean_dataset<-find_map%>%select(name, `Date tests last reported`, `Test positivity rate (%) in past year`,
                                  `Average daily tests in past year`, `% of cases sequenced in past year`,
-                                 `Number of sequences in past year`, `Cumulative number of sequences entire pandemic`,
+                                 `Number of sequences in past year`, #`Cumulative number of sequences entire pandemic`,
                                  world_bank_economies,dx_testing_capacity, 
                                  `Test recommendation`,
                                  sars_cov_2_sequencing,facility_access, archetype_orig_w_HICs)%>%
@@ -754,6 +764,9 @@ test_scatterplot<-full_dataset%>%mutate(
                                        world_bank_economies)%>%
     filter(dx_testing_capacity != "Insufficient testing data")
 
+
+
+#Exporting to .csv files for local and remote repos/virtual environments
 if (USE_CASE == 'local'){
   if(prev_month!= 'November' & prev_year != '2021'){
     write.csv(find_changed_archetypes, paste0('../../../data/NGS_Data_Tables/', current_folder, '/PPI/find_changed_archetypes.csv'), row.names = F)
@@ -778,9 +791,3 @@ if (USE_CASE == 'domino'){
   write.csv(seq_scatterplot, "/mnt/data/processed/seq_data.csv", na = "NaN", row.names = FALSE )
   write.csv(test_scatterplot, "/mnt/data/processed/test_data.csv", na = "NaN", row.names = FALSE )
   }
-
-
-
-
-
-
