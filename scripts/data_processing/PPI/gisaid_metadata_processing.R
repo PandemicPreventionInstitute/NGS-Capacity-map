@@ -66,7 +66,6 @@ FIRST_DATE<-"2019-12-01" # earliest date we want COVID cases for
 today_date<-lubridate::today('EST')
 current_month<-month(today_date)
 current_year<-year(today_date)
-UPDATE_DATE<- str_c(current_year, current_month, "01", sep = '-') # we want to exclude sequences submitted after the first of the month
 
 #-----Download and process------
 
@@ -174,8 +173,6 @@ gisaid_t <- metadata %>%
   select(code, collection_date, n_new_sequences)%>%
   rename(country_code = code,
          gisaid_collect_date = collection_date)
-
-# Add in code to complete through yesterday with 0s for each country 
 
 country_code <-unique(gisaid_t$country_code)
 n_gisaid_codes<-length(country_code)
