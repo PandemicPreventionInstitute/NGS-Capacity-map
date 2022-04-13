@@ -1,4 +1,4 @@
-﻿Country archetypes based on existing genomic sequencing capacity and activities,,,,,,,,
+Country archetypes based on existing genomic sequencing capacity and activities,,,,,,,,
 Country,Country code,World Bank Economies,WHO region,Testing capacity (last updated: 22 Mar 21),NGS capacity (last updated: Feb 21),SARS-Cov-2 sequences uploaded to GISAID (last updated: 23 Mar 21),Archetype,"Rank by number of cases (ranked within countries of the same WHO region, last updated 15 Mar 21)"
 x,x,,x,,,,x,x
 Afghanistan,AFG,Low income,Eastern Mediterranean,1 - Reliable testing capacity,0 - No NGS facilities,16,Connect,22
