@@ -13,7 +13,7 @@ if(USE_CASE == ""){
 }
 #USE_CASE = 'domino' # 'domino' or 'local'
 
-FROM_FEED <- FALSE
+FROM_FEED <- TRUE
 
 #------Libraries------------
 if (USE_CASE== 'domino'){
@@ -48,7 +48,7 @@ library(readr) # read_csv
 #-----Filepaths------------
 #local
 if (USE_CASE == 'local'){
-GISAID_METADATA_PATH<-"../../../data/raw/metadata.csv" # from extracted datastream
+GISAID_METADATA_PATH<-"../data/raw/metadata.csv" # from extracted datastream
 GISAID_METADATA_PATH_DWNLD<- "../../../data/raw/metadata.tsv" # from download 
 OWID_PATH<-url('https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv')
 #FUTURE_DATE_PATH<-'../../data/suspect_date.csv'
