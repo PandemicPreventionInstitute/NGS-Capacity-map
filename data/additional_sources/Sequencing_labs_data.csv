@@ -1,0 +1,220 @@
+﻿Country archetypes based on existing genomic sequencing capacity and activities,,,,,,,,
+Country,Country code,World Bank Economies,WHO region,Testing capacity (last updated: 22 Mar 21),NGS capacity (last updated: Feb 21),SARS-Cov-2 sequences uploaded to GISAID (last updated: 23 Mar 21),Archetype,"Rank by number of cases (ranked within countries of the same WHO region, last updated 15 Mar 21)"
+x,x,,x,,,,x,x
+Afghanistan,AFG,Low income,Eastern Mediterranean,1 - Reliable testing capacity,0 - No NGS facilities,16,Connect,22
+Albania,ALB,Upper middle income,Europe,1 - Reliable testing capacity,0 - No NGS facilities,30,Connect,27
+Algeria,DZA,Lower middle income,Africa,1 - Reliable testing capacity,0 - No NGS facilities,29,Connect,15
+American Samoa,ASM,Upper middle income,Western Pacific,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,21
+Andorra,AND,High income,Europe,1 - Reliable testing capacity,0 - No NGS facilities,1,Connect,49
+Angola,AGO,Lower middle income,Africa,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,38
+Antigua and Barbuda,ATG,High income,Americas,0 - No reliable testing capacity,0 - No NGS facilities,1,Test,25
+Argentina,ARG,Upper middle income,Americas,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,661,Strengthen,9
+Armenia,ARM,Upper middle income,Europe,1 - Reliable testing capacity,0 - No NGS facilities,15,Connect,24
+Aruba,ABW,High income,Americas,1 - Reliable testing capacity,0 - No NGS facilities,322,Connect,24
+Australia,AUS,High income,Western Pacific,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,17638,Strengthen,17
+Austria,AUT,High income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,2741,Strengthen,19
+Azerbaijan,AZE,Upper middle income,Europe,0 - No reliable testing capacity,1 - 1-3 NGS facilities or equivalent,9,Leverage,45
+"Bahamas, The",BHS,High income,Americas,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,38
+Bahrain,BHR,High income,Eastern Mediterranean,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,151,Leverage,4
+Bangladesh,BGD,Lower middle income,South-East Asia,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,971,Strengthen,4
+Barbados,BRB,High income,Americas,0 - No reliable testing capacity,0 - No NGS facilities,5,Test,30
+Belarus,BLR,Upper middle income,Europe,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,40,Leverage,37
+Belgium,BEL,High income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,9174,Strengthen,26
+Belize,BLZ,Upper middle income,Americas,0 - No reliable testing capacity,0 - No NGS facilities,4,Test,39
+Benin,BEN,Lower middle income,Africa,0 - No reliable testing capacity,0 - No NGS facilities,12,Test,29
+Bermuda,BMU,High income,Americas,1 - Reliable testing capacity,0 - No NGS facilities,30,Connect,35
+Bhutan,BTN,Lower middle income,South-East Asia,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,10
+Bolivia,BOL,Lower middle income,Americas,1 - Reliable testing capacity,0 - No NGS facilities,38,Connect,17
+Bosnia and Herzegovina,BIH,Upper middle income,Europe,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,90,Leverage,20
+Botswana,BWA,Upper middle income,Africa,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,67,Leverage,1
+Brazil,BRA,Upper middle income,Americas,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,4478,Strengthen,1
+British Virgin Islands,VGB,High income,Americas,0 - No reliable testing capacity,0 - No NGS facilities,5,Test,44
+Brunei Darussalam,BRN,High income,Western Pacific,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,10,Leverage,13
+Bulgaria,BGR,Upper middle income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,558,Strengthen,8
+Burkina Faso,BFA,Low income,Africa,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,94,Leverage,37
+Burundi,BDI,Low income,Africa,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,36
+Cabo Verde,CPV,Lower middle income,Africa,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,19
+Cambodia,KHM,Lower middle income,Western Pacific,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,60,Leverage,11
+Cameroon,CMR,Lower middle income,Africa,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,42,Leverage,6
+Canada,CAN,High income,Americas,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,22087,Strengthen,12
+Cayman Islands,CYM,High income,Americas,0 - No reliable testing capacity,0 - No NGS facilities,3,Test,34
+Central African Republic,CAF,Low income,Africa,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,46
+Chad,TCD,Low income,Africa,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,39
+Chile,CHL,High income,Americas,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,1303,Strengthen,3
+China,CHN,Upper middle income,Western Pacific,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,1629,Strengthen,20
+Colombia,COL,Upper middle income,Americas,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,556,Strengthen,14
+Comoros,COM,Lower middle income,Africa,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,28
+"Congo, Dem. Rep.",COD,Low income,Africa,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,424,Leverage,40
+"Congo, Rep.",COG,Lower middle income,Africa,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,31
+Costa Rica,CRI,Upper middle income,Americas,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,289,Leverage,15
+Côte d'Ivoire,CIV,Lower middle income,Africa,1 - Reliable testing capacity,0 - No NGS facilities,65,Connect,8
+Croatia,HRV,High income,Europe,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,688,Strengthen,31
+Cuba,CUB,Upper middle income,Americas,0 - No reliable testing capacity,0 - No NGS facilities,2,Test,11
+Curaçao,CUW,High income,Americas,0 - No reliable testing capacity,0 - No NGS facilities,125,Test,26
+Cyprus,CYP,High income,Europe,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,133,Leverage,16
+Czech Republic,CZE,High income,Europe,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,1054,Strengthen,2
+Denmark,DNK,High income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,50545,Strengthen,32
+Djibouti,DJI,Lower middle income,Eastern Mediterranean,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,17
+Dominica,DMA,Upper middle income,Americas,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,37
+Dominican Republic,DOM,Upper middle income,Americas,0 - No reliable testing capacity,1 - 1-3 NGS facilities or equivalent,9,Leverage,20
+Ecuador,ECU,Upper middle income,Americas,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,290,Leverage,16
+"Egypt, Arab Rep.",EGY,Lower middle income,Eastern Mediterranean,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,445,Leverage,16
+El Salvador,SLV,Lower middle income,Americas,0 - No reliable testing capacity,1 - 1-3 NGS facilities or equivalent,6,Leverage,22
+Equatorial Guinea,GNQ,Upper middle income,Africa,0 - No reliable testing capacity,0 - No NGS facilities,119,Test,20
+Eritrea,ERI,Low income,Africa,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,30
+Estonia,EST,High income,Europe,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,343,Leverage,1
+Eswatini,SWZ,Lower middle income,Africa,1 - Reliable testing capacity,0 - No NGS facilities,22,Connect,27
+Ethiopia,ETH,Low income,Africa,1 - Reliable testing capacity,0 - No NGS facilities,4,Connect,10
+Faroe Islands,FRO,High income,Europe,1 - Reliable testing capacity,0 - No NGS facilities,38,Connect,53
+Fiji,FJI,Upper middle income,Western Pacific,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,16
+Finland,FIN,High income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,2374,Strengthen,40
+France,FRA,High income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,11644,Strengthen,12
+French Polynesia,PYF,High income,Western Pacific,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,5
+Gabon,GAB,Upper middle income,Africa,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,9,Leverage,3
+"Gambia, The",GMB,Low income,Africa,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,478,Leverage,21
+Georgia,GEO,Upper middle income,Europe,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,28,Leverage,41
+Germany,DEU,High income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,30321,Strengthen,35
+Ghana,GHA,Lower middle income,Africa,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,408,Leverage,13
+Gibraltar,GIB,High income,Europe,0 - No reliable testing capacity,0 - No NGS facilities,762,Test,51
+Greece,GRC,High income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,166,Leverage,25
+Greenland,GRL,High income,Europe,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,57
+Grenada,GRD,Upper middle income,Americas,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,45
+Guam,GUM,High income,Western Pacific,1 - Reliable testing capacity,0 - No NGS facilities,30,Connect,8
+Guatemala,GTM,Upper middle income,Americas,0 - No reliable testing capacity,1 - 1-3 NGS facilities or equivalent,30,Leverage,21
+Guinea,GIN,Low income,Africa,0 - No reliable testing capacity,0 - No NGS facilities,8,Test,9
+Guinea-Bissau,GNB,Low income,Africa,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,24
+Guyana,GUY,Upper middle income,Americas,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,32
+Haiti,HTI,Low income,Americas,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,8
+Honduras,HND,Lower middle income,Americas,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,18
+"Hong Kong SAR, China",HKG,High income,#N/A,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,1254,Strengthen,0
+Hungary,HUN,High income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,405,Leverage,3
+Iceland,ISL,High income,Europe,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,4172,Strengthen,55
+India,IND,Lower middle income,South-East Asia,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,6071,Strengthen,2
+Indonesia,IDN,Upper middle income,South-East Asia,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,795,Strengthen,1
+"Iran, Islamic Rep.",IRN,Upper middle income,Eastern Mediterranean,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,283,Leverage,9
+Iraq,IRQ,Upper middle income,Eastern Mediterranean,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,112,Leverage,10
+Ireland,IRL,High income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,5345,Strengthen,36
+Isle of Man,IMN,High income,Europe,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,48
+Israel,ISR,High income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,3677,Strengthen,33
+Italy,ITA,High income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,13767,Strengthen,10
+Jamaica,JAM,Upper middle income,Americas,1 - Reliable testing capacity,0 - No NGS facilities,13,Connect,6
+Japan,JPN,High income,Western Pacific,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,21994,Strengthen,3
+Jordan,JOR,Upper middle income,Eastern Mediterranean,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,593,Strengthen,1
+Kazakhstan,KAZ,Upper middle income,Europe,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,59,Leverage,46
+Kenya,KEN,Lower middle income,Africa,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,686,Strengthen,7
+Kiribati,KIR,Lower middle income,Western Pacific,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,22
+"Korea, Dem. People's Rep.",PRK,Low income,South-East Asia,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,11
+"Korea, Rep.",KOR,High income,Western Pacific,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,2692,Strengthen,4
+Kosovo,XKX,Upper middle income,Europe,0 - No reliable testing capacity,0 - No NGS facilities,30,Test,17
+Kuwait,KWT,High income,Eastern Mediterranean,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,30,Leverage,5
+Kyrgyz Republic,KGZ,Lower middle income,Europe,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,54
+Lao PDR,LAO,Lower middle income,Western Pacific,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,19
+Latvia,LVA,High income,Europe,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,861,Strengthen,22
+Lebanon,LBN,Upper middle income,Eastern Mediterranean,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,49,Leverage,2
+Lesotho,LSO,Lower middle income,Africa,1 - Reliable testing capacity,0 - No NGS facilities,18,Connect,42
+Liberia,LBR,Low income,Africa,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,45
+Libya,LBY,Upper middle income,Eastern Mediterranean,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,8
+Liechtenstein,LIE,High income,Europe,1 - Reliable testing capacity,0 - No NGS facilities,39,Connect,52
+Lithuania,LTU,High income,Europe,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,1492,Strengthen,29
+Luxembourg,LUX,High income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,3225,Strengthen,21
+"Macao SAR, China",MAC,High income,#N/A,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,0
+Madagascar,MDG,Low income,Africa,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,6,Leverage,14
+Malawi,MWI,Low income,Africa,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,33
+Malaysia,MYS,Upper middle income,Western Pacific,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,424,Leverage,1
+Maldives,MDV,Upper middle income,South-East Asia,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,5
+Mali,MLI,Low income,Africa,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,24,Leverage,34
+Malta,MLT,High income,Europe,1 - Reliable testing capacity,0 - No NGS facilities,15,Connect,5
+Marshall Islands,MHL,Upper middle income,Western Pacific,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,23
+Mauritania,MRT,Lower middle income,Africa,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,32
+Mauritius,MUS,High income,Africa,1 - Reliable testing capacity,0 - No NGS facilities,12,Connect,25
+Mexico,MEX,Upper middle income,Americas,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,3190,Strengthen,19
+"Micronesia, Fed. Sts.",FSM,Lower middle income,Western Pacific,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,24
+Moldova,MDA,Lower middle income,Europe,0 - No reliable testing capacity,0 - No NGS facilities,9,Test,15
+Monaco,MCO,High income,Europe,1 - Reliable testing capacity,0 - No NGS facilities,5,Connect,50
+Mongolia,MNG,Lower middle income,Western Pacific,1 - Reliable testing capacity,0 - No NGS facilities,7,Connect,6
+Montenegro,MNE,Upper middle income,Europe,0 - No reliable testing capacity,0 - No NGS facilities,31,Test,4
+Morocco,MAR,Lower middle income,Eastern Mediterranean,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,162,Leverage,14
+Mozambique,MOZ,Low income,Africa,1 - Reliable testing capacity,0 - No NGS facilities,153,Connect,11
+Myanmar,MMR,Lower middle income,South-East Asia,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,41,Leverage,9
+Namibia,NAM,Upper middle income,Africa,0 - No reliable testing capacity,0 - No NGS facilities,58,Test,2
+Nauru,NRU,High income,Western Pacific,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,25
+Nepal,NPL,Lower middle income,South-East Asia,0 - No reliable testing capacity,1 - 1-3 NGS facilities or equivalent,15,Leverage,7
+Netherlands,NLD,High income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,14457,Strengthen,18
+New Caledonia,NCL,High income,Western Pacific,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,7
+New Zealand,NZL,High income,Western Pacific,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,1193,Strengthen,15
+Nicaragua,NIC,Lower middle income,Americas,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,43
+Niger,NER,Low income,Africa,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,41
+Nigeria,NGA,Lower middle income,Africa,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,582,Strengthen,16
+North Macedonia,MKD,Upper middle income,Europe,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,396,Leverage,11
+Northern Mariana Islands,MNP,High income,Western Pacific,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,9
+Norway,NOR,High income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,3389,Strengthen,34
+Oman,OMN,High income,Eastern Mediterranean,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,205,Leverage,11
+Pakistan,PAK,Lower middle income,Eastern Mediterranean,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,109,Leverage,15
+Palau,PLW,High income,Western Pacific,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,26
+Panama,PAN,High income,Americas,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,571,Strengthen,10
+Papua New Guinea,PNG,Lower middle income,Western Pacific,0 - No reliable testing capacity,0 - No NGS facilities,13,Test,10
+Paraguay,PRY,Upper middle income,Americas,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,4
+Peru,PER,Upper middle income,Americas,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,974,Strengthen,5
+Philippines,PHL,Lower middle income,Western Pacific,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,188,Leverage,2
+Poland,POL,High income,Europe,0 - No reliable testing capacity,2 - >3 NGS facilities or equivalent,1979,Strengthen,7
+Portugal,PRT,High income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,4341,Strengthen,43
+Puerto Rico,PRI,High income,Americas,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,0,Connect,13
+Qatar,QAT,High income,Eastern Mediterranean,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,16,Leverage,7
+Romania,ROU,High income,Europe,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,401,Leverage,23
+Russian Federation,RUS,Upper middle income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,2140,Strengthen,42
+Rwanda,RWA,Low income,Africa,1 - Reliable testing capacity,0 - No NGS facilities,283,Connect,26
+Samoa,WSM,Upper middle income,Western Pacific,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,27
+San Marino,SMR,High income,Europe,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,47
+São Tomé and Principe,STP,Lower middle income,Africa,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,18
+Saudi Arabia,SAU,High income,Eastern Mediterranean,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,953,Strengthen,13
+Senegal,SEN,Lower middle income,Africa,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,271,Leverage,12
+Serbia,SRB,Upper middle income,Europe,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,221,Leverage,6
+Seychelles,SYC,High income,Africa,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,17
+Sierra Leone,SLE,Low income,Africa,0 - No reliable testing capacity,1 - 1-3 NGS facilities or equivalent,11,Leverage,43
+Singapore,SGP,High income,Western Pacific,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,1890,Strengthen,12
+Sint Maarten (Dutch part),SXM,High income,Americas,0 - No reliable testing capacity,0 - No NGS facilities,104,Test,33
+Slovak Republic,SVK,High income,Europe,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,477,Leverage,9
+Slovenia,SVN,High income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,3746,Strengthen,14
+Solomon Islands,SLB,Lower middle income,Western Pacific,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,28
+Somalia,SOM,Low income,Eastern Mediterranean,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,18
+South Africa,ZAF,Upper middle income,Africa,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,4319,Strengthen,4
+South Sudan,SSD,Low income,Africa,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,22
+Spain,ESP,High income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,13608,Strengthen,44
+Sri Lanka,LKA,Lower middle income,South-East Asia,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,234,Leverage,3
+St. Kitts and Nevis,KNA,High income,Americas,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,41
+St. Lucia,LCA,Upper middle income,Americas,0 - No reliable testing capacity,0 - No NGS facilities,10,Test,27
+St. Martin (French part),MAF,High income,Americas,0 - No reliable testing capacity,0 - No NGS facilities,10,Test,28
+St. Vincent and the Grenadines,VCT,Upper middle income,Americas,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,36
+Sudan,SDN,Low income,Eastern Mediterranean,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,21
+Suriname,SUR,Upper middle income,Americas,1 - Reliable testing capacity,0 - No NGS facilities,71,Connect,40
+Sweden,SWE,High income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,7922,Strengthen,13
+Switzerland,CHE,High income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,20334,Strengthen,38
+Syrian Arab Republic,SYR,Low income,Eastern Mediterranean,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,19
+"Taiwan, China",TWN,High income,#N/A,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,173,Leverage,0
+Tajikistan,TJK,Low income,Europe,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,58
+Tanzania,TZA,Lower middle income,Africa,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,47
+Thailand,THA,Upper middle income,South-East Asia,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,903,Strengthen,8
+Timor-Leste,TLS,Lower middle income,South-East Asia,1 - Reliable testing capacity,0 - No NGS facilities,19,Connect,6
+Togo,TGO,Low income,Africa,0 - No reliable testing capacity,0 - No NGS facilities,5,Test,23
+Tonga,TON,Upper middle income,Western Pacific,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,29
+Trinidad and Tobago,TTO,High income,Americas,1 - Reliable testing capacity,0 - No NGS facilities,16,Connect,42
+Tunisia,TUN,Lower middle income,Eastern Mediterranean,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,96,Leverage,12
+Turkey,TUR,Upper middle income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,2981,Strengthen,30
+Turkmenistan,TKM,Upper middle income,Europe,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,59
+Turks and Caicos Islands,TCA,High income,Americas,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,29
+Tuvalu,TUV,Upper middle income,Western Pacific,0 - No reliable testing capacity,0 - No NGS facilities,0,Test,30
+Uganda,UGA,Low income,Africa,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,208,Leverage,44
+Ukraine,UKR,Lower middle income,Europe,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,133,Leverage,28
+United Arab Emirates,ARE,High income,Eastern Mediterranean,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,1844,Strengthen,6
+United Kingdom,GBR,High income,Europe,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,304493,Strengthen,39
+United States,USA,High income,Americas,1 - Reliable testing capacity,2 - >3 NGS facilities or equivalent,195321,Strengthen,7
+Uruguay,URY,High income,Americas,0 - No reliable testing capacity,2 - >3 NGS facilities or equivalent,135,Leverage,2
+Uzbekistan,UZB,Lower middle income,Europe,1 - Reliable testing capacity,0 - No NGS facilities,2,Connect,56
+Vanuatu,VUT,Lower middle income,Western Pacific,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,14
+"Venezuela, RB",VEN,Upper middle income,Americas,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,12,Leverage,23
+Vietnam,VNM,Lower middle income,Western Pacific,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,153,Leverage,18
+Virgin Islands (U.S.),VIR,High income,Americas,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,31
+West Bank and Gaza,PSE,Lower middle income,Eastern Mediterranean,0 - No reliable testing capacity,0 - No NGS facilities,98,Test,3
+"Yemen, Rep.",YEM,Low income,Eastern Mediterranean,1 - Reliable testing capacity,0 - No NGS facilities,0,Connect,20
+Zambia,ZMB,Lower middle income,Africa,1 - Reliable testing capacity,1 - 1-3 NGS facilities or equivalent,221,Leverage,5
+Zimbabwe,ZWE,Lower middle income,Africa,1 - Reliable testing capacity,0 - No NGS facilities,400,Connect,35
