@@ -212,7 +212,8 @@ find_testing_t <- find_raw %>%
   mutate(date = as.Date(date, format = "%Y-%m-%d"), #reformatting date
          pop = pop_100k*100000, # get full pop
          code = countrycode(country, origin = 'country.name', destination = 'iso3c')) # make country code column for joining
-      # what does this dooo with "destination 'iso3c'?
+      # what does this dooo with "destination 'iso3c'? The countrycode function converts the column 'country' from 
+      # country.name to iso3c code. 
 
 # new_tests_smoothed runs only up until the most recent date of test reporting. Therefore, we need cases to also be truncated
 # at this point to calculate the test positivity rate properly. We replace all case data after the data of tests last being reported
@@ -470,10 +471,11 @@ if (prev_month == "November" & prev_year == "2021")
   old_find<-read.csv(url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/NGS_Data_Tables/November_2021/PPI/find_map_11.30.2021.csv'))%>%
   select(code,country,dx_testing_capacity_clean, sars_cov_2_sequencing, archetype)%>%
 
-#when renaming, does order of variables matter?
+#when renaming, does order of variables matter? Yes, LHS is the new one, RHS is the old one
   rename(prev_test_rec = dx_testing_capacity_clean, # dx_testing_capacity
          old_archetype = archetype, # archetype_orig_w_HICs
-         old_sequencing_archetype = sars_cov_2_sequencing)%>%filter(!is.na(code))%>%filter(country != "West Bank and Gaza") # 237 countries, filter out Palastine 2 country  names
+         old_sequencing_archetype = sars_cov_2_sequencing)%>%
+      filter(!is.na(code))%>%filter(country != "West Bank and Gaza") # 237 countries, filter out Palastine 2 country  names
   }
 
 # for following months, after first new methodologies iteration
@@ -629,7 +631,7 @@ n_Test<- sum(find_clean_LMICs$dx_testing_capacity == "Does not meet testing targ
 #n_given_archetypes =  n_Strengthen + n_Sequence
 
 # unit test
-# Is this a sustainable unit test?
+# Is this a sustainable unit test? Nah we should delete this becuase we changed the archetypes
 stopifnot("Counts of archetypes (except insufficient data) is less than 90 (should be around 95)"= n_given_archetypes>=90)
 
 # Select necessary variables for Flourish map only
