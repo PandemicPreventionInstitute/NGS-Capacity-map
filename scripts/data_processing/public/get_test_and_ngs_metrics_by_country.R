@@ -35,6 +35,8 @@ install.packages("R.utils", dependencies=TRUE, repos='http://cran.us.r-project.o
 install.packages("stringr", dependencies=TRUE, repos='http://cran.us.r-project.org')
 install.packages("dplyr", dependencies=TRUE, repos='http://cran.us.r-project.org')
 install.packages("scales", dependencies=TRUE, repos='http://cran.us.r-project.org')
+install.packages("bpa", dependencies=TRUE, repos='http://cran.us.r-project.org')
+
 }
 
 #---- Libraries----------
@@ -51,6 +53,7 @@ library(stringr) # to parse strings in R
 library(dplyr) # data wrangling
 library(scales) # comma formatting
 library(bpa) # to get trim_ws working, which allows for installation of lat/long coordinates
+
  
 # ------ Name data paths and set parameters -------------------------------------------
 
@@ -65,9 +68,15 @@ current_year<-year(today_date)
 current_folder<-str_c(current_month, current_year, sep = '_')
 current_month<-month(today_date)
 current_year<-year(today_date)
-LAST_DATA_PULL_DATE<-ymd(str_c(current_year, current_month, '01', sep = '-'))
+LAST_DATA_PULL_DATE<-ymd(str_c(current_year, current_month, "01", sep = '-'))
+# Compares to last published archetype definitions
+prev_month<-month.name[month(ymd(LAST_DATA_PULL_DATE) - months(1))]
+#prev_month<-"November"
+prev_year<-year(ymd(LAST_DATA_PULL_DATE) - months(1))
 
-#?????: Does this prev_month of November overwrite the other prev_month definition?
+
+#Q: Does this prev_month of November overwrite the other prev_month definition? Yes, which is why we comment it out unless we want to
+# compare to November 21 (which is the date of the last published update before April 2022)
 prev_month<-month.name[month(LAST_DATA_PULL_DATE-months(1))]
 #keep November in case FIND wants to compare to the last published methodologies version
 #prev_month<-"November"
@@ -80,41 +89,26 @@ TIME_WINDOW_YEAR<-364
 TIME_WINDOW_WEEK<- 6
 
 
-## Set filepaths
+## Set filepaths that are from public github repos 
+ALL_DATA_PATH<- url("https://raw.githubusercontent.com/dsbbfinddx/FINDCov19TrackerData/master/processed/data_all.csv")
+SHAPEFILES_FOR_FLOURISH_PATH <- 'https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/Geospatial_Data/geometric_polygons_country.txt' # shapefiles for mapping+
+WHO_REGIONS_PATH<-url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/additional_sources/WHO_region_data.csv') # WHO country list
+ECONOMY_PATH<-url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/additional_sources/WB_class_data.csv')
+FIND_TESTING_SEQ_RAW_PATH<- url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/additional_sources/Sequencing_labs_data.csv') # NGS capacity data
+LAT_LONG_DATA <- url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/Geospatial_Data/iso_3_centroids.csv')
 
-
-
-
-
-
-
-
-
-
-
-
-#Lat/long github repo
-LAT_LONG_DATA<-url("https://gist.githubusercontent.com/tadast/8827699/raw/f5cac3d42d16b78348610fc4ec301e9234f82821/countries_codes_and_coordinates.csv")
+if(prev_folder != "November_2021"){
+    OLD_FIND_MAP_PATH<-url(paste0("https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/NGS_Data_Tables/", prev_folder, "/PPI/find_map.csv"))
+}
 
 #if running in domino, run the following pathways to ingest this data from Domino folders:
 if (USE_CASE == 'domino'){
 GISAID_DAILY_PATH<-'/mnt/data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
-SHAPEFILES_FOR_FLOURISH_PATH <- '/mnt/data/Geospatial_Data/geometric_polygons_country.txt' #shapefiles for mapping
-WHO_REGIONS_PATH<-'/mnt/data/additional_sources/WHO_region_data.csv' # WHO country list
-ECONOMY_PATH<-'/mnt/data/additional_sources/WB_class_data.xls' #World Bank socioeconomic class data
-FIND_TESTING_SEQ_RAW_PATH<- '/mnt/data/additional_sources/Sequencing_labs_data.xlsx' # WHO NGS facility data
-LAT_LONG_DATA <- '/mnt/data/Geospatial_data/country_lat_long_names.csv' #lat/long coordinates data
 }
 
-#if running locally, run the following local pathways to ingets data from local folders (pulled from github)
+#if running locally, run the following local pathways to ingest data from local folders (pulled from github)
 if (USE_CASE == 'local'){
-
-GISAID_DAILY_PATH<-'../../../data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
-SHAPEFILES_FOR_FLOURISH_PATH <- '../../../data/Geospatial_Data/geometric_polygons_country.txt' # shapefiles for mapping+
-WHO_REGIONS_PATH<-'../../../data/additional_sources/WHO_region_data.csv' # WHO country list
-ECONOMY_PATH<-'../../../data/additional_sources/WB_class_data.xls'
-FIND_TESTING_SEQ_RAW_PATH<- '../../../data/additional_sources/Sequencing_labs_data.xlsx' # NGS capacity data
-LAT_LONG_DATA <- '../../../data/Geospatial_data/iso_3_centroids.csv'
+GISAID_DAILY_PATH<-'../data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
 }
 
 # ------ WHO countries, regions, and code ---------------------------------------------
@@ -130,20 +124,17 @@ WHO_regions <- read.csv(WHO_REGIONS_PATH) %>%
 
 
 
+
 # ------ Categorical WHO NGS facility data -------------------------------------
 # Reading in all countries and subsetting to countries with valid names
-test_seq_raw <- read_excel(FIND_TESTING_SEQ_RAW_PATH,
-                           sheet = "Country classification",
-                           skip = 1) %>%
+test_seq_raw <- read.csv(FIND_TESTING_SEQ_RAW_PATH) %>%
   #clean names are those that do not have missing country codes
-  clean_names()%>%
-  filter(country_code != "x") %>% 
-  filter(country_code != "") %>%
-  filter(country_code != " ")
+  clean_names()
+
 
 # get only ngs facility data
-#???? Explain here, is "code" the column or "country_code"? 
-#??? Is this not case sensitive, since the actual dataset is "NGS capacity" column?
+#Q: Explain here, is "code" the column or "country_code"? It is 'country_code', so we are looking for any column containing code
+#Q: Is this not case sensitive, since the actual dataset is "NGS capacity" column? clean_names changes it to lowercase with underscores
 ngs_clean <- test_seq_raw %>%
   select(contains("code"), starts_with("ngs_capacity_"))
 
@@ -176,6 +167,18 @@ ngs_clean<-ngs_clean%>%mutate(
 # select only code, capacity, and binary facility variables
 ngs_clean <- ngs_clean %>%
   select(contains("code"),  ngs_capacity, facility_access)%>%
+    mutate(
+        # just recoding what is in raw data
+        sequencing_capacity = case_when(
+            ngs_capacity == 0 ~ "0 NGS facilities or equivalent",
+            ngs_capacity == 1 ~ "1-3 NGS facilities or equivalent",
+            ngs_capacity == 2 ~ "4+ NGS facilities or equivalent",
+            is.na(ngs_capacity) == T ~ "0 NGS facilities or equivalent" #??? What is this T??, know this is for missing values
+        ))
+    
+
+# find_clean: merge sequencing capacity data into template
+find_clean <- left_join(WHO_regions, ngs_clean, by = c("code" = "country_code")) %>%
   mutate(
     # just recoding what is in raw data
     sequencing_capacity = case_when(
@@ -189,6 +192,7 @@ ngs_clean <- ngs_clean %>%
 # find_clean: merge sequencing capacity data into template
 #changed the original "find_clean" to avoid duplicate or overwritten dataframes
 find_clean <- left_join(WHO_regions, ngs_clean, by = c("code" = "country_code"))
+
 
 
 
@@ -212,7 +216,7 @@ find_testing_t <- find_raw %>%
   mutate(date = as.Date(date, format = "%Y-%m-%d"), #reformatting date
          pop = pop_100k*100000, # get full pop
          code = countrycode(country, origin = 'country.name', destination = 'iso3c')) # make country code column for joining
-      # what does this dooo with "destination 'iso3c'? The countrycode function converts the column 'country' from 
+      # Q: what does this dooo with "destination 'iso3c'? The countrycode function converts the column 'country' from 
       # country.name to iso3c code. 
 
 # new_tests_smoothed runs only up until the most recent date of test reporting. Therefore, we need cases to also be truncated
@@ -383,40 +387,17 @@ gisaid_t <- gisaid_raw%>%
 
 # unit test:
 # Make sure that the most recent date is yesterday (only relevant if we are updating)
-if (ymd(max(gisaid_t$collection_date) != LAST_DATA_PULL_DATE - days(1)))
-  {
+
+if (ymd(max(gisaid_t$collection_date)) != ymd(LAST_DATA_PULL_DATE)-days(1)){
   warning("GISAID metadata not updated")
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # Subset GISAID data to the last  year
 gisaid_last_year<-gisaid_t%>%filter(collection_date>=(LAST_DATA_PULL_DATE - TIME_WINDOW_YEAR) & 
                                       collection_date<= LAST_DATA_PULL_DATE)%>%
   group_by(country_code)%>%
   summarise(cases_in_last_year = sum(owid_new_cases), # total cases in past year from OWID
-            cases_per_100k_last_year = round(100000 * cases_in_last_year/max(owid_population),3), # total cases per capita
+            cases_per_100k_last_year = round(100000 *cases_in_last_year/max(owid_population),3), # total cases per capita
             sequences_in_last_year= sum(n_new_sequences), # total sequences collected and submitted to GISAID in past year 
             pct_cases_sequenced_in_last_year = round(100*(sequences_in_last_year/cases_in_last_year),2), # pct cases sequenced
             sequences_per_100k_last_year = round(100000*sequences_in_last_year/max(owid_population),3) # total sequences per capita
@@ -436,7 +417,7 @@ cases_in_last_7_days<-gisaid_t%>%
 gisaid_cumulative<-gisaid_t%>%group_by(country_code)%>%
   summarise(cum_seq = sum(n_new_sequences), #cumulative number of sequences collected and submitted over the entire pandemic
             cum_cases = sum(owid_new_cases), #cumulative number of cases over the entire pandemic
-            cum_cases_per_100K = round(100000 *cum_cases/max(owid_population), 3)
+            cum_cases_per_100k = round(100000 *cum_cases/max(owid_population), 3)
             )
 
 gisaid_last_year$pct_cases_sequenced_in_last_year[is.infinite(gisaid_last_year$pct_cases_sequenced_in_last_year)]<-NA
@@ -446,22 +427,11 @@ gisaid_last_year$pct_cases_sequenced_in_last_year[is.infinite(gisaid_last_year$p
 
 # Join both sets of metrics 
 find_clean <- left_join(find_clean, gisaid_last_year, by = c("code" = "country_code")) 
+#does this mean one df has "code" and another has "country_code"? YES
 find_clean <- left_join (find_clean, gisaid_cumulative, by = c("code" = "country_code"))
 
 find_clean <- left_join (find_clean, cases_in_last_7_days, by = c("code" = "country_code"))
 #One df has "code" and another has "country_code"
-
-
-
-
-
-
-
-
-
-
-
-
 
 #############################################################################################################################################################
 
@@ -471,7 +441,7 @@ if (prev_month == "November" & prev_year == "2021")
   old_find<-read.csv(url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/NGS_Data_Tables/November_2021/PPI/find_map_11.30.2021.csv'))%>%
   select(code,country,dx_testing_capacity_clean, sars_cov_2_sequencing, archetype)%>%
 
-#when renaming, does order of variables matter? Yes, LHS is the new one, RHS is the old one
+#Q: when renaming, does order of variables matter? Yes, LHS is the new one, RHS is the old one
   rename(prev_test_rec = dx_testing_capacity_clean, # dx_testing_capacity
          old_archetype = archetype, # archetype_orig_w_HICs
          old_sequencing_archetype = sars_cov_2_sequencing)%>%
@@ -482,8 +452,8 @@ if (prev_month == "November" & prev_year == "2021")
 if (prev_month!= "November" & prev_year != "2021")
   { 
   old_find<-read.csv(OLD_FIND_MAP_PATH)%>%
-    select(code,country,dx_testing_rec, sars_cov_2_sequencing, archetype_orig_w_HICs)%>%
-    rename(prev_test_rec = dx_testing_rec, 
+    select(code,country,dx_testing_capacity, sars_cov_2_sequencing, archetype_orig_w_HICs)%>%
+    rename(prev_test_rec = dx_testing_capacity, 
            old_archetype = archetype_orig_w_HICs)
 }
 
@@ -512,16 +482,12 @@ n_codes <- length(unique(find_clean$code)) #assess number of unique codes in dat
 
 
 # ------ World Bank Economy classifier ------------------------------------------------
-world_bank_background_raw <- read_excel(ECONOMY_PATH,
-                                        sheet = "List of economies",
-                                        skip = 5) %>%
-  # standardize names with this janitor function
-  clean_names()
+world_bank_background_raw<-read.csv(ECONOMY_PATH) %>% clean_names()
 
-# remove buffer rows by iso3 code and select code and testing capacity columns
-world_bank_background_clean <- world_bank_background_raw %>%
+world_bank_background_clean <- world_bank_background_raw %>% 
   # drop all columns except iso3 code and world_bank_economies
-  select(4,7)
+  select(code, income_group) %>%
+      filter(code != 'x')
 
 # rename columns code and world_bank_economies
 colnames(world_bank_background_clean) <- c("code", "world_bank_economies")
@@ -538,7 +504,9 @@ find_clean<-find_clean%>%
 stopifnot('Incorrect number of countries'= n_codes<=237 | n_codes>=236)
 find_clean_LMICs<-find_clean%>%
   filter(LMIC_status != 'High Income')
-#Why 90? Don't we expect this number to change as more LMICs report their data?
+#Q: Why 90? Don't we expect this number to change as more LMICs report their data?
+#A: This is just a flag, so we will be notified when something like this changes and we can make sure nothing
+# weird is happening in the dataset (i.e. if a very low # of LMICs had testing data)
 stopifnot('Less than 90 LMICs with avg daily TPR not NA & with tests reported in last 6 months' = 
             nrow(find_clean_LMICs%>%
                    filter(!is.na(avg_tpr_find))%>%filter(rept_tests_within_last_6_months == TRUE)) >= 90)
@@ -623,39 +591,29 @@ find_clean_LMICs<-find_clean%>%filter(LMIC_status != 'High Income')
 #             n_insufficient_data<- sum(find_clean_LMICs$archetype_orig == "Insufficient data")
 n_not_tests<-sum(find_clean_LMICs$dx_testing_capacity == "Meets testing target")
 n_Test<- sum(find_clean_LMICs$dx_testing_capacity == "Does not meet testing target")
-#             n_Strengthen <-sum(find_clean_LMICs$archetype_orig == "Strengthen")
-#             n_Leverage <- sum(find_clean_LMICs$archetype_orig == "Leverage")
-#             n_Connect <- sum(find_clean_LMICs$archetype_orig == "Connect")
-#             n_Sequence<- sum(find_clean_LMICs$archetype_new == "Sequence")
 
-#n_given_archetypes =  n_Strengthen + n_Sequence
-
-# unit test
-# Is this a sustainable unit test? Nah we should delete this becuase we changed the archetypes
-stopifnot("Counts of archetypes (except insufficient data) is less than 90 (should be around 95)"= n_given_archetypes>=90)
 
 # Select necessary variables for Flourish map only
 find_map<- find_clean %>%select(name, code, population_size, sequencing_capacity, tpr_year_smoothed_truncated, avg_daily_tests_per_1000_last_year_smoothed,
                                 dx_testing_capacity, date_tests_last_reported, days_since_tests_reported, cases_per_100k_last_year, pct_cases_sequenced_in_last_year,
-                                sequences_per_100k_last_year, sars_cov_2_sequencing, ngs_capacity, facility_access,
-#                                old_archetype, archetype_orig, archetype_new, prev_test_rec
-                                archetype_orig_w_HICs, archetype_full_orig_w_HICs, world_bank_economies, dx_archetype, dx_testing_rec, cum_seq)
-
+                                sequences_per_100k_last_year, cum_seq, sars_cov_2_sequencing, ngs_capacity, facility_access,
+                                archetype_orig_w_HICs,  world_bank_economies, prev_test_rec, dx_archetype, dx_testing_rec)
 # Find the countries with new archetypes
-#         if (prev_month != "November" & prev_year!= "2021"){
-#         find_changed_archetypes <-find_map%>%filter(old_archetype != archetype_orig_w_HICs, prev_test_rec != dx_testing_rec)%>%
-#           select(!archetype_orig, !archetype_new)
-#           }
+if (prev_month != "November" & prev_year!= "2021"){
+find_changed_archetypes <-find_clean%>%filter(old_archetype != archetype_orig_w_HICs, prev_test_rec != dx_testing_rec)
+
+}
 
 # Make internal validation data sets 
-  if (USE_CASE == 'local') {
+if (USE_CASE == 'local') {
 #  find_clean%>%filter(archetype_orig == "Insufficient data")%>%write.csv(paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/countries_in_insufficient_data.csv'))
-  find_clean%>%filter(dx_testing_rec == "Test - Increase diagnostic testing capacity")%>%write.csv(paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/countries_in_test.csv'))
+  find_clean%>%filter(dx_testing_rec == "Test - Increase diagnostic testing capacity")%>%write.csv(paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/countries_in_test.csv'))
 #  find_clean%>%filter(archetype_orig == "Strengthen")%>%write.csv(paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/countries_in_strengthen.csv'))
 #  find_clean%>%filter(archetype_orig == "Leverage" | archetype_orig == "Connect")%>%
 #    write.csv(paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/countries_in_insufficient_data.csv'))
   if (prev_month != "November" & prev_year!= "2021"){
-   write.csv(find_changed_archetypes, paste0('../../../data/NGS_Data_Tables/PPI/find_changed_archetypes', prev_month, '_to_', current_month, '.csv'))
+
+   write.csv(find_changed_archetypes, paste0('../data/NGS_Data_Tables/', current_folder, '/PPI/find_changed_archetypes_', prev_month, '_to_', current_month, '.csv'))
   }
 }
 
@@ -666,7 +624,7 @@ if (USE_CASE == 'domino') {
   find_clean%>%filter(archetype_orig == "Strengthen")%>%write.csv('/mnt/data/processed/countries_in_strengthen.csv')
   find_clean%>%filter(archetype_orig == "Leverage" | archetype_orig == "Connect")%>%write.csv('/mnt/data/processed/countries_in_Lev_or_Connect.csv')
   if (prev_month != "November" & prev_year!= "2021"){
-    write.csv(find_changed_archetypes, paste0('../../../data/NGS_Data_Tables/PPI/find_changed_archetypes', prev_month, '_to_', current_month, '.csv'))
+    write.csv(find_changed_archetypes, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/find_changed_archetypes', prev_month, '_to_', current_month, '.csv'))
   }
 }
 
@@ -793,8 +751,8 @@ full_dataset<-find_clean%>%select(name, code, population_size, date_tests_last_r
 
 
 # Remove extraneous columns from the map dataset 
-find_clean_flourish<-find_clean_flourish%>%select(-old_archetype, -archetype_orig, -`Archetype`, 
-                                                  -archetype_full_new, -archetype_new)
+find_clean_flourish<-find_clean_flourish%>%select(-archetype_orig, -`Archetype`, 
+                                                  -archetype_new)
 # Add a column for TPR that is in % but without the tacked on percent!
 find_clean_flourish<-find_clean_flourish%>%mutate(tpr_pct = 100*tpr_year_smoothed_truncated)
 
@@ -830,15 +788,15 @@ test_scatterplot<-full_dataset%>%mutate(
 
 if (USE_CASE == 'local'){
   if(prev_month!= 'November' & prev_year != '2021'){
-    write.csv(find_changed_archetypes, paste0('../../../data/NGS_Data_Tables/', current_folder, '/PPI/find_changed_archetypes.csv'), row.names = F)
+    write.csv(find_changed_archetypes, paste0('../data/NGS_Data_Tables/', current_folder, '/PPI/find_changed_archetypes.csv'), row.names = F)
   }
-  write.csv(find_not_reported, paste0('../../../data/NGS_Data_Tables/', current_folder, '/PPI/find_delayed_test_reporting.csv'), row.names = F)
-  write.csv(full_dataset, paste0('../../../data/NGS_Data_Tables/', current_folder, '/public/full_dataset.csv'), na = "NaN", row.names = FALSE)
-  write.csv(find_clean_flourish, paste0('../../../data/NGS_Data_Tables/', current_folder, '/PPI/find_map.csv'), na = "NaN", row.names = FALSE)
-  write.csv(clean_dataset, paste0('../../../data/NGS_Data_Tables/', current_folder, '/public/clean_dataset.csv'), na = "NaN", row.names = FALSE)
-  write.csv(find_rec_test, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/countries_in_test.csv'), na = "NaN", row.names = FALSE )
-  write.csv(seq_scatterplot, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/seq_data.csv'), na = "NaN", row.names = FALSE )
-  write.csv(test_scatterplot, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/test_data.csv'), na = "NaN", row.names = FALSE )
+  write.csv(find_not_reported, paste0('../data/NGS_Data_Tables/', current_folder, '/PPI/find_delayed_test_reporting.csv'), row.names = F)
+  write.csv(full_dataset, paste0('../data/NGS_Data_Tables/', current_folder, '/public/full_dataset.csv'), na = "NaN", row.names = FALSE)
+  write.csv(find_clean_flourish, paste0('../data/NGS_Data_Tables/', current_folder, '/PPI/find_map.csv'), na = "NaN", row.names = FALSE)
+  write.csv(clean_dataset, paste0('../data/NGS_Data_Tables/', current_folder, '/public/clean_dataset.csv'), na = "NaN", row.names = FALSE)
+  write.csv(find_rec_test, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/countries_in_test.csv'), na = "NaN", row.names = FALSE )
+  write.csv(seq_scatterplot, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/seq_data.csv'), na = "NaN", row.names = FALSE )
+  write.csv(test_scatterplot, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/test_data.csv'), na = "NaN", row.names = FALSE )
   }
 
 if (USE_CASE == 'domino'){
@@ -858,6 +816,6 @@ if (USE_CASE == 'domino'){
 
 
 #come back to thisssss!
-rename(avg_daily_tests = avg_daily_tests_per_1000_last_year_smoothed)%>% # rename long columnn name to average daily test
+#rename(avg_daily_tests = avg_daily_tests_per_1000_last_year_smoothed)%>% # rename long columnn name to average daily test
 
 
