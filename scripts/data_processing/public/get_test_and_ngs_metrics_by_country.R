@@ -75,7 +75,8 @@ prev_month<-month.name[month(ymd(LAST_DATA_PULL_DATE) - months(1))]
 prev_year<-year(ymd(LAST_DATA_PULL_DATE) - months(1))
 
 
-#?????: Does this prev_month of November overwrite the other prev_month definition?
+#Q: Does this prev_month of November overwrite the other prev_month definition? Yes, which is why we comment it out unless we want to
+# compare to November 21 (which is the date of the last published update before April 2022)
 prev_month<-month.name[month(LAST_DATA_PULL_DATE-months(1))]
 #keep November in case FIND wants to compare to the last published methodologies version
 #prev_month<-"November"
@@ -88,36 +89,26 @@ TIME_WINDOW_YEAR<-364
 TIME_WINDOW_WEEK<- 6
 
 
-## Set filepaths
-#FIND Test Tracker data pulled from github
+## Set filepaths that are from public github repos 
 ALL_DATA_PATH<- url("https://raw.githubusercontent.com/dsbbfinddx/FINDCov19TrackerData/master/processed/data_all.csv")
-
-if(prev_folder != "November_2021"){
-    OLD_FIND_MAP_PATH<-url(paste0("https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/NGS_Data_Tables/", prev_folder, "/PPI/find_map.csv"))
-}
-
-#Lat/long github repo
-LAT_LONG_DATA<-url("https://gist.githubusercontent.com/tadast/8827699/raw/f5cac3d42d16b78348610fc4ec301e9234f82821/countries_codes_and_coordinates.csv")
-
-#if running in domino, run the following pathways to ingest this data from Domino folders:
-if (USE_CASE == 'domino'){
-GISAID_DAILY_PATH<-'/mnt/data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
-SHAPEFILES_FOR_FLOURISH_PATH <- '/mnt/data/Geospatial_Data/geometric_polygons_country.txt' #shapefiles for mapping
-WHO_REGIONS_PATH<-'/mnt/data/additional_sources/WHO_region_data.csv' # WHO country list
-ECONOMY_PATH<-'/mnt/data/additional_sources/WB_class_data.xls' #World Bank socioeconomic class data
-FIND_TESTING_SEQ_RAW_PATH<- '/mnt/data/additional_sources/Sequencing_labs_data.xlsx' # WHO NGS facility data
-LAT_LONG_DATA <- '/mnt/data/Geospatial_data/country_lat_long_names.csv' #lat/long coordinates data
-}
-
-#if running locally, run the following local pathways to ingest data from local folders (pulled from github)
-if (USE_CASE == 'local'){
-
-GISAID_DAILY_PATH<-'../data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
 SHAPEFILES_FOR_FLOURISH_PATH <- 'https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/Geospatial_Data/geometric_polygons_country.txt' # shapefiles for mapping+
 WHO_REGIONS_PATH<-url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/additional_sources/WHO_region_data.csv') # WHO country list
 ECONOMY_PATH<-url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/additional_sources/WB_class_data.csv')
 FIND_TESTING_SEQ_RAW_PATH<- url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/additional_sources/Sequencing_labs_data.csv') # NGS capacity data
 LAT_LONG_DATA <- url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/Geospatial_Data/iso_3_centroids.csv')
+
+if(prev_folder != "November_2021"){
+    OLD_FIND_MAP_PATH<-url(paste0("https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/NGS_Data_Tables/", prev_folder, "/PPI/find_map.csv"))
+}
+
+#if running in domino, run the following pathways to ingest this data from Domino folders:
+if (USE_CASE == 'domino'){
+GISAID_DAILY_PATH<-'/mnt/data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
+}
+
+#if running locally, run the following local pathways to ingest data from local folders (pulled from github)
+if (USE_CASE == 'local'){
+GISAID_DAILY_PATH<-'../data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
 }
 
 # ------ WHO countries, regions, and code ---------------------------------------------
@@ -142,8 +133,8 @@ test_seq_raw <- read.csv(FIND_TESTING_SEQ_RAW_PATH) %>%
 
 
 # get only ngs facility data
-#???? Explain here, is "code" the column or "country_code"? 
-#??? Is this not case sensitive, since the actual dataset is "NGS capacity" column?
+#Q: Explain here, is "code" the column or "country_code"? It is 'country_code', so we are looking for any column containing code
+#Q: Is this not case sensitive, since the actual dataset is "NGS capacity" column? clean_names changes it to lowercase with underscores
 ngs_clean <- test_seq_raw %>%
   select(contains("code"), starts_with("ngs_capacity_"))
 
@@ -225,7 +216,8 @@ find_testing_t <- find_raw %>%
   mutate(date = as.Date(date, format = "%Y-%m-%d"), #reformatting date
          pop = pop_100k*100000, # get full pop
          code = countrycode(country, origin = 'country.name', destination = 'iso3c')) # make country code column for joining
-      # what does this dooo with "destination 'iso3c'?
+      # Q: what does this dooo with "destination 'iso3c'? The countrycode function converts the column 'country' from 
+      # country.name to iso3c code. 
 
 # new_tests_smoothed runs only up until the most recent date of test reporting. Therefore, we need cases to also be truncated
 # at this point to calculate the test positivity rate properly. We replace all case data after the data of tests last being reported
@@ -449,10 +441,11 @@ if (prev_month == "November" & prev_year == "2021")
   old_find<-read.csv(url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/NGS_Data_Tables/November_2021/PPI/find_map_11.30.2021.csv'))%>%
   select(code,country,dx_testing_capacity_clean, sars_cov_2_sequencing, archetype)%>%
 
-#when renaming, does order of variables matter?
+#Q: when renaming, does order of variables matter? Yes, LHS is the new one, RHS is the old one
   rename(prev_test_rec = dx_testing_capacity_clean, # dx_testing_capacity
          old_archetype = archetype, # archetype_orig_w_HICs
-         old_sequencing_archetype = sars_cov_2_sequencing)%>%filter(!is.na(code))%>%filter(country != "West Bank and Gaza") # 237 countries, filter out Palastine 2 country  names
+         old_sequencing_archetype = sars_cov_2_sequencing)%>%
+      filter(!is.na(code))%>%filter(country != "West Bank and Gaza") # 237 countries, filter out Palastine 2 country  names
   }
 
 # for following months, after first new methodologies iteration
@@ -511,7 +504,9 @@ find_clean<-find_clean%>%
 stopifnot('Incorrect number of countries'= n_codes<=237 | n_codes>=236)
 find_clean_LMICs<-find_clean%>%
   filter(LMIC_status != 'High Income')
-#Why 90? Don't we expect this number to change as more LMICs report their data?
+#Q: Why 90? Don't we expect this number to change as more LMICs report their data?
+#A: This is just a flag, so we will be notified when something like this changes and we can make sure nothing
+# weird is happening in the dataset (i.e. if a very low # of LMICs had testing data)
 stopifnot('Less than 90 LMICs with avg daily TPR not NA & with tests reported in last 6 months' = 
             nrow(find_clean_LMICs%>%
                    filter(!is.na(avg_tpr_find))%>%filter(rept_tests_within_last_6_months == TRUE)) >= 90)
