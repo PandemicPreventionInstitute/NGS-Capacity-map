@@ -756,7 +756,7 @@ full_dataset<-find_clean%>%select(name, code, population_size, date_tests_last_r
 
 
 # Remove extraneous columns from the map dataset 
-find_clean_flourish<-find_clean_flourish%>%select(-archetype_orig, -`Archetype`, 
+find_clean_flourish<-find_clean_flourish%>%select( -`Archetype`, 
                                                   -archetype_new)
 # Add a column for TPR that is in % but without the tacked on percent!
 find_clean_flourish<-find_clean_flourish%>%mutate(tpr_pct = 100*tpr_year_smoothed_truncated)
