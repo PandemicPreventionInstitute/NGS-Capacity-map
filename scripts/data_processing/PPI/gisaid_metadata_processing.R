@@ -1,4 +1,4 @@
-#Kaitlyn Johnson & Briana Thrift
+# Kaitlyn Johnson & Briana Thrift
 # process metadata from GISAID automated data stream, combine with owid cases and population and generate
 # gisaid_cleaning_output.csv which contains number of sequences by collection date by country and day,
 # and number of new cases by country and day
@@ -7,13 +7,13 @@
 # Github, git pull first to make sure you have the most recent version of "main" repo
 
 
-#Jan 3rd 2022
+# Jan 3rd 2022
 rm(list = ls())
 USE_CASE = Sys.getenv("USE_CASE")
 if(USE_CASE == ""){
   USE_CASE<-'local'
 }
-#USE_CASE = 'domino' # 'domino' or 'local'
+# USE_CASE = 'domino' # 'domino' or 'local'
 
 FROM_FEED <- TRUE
 
@@ -66,7 +66,6 @@ FIRST_DATE<-"2019-12-01" # earliest date we want COVID cases for
 today_date<-lubridate::today('EST')
 current_month<-month(today_date)
 current_year<-year(today_date)
-UPDATE_DATE<- str_c(current_year, current_month, "01", sep = '-') # we want to exclude sequences submitted after the first of the month
 
 #-----Download and process------
 
@@ -175,8 +174,8 @@ gisaid_t <- metadata %>%
   rename(country_code = code,
          gisaid_collect_date = collection_date)
 
-# Add in code to complete through yesterday with 0s for each country 
-
+#add in snippet to complete analysis through yesterday, and have 0s per country for date's unavailable
+gisaid_collect_date <- seq.Date(as.Date(FIRST_DATE), ymd (UPDATE_DATE) - days (1), by = "day")
 country_code <-unique(gisaid_t$country_code)
 n_gisaid_codes<-length(country_code)
 date_country<-expand_grid(gisaid_collect_date, country_code)
@@ -238,14 +237,14 @@ n_global_cases<-sum(merged_df$owid_new_cases)
 
 #-------Write data to file---------
 
-#local
+# local
 if (USE_CASE == 'local'){
 write.csv(merged_df, '../../../data/processed/gisaid_owid_merged.csv', row.names = FALSE)
-#write_csv(suspect_date, '../data/suspect_date.csv')
+# write_csv(suspect_date, '../data/suspect_date.csv')
 }
 if (USE_CASE == 'domino'){
-#Domino
+# Domino
 write.csv(merged_df, '/mnt/data/processed/gisaid_owid_merged.csv', row.names = FALSE)
-#write_csv(suspect_date, '/mnt/data/suspect_date.csv')
-#write_csv(combined_df, '/mnt/data/processed/sequences_last_30_days.csv')
+# write_csv(suspect_date, '/mnt/data/suspect_date.csv')
+# write_csv(combined_df, '/mnt/data/processed/sequences_last_30_days.csv')
 }
