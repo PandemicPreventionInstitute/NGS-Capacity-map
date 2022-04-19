@@ -44,7 +44,7 @@ install.packages("bpa", dependencies=TRUE, repos='http://cran.us.r-project.org')
 }
 
 # ---------------------------------------------------------
-# --------------  Install Libraries 
+# --------------  Load Libraries 
 # ---------------------------------------------------------
 
 # Install these libraries regardless of "USE_CASE"
@@ -74,14 +74,13 @@ library(bpa) # To get the trim_ws working, which will allow you to join the lat 
 # Starting at 1 character length, and ending at 13 length
 today_date<-lubridate::today('EST')
 
-# Pulling in the current month
+# Pulling in the current month and year to name the folder 
 current_month<-month.name[month(today_date)]
 current_year<-year(today_date)
 current_folder<-str_c(current_month, current_year, sep = '_')
-current_month<-month(today_date)
-current_year<-year(today_date)
 
-# Creating last date pulled and previous month variables
+
+# Creating last date pulled (first day of current month) and previous month variables
 LAST_DATA_PULL_DATE<-ymd(str_c(current_year, current_month, "01", sep = '-'))
 # Compares to last published archetype definitions
 prev_month<-month.name[month(ymd(LAST_DATA_PULL_DATE) - months(1))]
@@ -126,7 +125,7 @@ if (USE_CASE == 'domino'){
   GISAID_DAILY_PATH<-'/mnt/data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
 }
 
-# When running locally, run the following local pathways to ingest data from local folders (pulled from github)
+# When running locally, run the following local pathways to ingest data from local folders:
 if (USE_CASE == 'local'){
   GISAID_DAILY_PATH<-'../data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
 }
@@ -193,7 +192,7 @@ ngs_clean <- ngs_clean %>%
 
 # find_clean: merge sequencing capacity data into template
 # All additional variables will be joined to this find_clean template
-find_clean <- left_join(WHO_regions, ngs_clean, by = c("code" = "code"))
+find_clean <- left_join(WHO_regions, ngs_clean, by = c("code" = "country_code"))
 
 
 # -------------------------------------------------------------------------------------
@@ -261,9 +260,7 @@ find_test_update_date<-find_testing_t%>%
 
 # Unit test for report date
 stopifnot('last reported date is more recent than data pull date' = sum(as.Date(find_test_update_date$date_tests_last_reported) > 
-
-                                                                          
-                                                                                                                                                    as.Date(LAST_DATA_PULL_DATE), na.rm = TRUE)== 0)
+                                                                            as.Date(LAST_DATA_PULL_DATE), na.rm = TRUE)== 0)
 # ----------- Data Processing ------------------------------
 
 # Compute the testing metrics over the past year
@@ -340,7 +337,6 @@ ACT_A_target<-1
 # AND average daily tests per 1000 > 0.15 (PPI/FIND targets)
 find_clean <- find_clean %>%
   mutate(
-    
     dx_testing_binary = case_when(
       (is.na(avg_tpr_find)  | rept_tests_within_last_6_months ==FALSE | is.infinite(avg_tpr_find)) ~ "Insufficient testing data",
       tpr >= TPR_thres & avg_daily_tests_per_1000_last_year_smoothed <= daily_tests_thres ~ "Does not meet testing target", #bottom right
@@ -466,20 +462,35 @@ if (prev_folder == "November_2021")
            filter(country != "West Bank and Gaza") # 237 countries, filter out Palastine 2 country  names
 }
 
-# If looking particularly at March, needs to make systematic changes here for March dataframe, 
-# change the variable names
-
-if (prev_folder != "November_2021")
-{
-  old_find <-read.csv(OLD_FIND_MAP_PATH) %>%
-    select(code, country, ngs_capacity, dx_archetype, sars_cov_2_sequencing)
+# Minor changes from March, so account for them
+if (prev_folder == "March_2022"){
+  old_find <-read.csv(OLD_FIND_MAP_PATH) %>% clean_names() %>%
+    select(code, country, ngs_capacity, dx_testing_capacity, sars_cov_2_sequencing)%>%
+      mutate(dx_archetype = case_when(
+          dx_testing_capacity == "Meets testing target" ~ "Sustain",
+          dx_testing_capacity == "Does not meet testing target" ~ "Test",
+          dx_testing_capacity == "Insufficient testing data" ~ "Insufficient data"
+      ),
+      sx_archetype = case_when(  
+          (sars_cov_2_sequencing == "Insufficient data") ~ "Insufficient data",
+          sars_cov_2_sequencing == "Meets sequencing target" ~ "Sustain",
+          (sars_cov_2_sequencing == "Does not meet sequencing target" &
+               (ngs_capacity == 2 | ngs_capacity == 1)) ~ "Strengthen/Leverage",
+          sars_cov_2_sequencing == "Does not meet sequencing target" & (ngs_capacity == 0 |is.na(ngs_capacity)) ~ "Connect/Build")
+      )%>%
+      rename(sars_cov_2_binary = sars_cov_2_sequencing)
 }
 
-old_find_df <- old_find_df %>% 
+if (prev_folder != "March_2022" & prev_folder != "November_2021"){
+    old_find <-read.csv(OLD_FIND_MAP_PATH) %>% clean_names() %>%
+        select(code, country, ngs_capacity, dx_archetype, sx_archetype, sars_cov_sequencing_binary)
+}
+
+old_find_df <- old_find %>% 
     # When renaming, first variable is the NEW name, second is the OLD name (opposite of python rename)
     rename(prev_dx = dx_archetype,
            prev_sequ = sx_archetype, # sx_archetype including HICs
-           old_sequencing_archetype = sars_cov_2_sequencing)
+           old_sequencing_archetype = sars_cov_2_binary)
 
 old_find_df <- old_find_df %>%
   select (code, old_sequencing_archetype, prev_sequ, prev_dx)
@@ -528,15 +539,14 @@ find_clean<-find_clean%>%
   mutate( LMIC_status = case_when(
   world_bank_economies == 'High income' ~ 'High Income',
   world_bank_economies != 'High income' ~ 'LMIC',
-  is.na(world_bank_economies) == T ~ "No Income data")
+  is.na(world_bank_economies) == T ~ "No income data")
   )
 
 #replace missing values with 'No income data' in world_bank_economies column
-# K: I think this is duplicative from the last line above?
 find_clean$world_bank_economies <- find_clean$world_bank_economies %>% replace_na('No income data')
 
 
-# -------------------- Validation test
+# -------------------- Validation test---------------------------------
 # Unit tests
 stopifnot('Incorrect number of countries'= n_codes<=237 | n_codes>=236)
 find_clean_LMICs<-find_clean%>%
@@ -618,7 +628,7 @@ find_clean$facility_access[is.na(find_clean$facility_access)]<-"Insufficient dat
 find_map<- find_clean %>%select(name, code, population_size, world_bank_economies,
                                 
                                 #Cases & Reporting 
-                                cum_seq, cum_cases_per_100k, cases_per_100k_last_7_days, 
+                                cum_seq,
                                 date_tests_last_reported, days_since_tests_reported, 
                                 #Testing
                                 tpr_year_smoothed_truncated, TPR_pct,
@@ -678,8 +688,7 @@ stopifnot('More than 3 countries missing archetype at final step' = sum(find_map
  find_changed_archetypes<-find_changed_archetypes%>%
    select(name, world_bank_economies,
           prev_sequ, sx_archetype, prev_dx, dx_archetype,
-          cases_in_last_year_smoothed_truncated, tests_in_last_year_smoothed,
-          tpr, avg_daily_tests_per_1000_last_year_smoothed,
+          tpr_year_smoothed_truncated, avg_daily_tests_per_1000_last_year_smoothed,
           pct_cases_sequenced_in_last_year,
           sequences_per_100k_last_year,
           ngs_capacity, ngs_facility)
@@ -713,16 +722,12 @@ stopifnot("Number given archetypes other than insufficient data is less than 90 
 # K: I think these are helpful for us internally, for countries in test and countries that have changed archetypes
 
 if (USE_CASE == 'local') {
-  find_map%>%filter(dx_testing_rec == "Test - Increase diagnostic testing capacity")%>%write.csv(paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/countries_in_test.csv'))
   if (prev_month != "November" & prev_year!= "2021"){
      write.csv(find_changed_archetypes, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/find_changed_archetypes', prev_month, '_to_', current_month, '.csv'))
    }
  }
 
-
 if (USE_CASE == 'domino') {
-  find_map%>%filter(dx_testing_rec == "Test - Increase diagnostic testing capacity")%>
-  write.csv(paste0('/mnt/data/processed/NGS_Data_Tables', current_folder, '/PPI/countries_in_test.csv'))
  if (prev_month != "November" & prev_year!= "2021"){
    write.csv(find_changed_archetypes, paste0('mnt/data/processed/NGS_Data_Tables/', current_folder,'/PPI/find_changed_archetypes', prev_month, '_to_', current_month, '.csv'))
    }
@@ -731,8 +736,6 @@ if (USE_CASE == 'domino') {
 # ------------------------------------------------------------------------------
 # ----------------------- Join shapefiles & lat/long coordinates
 # ------------------------------------------------------------------------------
-
-# Lat/long github repo
 
 shapefile <- read_delim(SHAPEFILES_FOR_FLOURISH_PATH, delim = "\t", show_col_types = FALSE) %>%
   select(geometry, code, country)
@@ -751,7 +754,8 @@ find_rec_test<-find_map%>%
 find_TEST_countries <-left_join(find_rec_test, lat_long, by = "code")
 
 # Join Shapefiles dataframe to find_map template
-find_map<-left_join (find_map, shapefile, by = "code")
+find_map<-left_join (shapefile, find_map, by = "code") 
+# need to join to the shape file so that every geometry gets assigned its country's data
 
 
 #-------------------------------------------------------------------------
@@ -779,7 +783,7 @@ seq_scatterplot<-find_map%>% select(
   country, code, population_size,world_bank_economies,
   pct_cases_sequenced_in_last_year,
   sequences_per_100k_last_year, sars_cov_2_binary)%>%
-  filter(sars_cov_2_binary != "Insufficient data")
+  filter(sars_cov_2_binary != "Insufficient data", !is.na(sars_cov_2_binary))
 
 #Create a dataset for Testing scatterplot visuals
 test_scatterplot<-find_map%>%mutate(
@@ -787,7 +791,7 @@ test_scatterplot<-find_map%>%mutate(
     country, code, population_size,world_bank_economies,
     date_tests_last_reported, TPR_pct,
     avg_daily_tests_per_1000_last_year_smoothed, dx_testing_binary)%>%
-  filter(dx_testing_binary != "Insufficient testing data")
+  filter(dx_testing_binary != "Insufficient testing data", !is.na(dx_testing_binary))
 
 
 #-------------------------------------------------------------------------
@@ -795,36 +799,13 @@ test_scatterplot<-find_map%>%mutate(
 #-------------------------------------------------------------------------
 
 #Clean up dataframe and order variables
-find_map <- find_map %>%select(
-                                #Descriptives
-                                geometry, name, code, population_size, world_bank_economies,
-                                #Cases & Reporting 
-                                cum_cases_per_100k, cases_per_100k_last_7_days, 
-                                date_tests_last_reported, days_since_tests_reported, 
-                                #Testing
-                                tpr_year_smoothed_truncated, avg_daily_tests_per_1000_last_year_smoothed,
-                                #Sequencing
-                                cum_seq, pct_cases_sequenced_in_last_year, 
-                                sequences_per_100k_last_year, 
-                                #Targets
-                                dx_testing_binary, sars_cov_2_binary, 
-                                ngs_capacity, facility_access, ngs_facility,
-                                archetype_orig, dx_archetype, sx_archetype,
-                                dx_testing_rec, sx_sequencing_rec,
-                                prev_dx, prev_sequ,
-                                #Flags
-                                seq_but_no_test_flag, 
-                                #Metrics explained
-                                TPR_pct, daily_tests_per_1000, pct_seq,seq_per_100k)%>%
-  rename(
-    `country` = name)
+find_map <- find_map %>%select(-name)
 
 # Remove extraneous columns from find_map.csv to create a "full_dataset" for public consumption
 full_dataset<-find_map%>%select(
                         #Descriptives
                          country, code, population_size, world_bank_economies,
                         #Cases & Reporting 
-                          cum_cases_per_100k, cases_per_100k_last_7_days, 
                           date_tests_last_reported, days_since_tests_reported, 
                         #Testing
                           tpr_year_smoothed_truncated, avg_daily_tests_per_1000_last_year_smoothed,
@@ -840,48 +821,58 @@ full_dataset<-find_map%>%select(
                         #Flags
                           seq_but_no_test_flag, 
                         #Metrics explained
-                          TPR_pct, daily_tests_per_1000, pct_seq,seq_per_100k)
+                          TPR_pct, daily_tests_per_1000, pct_seq,seq_per_100k) %>%
+    filter(code %in% old_codes) %>%
+    unique()# Need to deduplicate because geometries add duplicates
+
 
 # Create a dataset with clean titles
-clean_dataset<-find_map_clean_titles%>%select(
-                                     name, world_bank_economies,
-                                    `Date tests last reported`, 
-                                    `Test positivity rate (%) in past year`,
-                                    `Average daily tests in past year`, 
-                                    `% of cases sequenced in past year`,
-                                    `Number of sequences in past year`, 
-                                    `Cumulative number of sequences entire pandemic`,
-                                    facility_access, dx_testing_binary,sars_cov_2_binary, 
-                                    `Test Archetype`,`Sequence Archetype`)%>%
+clean_dataset<-find_map_clean_titles%>%filter(code %in% old_codes) %>%
+    select(name, world_bank_economies,
+           `Date tests last reported`, 
+           `Test positivity rate (%) in past year`,
+           `Average daily tests in past year`, 
+           `% of cases sequenced in past year`,
+           `Number of sequences in past year`, 
+           `Cumulative number of sequences entire pandemic`,
+           facility_access, dx_testing_binary,sars_cov_2_binary, 
+           `Test Archetype`,`Sequence Archetype`)%>%
 rename(
     `country` = name,
     `World Bank economic status` = world_bank_economies,
     `COVID-19 diagnostic testing targets` = dx_testing_binary,
     `SARS-CoV-2 sequencing targets` = sars_cov_2_binary,
-    `NGS facility access` = facility_access)
+    `NGS facility access` = facility_access) %>% 
+    unique()
+# if a country has NA for sequences, assume 0 sequences submitted in GISAID (and weren't in GISAID dataset)
+clean_dataset$`Cumulative number of sequences entire pandemic`[is.na(clean_dataset$`Cumulative number of sequences entire pandemic`)]<-0
 
 
-# K: I think these all need to be replaced with find_map_clean_titles, but am going to leave for now to troubleshoot in main
-find_clean_flourish$`Test positivity rate (%) in past year`[is.na(find_clean_flourish$`Test positivity rate (%) in past year`)]<- 'Insufficient data'
-find_clean_flourish$`Average daily tests in past year`[is.na(find_clean_flourish$`Average daily tests in past year`)]<- 'Insufficient data'
-find_clean_flourish$`% of cases sequenced in past year`[is.na(find_clean_flourish$`% of cases sequenced in past year`)]<-'Insufficient data'
-find_clean_flourish$`Number of sequences in past year`[is.na(find_clean_flourish$`Number of sequences in past year`)]<- 'Insufficient data'
-find_clean_flourish$facility_access[is.na(find_clean_flourish$facility_access)]<-"Insufficient data"
-find_clean_flourish$sequencing_capacity[is.na(find_clean_flourish$facility_access)]<-"Insufficient data"
-find_clean_flourish$dx_testing_capacity[is.na(find_clean_flourish$dx_testing_capacity)]<-"Insufficient testing data"
-find_clean_flourish$sars_cov_2_sequencing[is.na(find_clean_flourish$sars_cov_2_sequencing)]<-"Insufficient data"
-find_clean_flourish$sequencing_capacity[is.na(find_clean_flourish$sequencing_capacity)]<-"Insufficient data"
-find_clean_flourish$archetype_orig_w_HICs[is.na(find_clean_flourish$archetype_orig_w_HICs)]<-"Insufficient data"
-find_clean_flourish$world_bank_economies[is.na(find_clean_flourish$world_bank_economies)]<- "Insufficient data"
-find_clean_flourish$sequencing_capacity[is.na(find_clean_flourish$sequencing_capacity)]<- "Insufficient data"
 
-# Not sure if we need this
-find_clean_flourish<-find_clean_flourish%>%mutate(
+# K:We still need these all I think because of the geometries (for anything that is in the map)
+find_map$TPR_pct[is.na(find_map$TPR_pct)]<- 'Insufficient data'
+find_map$date_tests_last_reported[is.na(find_map$date_tests_last_reported)]<-'Insufficient data'
+find_map$daily_tests_per_1000[is.na(find_map$daily_tests_per_1000)]<- 'Insufficient data'
+find_map$pct_cases_sequenced_in_last_year[is.na(find_map$pct_cases_sequenced_in_last_year)]<-'Insufficient data'
+find_map$sequences_per_100k_last_year[is.na(find_map$sequences_per_100k_last_year)]<- 'Insufficient data'
+find_map$facility_access[is.na(find_map$facility_access)]<-"Insufficient data"
+find_map$ngs_facility[is.na(find_map$ngs_facility)]<-"Insufficient data"
+find_map$dx_testing_binary[is.na(find_map$dx_testing_binary)]<-"Insufficient testing data"
+find_map$dx_archetype[is.na(find_map$dx_archetype)]<-"Insufficient testing data"
+find_map$dx_testing_rec[is.na(find_map$dx_testing_rec)]<-"Insufficient testing data"
+find_map$sars_cov_2_binary[is.na(find_map$sars_cov_2_binary)]<-"Insufficient data"
+find_map$sx_archetype[is.na(find_map$sx_archetype)]<-"Insufficient data"
+find_map$sx_sequencing_rec[is.na(find_map$sx_sequencing_rec)]<-"Insufficient data"
+find_map$world_bank_economies[is.na(find_map$world_bank_economies)]<- "Insufficient data"
+find_map$pct_seq[is.na(find_map$pct_seq)]<- "Insufficient data"
+find_map$seq_per_100k[is.na(find_map$seq_per_100k)]<-"Insufficient data"
+find_map$cum_seq[is.na(find_map$cum_seq)]<-"Insufficient data"
+
+
+# Add a column for binary Yes or No of whether the country has ngs facilities
+find_map<-find_map%>%mutate(
   ngs_capacity_binary = ifelse(
-    (ngs_capacity == 0 | is.na(ngs_capacity)), "No", "Yes"),
-  test_binary = ifelse(
-    `Test recommendation` == "Test - Increase diagnostic testing capacity", 1, NA
-  ))
+    (ngs_capacity == 0 | is.na(ngs_capacity)), "No", "Yes"))
 
 
 
@@ -899,10 +890,17 @@ find_clean_flourish<-find_clean_flourish%>%mutate(
 # Percent (%) of global population, cases, testing by SES, in the past 12 months
 
 # Join together these data-frames, and filer for this past 12 months
-globe_aggregated <- left_join (gisaid_last_year, find_testing_clean, by = c ("country_code" = "code"))
+globe_aggregated <- left_join (gisaid_last_year, find_testing_clean, by = c ("country_code" = "code"))%>%
+    select(-population_size)
+# Need the population for all countries, not just those in the find data
+all_pops<-full_dataset%>%select(code, population_size)
+globe_aggregated<- left_join(all_pops,globe_aggregated, by = c("code" = "country_code"))
+# want all 238 countries that we have population size data for 
+global_pop_size = sum(globe_aggregated$population_size, na.rm = T)
+print(paste0('Global population size in our dataset ', global_pop_size/1e9, ' billion, Google says 7.9 billion'))
 
-# find_clean: merge WHO testing data into template
-globe_aggregated <- left_join(globe_aggregated, world_bank_background_clean, by = c("country_code" = "code"))
+# find_clean: merge WB economy data into template
+globe_aggregated <- left_join(globe_aggregated, world_bank_background_clean, by = c("code"))
 #replace missing values with 'No income data' in world_bank_economies column
 globe_aggregated$world_bank_economies <- globe_aggregated$world_bank_economies %>% replace_na('No income data')
 
@@ -913,9 +911,6 @@ Global_stats <-globe_aggregated%>%
             global_tests = sum(tests_in_last_year_smoothed, na.rm = TRUE),
             global_sequences = sum(sequences_in_last_year, na.rm = TRUE)
   )
-# duplicate data 5 times to match with SES groups data
-Global_dups <- Global_stats[rep(seq_len(nrow(Global_stats)), each = 5), ]  
-Global_dups
 
 # Compute SES stats
 SES_stats <-globe_aggregated %>%
@@ -927,7 +922,7 @@ SES_stats <-globe_aggregated %>%
   )
 
 # Join global and SES dataframes (global stats will duplicate per SES group)
-global_SES<-cbind(SES_stats, Global_dups)
+global_SES<-cbind(SES_stats, Global_stats)
 
 # Compute SES %
 SES_breakdown <- global_SES %>%
@@ -939,8 +934,17 @@ SES_breakdown <- global_SES %>%
     )
 
 print (SES_breakdown)
+# check that everything adds to 100!
+SES_check<-SES_breakdown%>%summarise(
+    pop_sum = sum(SES_pop_rate),
+    case_sum = sum(SES_cases_rate),
+    test_sum = sum(SES_test_rate),
+    sequ_sum = sum(SES_sequ_rate)
+)
+# Unit test to make sure that all of the percents add to 100!
+stopifnot('Percents dont add to 100' = SES_check[1,] == c(100,100,100,100))
 
-# Compute LMIC 
+# Compute LMIC vs. HICs
 LMIC_binary <- globe_aggregated %>%
   mutate(
     LMIC_group = case_when(
@@ -957,12 +961,8 @@ LMIC_stats <-LMIC_binary %>%
             LMIC_sequences = sum(sequences_in_last_year, na.rm = TRUE)
   )
 
-# duplicate data 2 times to match with LMIC binary groups data
-Global_dups_2 <- Global_stats[rep(seq_len(nrow(Global_stats)), each = 2), ]  
-Global_dups_2
-
 # Join global and LMICs data-frames (global stats will duplicate per LMIC group)
-global_LMIC<-cbind (LMIC_stats, Global_dups_2)
+global_LMIC<-cbind (LMIC_stats, Global_stats)
 
 
 LMIC_breakdown <- global_LMIC %>%
@@ -975,7 +975,14 @@ LMIC_breakdown <- global_LMIC %>%
 
 print (LMIC_breakdown)
 
-
+LMIC_check<-LMIC_breakdown%>%summarise(
+    pop_sum = sum(LMIC_pop_rate),
+    case_sum = sum(LMIC_cases_rate),
+    test_sum = sum(LMIC_test_rate),
+    sequ_sum = sum(LMIC_sequ_rate)
+)
+# Unit test to make sure that all of the percents add to 100!
+stopifnot('Percents dont add to 100' = LMIC_check[1,] == c(100,100,100,100))
 
 
 # -----------------------------------------------------------------------------------
@@ -987,11 +994,13 @@ print (LMIC_breakdown)
    }
    write.csv(find_not_reported, paste0('../data/NGS_Data_Tables/', current_folder, '/PPI/find_delayed_test_reporting.csv'), row.names = F)
    write.csv(full_dataset, paste0('../data/NGS_Data_Tables/', current_folder, '/public/full_dataset.csv'), na = "NaN", row.names = FALSE)
-   write.csv(find_clean_flourish, paste0('../data/NGS_Data_Tables/', current_folder, '/PPI/find_map.csv'), na = "NaN", row.names = FALSE)
+   write.csv(find_map, paste0('../data/NGS_Data_Tables/', current_folder, '/PPI/find_map.csv'), na = "NaN", row.names = FALSE)
    write.csv(clean_dataset, paste0('../data/NGS_Data_Tables/', current_folder, '/public/clean_dataset.csv'), na = "NaN", row.names = FALSE)
-   write.csv(find_rec_test, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/find_TEST_countries.csv'), na = "NaN", row.names = FALSE )
+   write.csv(find_TEST_countries, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/find_TEST_countries.csv'), na = "NaN", row.names = FALSE )
    write.csv(seq_scatterplot, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/seq_data.csv'), na = "NaN", row.names = FALSE )
    write.csv(test_scatterplot, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/test_data.csv'), na = "NaN", row.names = FALSE )
+   write.csv(SES_breakdown, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/SES_breakdown.csv'), na = "NaN", row.names = FALSE)
+   write.csv(LMIC_breakdown, paste0('../data/NGS_Data_Tables/',current_folder, '/PPI/LMIC_breakdown.csv'), na = "NaN", row.names = FALSE)
  }
 # Briana's local paths 
 #if (USE_CASE == 'local'){
@@ -1012,14 +1021,16 @@ print (LMIC_breakdown)
 
 
 if (USE_CASE == 'domino'){
-  # write.csv(find_changed_archetypes, '/mnt/data/processed/find_changed_archetypes.csv')
-  write.csv(find_map_clean_titles, '/mnt/data/processed/find_map_clean_titles.csv')
-  write.csv(find_not_reported, '/mnt/data/processed/find_delayed_test_reporting.csv')
-  write.csv(find_not_reported, '/mnt/data/processed/find_delayed_test_reporting.csv')
-  write.csv(full_dataset, "/mnt/data/processed/full_dataset.csv", na = "NaN", row.names = FALSE)
-  write.csv(clean_dataset, "/mnt/data/processed/clean_dataset.csv", na = "NaN", row.names = FALSE)
-  write.csv(find_insufficient_test_but_have_seq, "/mnt/data/processed/test_but_suff_seq.csv", na = "NaN", row.names = FALSE )
-  write.csv(seq_scatterplot, "/mnt/data/processed/seq_data.csv", na = "NaN", row.names = FALSE )
-  write.csv(test_scatterplot, "/mnt/data/processed/test_data.csv", na = "NaN", row.names = FALSE )
-  write.csv(LMIC_breakdown, "/mnt/data/processed/LMIC_breakdown.csv", na = "NaN", row.names = FALSE )
+  if(prev_month!= 'November' & prev_year != '2021'){
+      write.csv(find_changed_archetypes, paste0('/mnt/data/processed/', current_folder, '/find_changed_archetypes.csv'), row.names = F)
+  }
+  write.csv(find_not_reported, paste0('/mnt/data/processed/', current_folder, '/find_delayed_test_reporting.csv'), row.names = F)
+  write.csv(full_dataset, paste0('/mnt/data/processed/', current_folder, '/full_dataset.csv'), na = "NaN", row.names = FALSE)
+  write.csv(find_map, paste0('/mnt/data/processed/', current_folder, '/find_map.csv'), na = "NaN", row.names = FALSE)
+  write.csv(clean_dataset, paste0('/mnt/data/processed/', current_folder, '/clean_dataset.csv'), na = "NaN", row.names = FALSE)
+  write.csv(find_TEST_countries, paste0('/mnt/data/processed/', current_folder,'/find_TEST_countries.csv'), na = "NaN", row.names = FALSE )
+  write.csv(seq_scatterplot, paste0('/mnt/data/processed/', current_folder,'/seq_data.csv'), na = "NaN", row.names = FALSE )
+  write.csv(test_scatterplot, paste0('/mnt/data/processed/', current_folder,'/test_data.csv'), na = "NaN", row.names = FALSE )
+  write.csv(LMIC_breakdown, '/mnt/data/processed/', current_folder, '/LMIC_breakdown.csv', na = "NaN", row.names = FALSE )
+  write.csv(SES_breakdown, paste0('/mnt/data/processed/', current_folder, '/SES_breakdown.csv'), na = "NaN", row.names = FALSE)
 }
