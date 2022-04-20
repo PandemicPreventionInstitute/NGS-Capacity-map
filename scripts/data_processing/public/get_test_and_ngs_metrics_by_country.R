@@ -151,7 +151,7 @@ WHO_regions <- read.csv(WHO_REGIONS_PATH) %>%
 # Reading in all countries and sub-setting to countries with valid names
 test_seq_raw <- read.csv (FIND_TESTING_SEQ_RAW_PATH) %>%
   #clean names are those that do not have missing country codes
-  clean_names()
+  clean_names() 
 
 # Get only NGS facility data
 ngs_clean <- test_seq_raw %>%
