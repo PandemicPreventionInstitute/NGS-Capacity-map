@@ -786,6 +786,9 @@ seq_scatterplot<-find_map%>% select(
   pct_cases_sequenced_in_last_year,
   sequences_per_100k_last_year, sars_cov_2_binary)%>%
   filter(sars_cov_2_binary != "Insufficient data", !is.na(sars_cov_2_binary))
+# Create a dataset with those without income data removed
+seq_scatterplot_income_rmvd<- seq_scatterplot %>%
+    filter(world_bank_economies != "No income data")
 
 #Create a dataset for Testing scatterplot visuals
 test_scatterplot<-find_map%>%mutate(
@@ -794,6 +797,11 @@ test_scatterplot<-find_map%>%mutate(
     date_tests_last_reported, TPR_pct,
     avg_daily_tests_per_1000_last_year_smoothed, dx_testing_binary)%>%
   filter(dx_testing_binary != "Insufficient testing data", !is.na(dx_testing_binary))
+# Create a dataset with those without income data removed
+test_scatterplot_income_rmvd<-test_scatterplot %>%
+    filter(world_bank_economies != "No income data")
+
+
 
 
 #-------------------------------------------------------------------------
@@ -1000,7 +1008,9 @@ stopifnot('Percents dont add to 100' = LMIC_check[1,] == c(100,100,100,100))
    write.csv(clean_dataset, paste0('../data/NGS_Data_Tables/', current_folder, '/public/clean_dataset.csv'), na = "NaN", row.names = FALSE)
    write.csv(find_TEST_countries, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/find_TEST_countries.csv'), na = "NaN", row.names = FALSE )
    write.csv(seq_scatterplot, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/seq_data.csv'), na = "NaN", row.names = FALSE )
+   write.csv(seq_scatterplot_income_rmvd, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/seq_data_SES.csv'), na = "NaN", row.names = FALSE )
    write.csv(test_scatterplot, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/test_data.csv'), na = "NaN", row.names = FALSE )
+   write.csv(test_scatterplot_income_rmvd, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/test_data_SES.csv'), na = "NaN", row.names = FALSE )
    write.csv(SES_breakdown, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/SES_breakdown.csv'), na = "NaN", row.names = FALSE)
    write.csv(LMIC_breakdown, paste0('../data/NGS_Data_Tables/',current_folder, '/PPI/LMIC_breakdown.csv'), na = "NaN", row.names = FALSE)
  }
@@ -1032,7 +1042,9 @@ if (USE_CASE == 'domino'){
   write.csv(clean_dataset, paste0('/mnt/data/processed/', current_folder, '/clean_dataset.csv'), na = "NaN", row.names = FALSE)
   write.csv(find_TEST_countries, paste0('/mnt/data/processed/', current_folder,'/find_TEST_countries.csv'), na = "NaN", row.names = FALSE )
   write.csv(seq_scatterplot, paste0('/mnt/data/processed/', current_folder,'/seq_data.csv'), na = "NaN", row.names = FALSE )
+  write.csv(seq_scatterplot_income_rmvd, paste0('/mnt/data/processed/', current_folder,'/seq_data_SES.csv'), na = "NaN", row.names = FALSE )
   write.csv(test_scatterplot, paste0('/mnt/data/processed/', current_folder,'/test_data.csv'), na = "NaN", row.names = FALSE )
+  write.csv(test_scatterplot_income_rmvd, paste0('/mnt/data/processed/', current_folder,'/test_data_SES.csv'), na = "NaN", row.names = FALSE )
   write.csv(LMIC_breakdown, '/mnt/data/processed/', current_folder, '/LMIC_breakdown.csv', na = "NaN", row.names = FALSE )
   write.csv(SES_breakdown, paste0('/mnt/data/processed/', current_folder, '/SES_breakdown.csv'), na = "NaN", row.names = FALSE)
 }
