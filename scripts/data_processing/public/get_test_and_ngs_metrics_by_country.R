@@ -7,6 +7,8 @@
 # This script takes in the GISAID metadata, OWID and FIND testing data and computes a number of metrics that will be used
 # to define country archetypes to assess surveillance capacity.
 
+# this is a test
+
 # Clears (rm = removes) all objects from the workspace
 rm(list = ls())
 
