@@ -5,7 +5,7 @@
 # Date updated: 11-15-2021
 
 
-
+# This is a test merge to dev 
 
 #install.packages("janitor")
 #install.packages("countrycode")
@@ -21,7 +21,6 @@ library(readxl) # excel import
 library(zoo) # calculate rolling averages
 library(R.utils) # R utilities
 library(stringr) # to parse strings in R
-library(tsoutliers) # remove outliers
 library(dplyr) # data wrangling
  
 # ------ Name data paths and set parameters -------------------------------------------
