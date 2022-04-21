@@ -937,13 +937,28 @@ global_SES<-cbind(SES_stats, Global_stats)
 # Compute SES %
 SES_breakdown <- global_SES %>%
   group_by (world_bank_economies)%>%
-  summarize ( SES_pop_rate = 100* (SES_population/global_population),
-              SES_cases_rate = 100* (SES_cases/global_cases),
-              SES_test_rate = 100* (SES_tests/global_tests),
-              SES_sequ_rate = 100*(SES_sequences/global_sequences)
+  summarize ( SES_pop_rate = round(100* (SES_population/global_population),1),
+              SES_cases_rate = round(100* (SES_cases/global_cases),1),
+              SES_test_rate = round(100* (SES_tests/global_tests),1),
+              SES_sequ_rate = round(100*(SES_sequences/global_sequences),1)
+    )%>%
+    rename(
+        `% of global population` = SES_pop_rate,
+        `% of global cases in the past year` = SES_cases_rate,
+        `% of global tests in the past year` = SES_test_rate,
+        `% of sequences collected & submitted in the past year` = SES_sequ_rate
     )
 
 print (SES_breakdown)
+# Format in the weird way FLourish needs it
+SES_flipped<-cbind(ID = rownames(SES_breakdown), SES_breakdown)
+SES_flourish<-melt(SES_flipped)%>%group_by(world_bank_economies)%>%
+    pivot_wider(id_cols = variable, names_from = world_bank_economies, values_from = value)%>%
+    select(-`No income data`)%>%
+    relocate(variable, `High income`, `Upper middle income`, `Lower middle income`, `Low income`)
+
+
+
 # check that everything adds to 100!
 SES_check<-SES_breakdown%>%summarise(
     pop_sum = sum(SES_pop_rate),
