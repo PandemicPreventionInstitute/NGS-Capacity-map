@@ -43,6 +43,7 @@ install.packages("magrittr", dependencies=TRUE, repos='http://cran.us.r-project.
 install.packages("dplyr", dependencies=TRUE, repos='http://cran.us.r-project.org')
 install.packages("scales", dependencies=TRUE, repos='http://cran.us.r-project.org')
 install.packages("bpa", dependencies=TRUE, repos='http://cran.us.r-project.org')
+install.packages("reshape2", dependencies=TRUE, repos='http://cran.us.r-project.org')
 }
 
 # ---------------------------------------------------------
@@ -64,6 +65,7 @@ library(magrittr) # Needs to be run every time you start R and want to use %>%
 library(dplyr) # Data wrangling
 library(scales) # Comma formatting
 library(bpa) # To get the trim_ws working, which will allow you to join the lat and long files
+library(reshape2) # melt function for wrangling
 
 
  
@@ -129,7 +131,7 @@ if (USE_CASE == 'domino'){
 
 # When running locally, run the following local pathways to ingest data from local folders:
 if (USE_CASE == 'local'){
-  GISAID_DAILY_PATH<-'../data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
+  GISAID_DAILY_PATH<-'../../../data/processed/gisaid_owid_merged.csv' # output from gisaid_metadata_processing.R
 }
 
 # -----------------------------------------------------------------------
@@ -657,7 +659,6 @@ find_map_clean_titles <-find_map%>%
   `Days since tests were reported` = days_since_tests_reported,
   `% of cases sequenced in past year` = pct_seq,
   `Number of sequences in past year` = seq_per_100k,
-  `Cumulative number of cases per 100K` = cum_cases_per_100k,
   `Cumulative number of sequences entire pandemic` = cum_seq)
 
 # -------------------- Validation test
@@ -725,7 +726,7 @@ stopifnot("Number given archetypes other than insufficient data is less than 90 
 
 if (USE_CASE == 'local') {
   if (prev_month != "November" & prev_year!= "2021"){
-     write.csv(find_changed_archetypes, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/find_changed_archetypes', prev_month, '_to_', current_month, '.csv'))
+     write.csv(find_changed_archetypes, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/find_changed_archetypes', prev_month, '_to_', current_month, '.csv'))
    }
  }
 
@@ -763,10 +764,6 @@ find_map<-left_join (shapefile, find_map, by = "code")
 #-------------------------------------------------------------------------
 #------------- Creating new dfs for visuals and public
 #-------------------------------------------------------------------------
-
-
-# ----------- Create a dataset including only countries that do not meet testing targets
-
 
 
 # Create new variable in find_map that has a flag of not meeting testing
@@ -848,7 +845,6 @@ clean_dataset<-find_map_clean_titles%>%filter(code %in% old_codes) %>%
            facility_access, dx_testing_binary,sars_cov_2_binary, 
            `Test Archetype`,`Sequence Archetype`)%>%
 rename(
-    `country` = name,
     `World Bank economic status` = world_bank_economies,
     `COVID-19 diagnostic testing targets` = dx_testing_binary,
     `SARS-CoV-2 sequencing targets` = sars_cov_2_binary,
@@ -940,8 +936,20 @@ SES_breakdown <- global_SES %>%
   summarize ( SES_pop_rate = round(100* (SES_population/global_population),1),
               SES_cases_rate = round(100* (SES_cases/global_cases),1),
               SES_test_rate = round(100* (SES_tests/global_tests),1),
-              SES_sequ_rate = round(100*(SES_sequences/global_sequences),1)
-    )%>%
+              SES_sequ_rate = round(100*(SES_sequences/global_sequences),1))
+
+# check that everything adds to 100!
+SES_check<-SES_breakdown%>%summarise(
+  pop_sum = sum(SES_pop_rate),
+  case_sum = sum(SES_cases_rate),
+  test_sum = sum(SES_test_rate),
+  sequ_sum = sum(SES_sequ_rate)
+)
+# Unit test to make sure that all of the percents add to 100!
+stopifnot('Percents dont add to 100' = SES_check[1,] == c(100,100,100,100))
+              
+              
+SES_breakdown<- SES_breakdown%>%
     rename(
         `% of global population` = SES_pop_rate,
         `% of global cases in the past year` = SES_cases_rate,
@@ -952,22 +960,13 @@ SES_breakdown <- global_SES %>%
 print (SES_breakdown)
 # Format in the weird way FLourish needs it
 SES_flipped<-cbind(ID = rownames(SES_breakdown), SES_breakdown)
-SES_flourish<-melt(SES_flipped)%>%group_by(world_bank_economies)%>%
+SES_flourish<-SES_flipped %>% melt()%>%group_by(world_bank_economies)%>%
     pivot_wider(id_cols = variable, names_from = world_bank_economies, values_from = value)%>%
     select(-`No income data`)%>%
     relocate(variable, `High income`, `Upper middle income`, `Lower middle income`, `Low income`)
 
 
 
-# check that everything adds to 100!
-SES_check<-SES_breakdown%>%summarise(
-    pop_sum = sum(SES_pop_rate),
-    case_sum = sum(SES_cases_rate),
-    test_sum = sum(SES_test_rate),
-    sequ_sum = sum(SES_sequ_rate)
-)
-# Unit test to make sure that all of the percents add to 100!
-stopifnot('Percents dont add to 100' = SES_check[1,] == c(100,100,100,100))
 
 # Compute LMIC vs. HICs
 LMIC_binary <- globe_aggregated %>%
@@ -1026,7 +1025,7 @@ stopifnot('Percents dont add to 100' = LMIC_check[1,] == c(100,100,100,100))
    write.csv(seq_scatterplot_income_rmvd, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/seq_data_SES.csv'), na = "NaN", row.names = FALSE )
    write.csv(test_scatterplot, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/test_data.csv'), na = "NaN", row.names = FALSE )
    write.csv(test_scatterplot_income_rmvd, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/test_data_SES.csv'), na = "NaN", row.names = FALSE )
-   write.csv(SES_breakdown, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/SES_breakdown.csv'), na = "NaN", row.names = FALSE)
+   write.csv(SES_flourish, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/SES_breakdown.csv'), na = "NaN", row.names = FALSE)
    write.csv(LMIC_breakdown, paste0('../data/NGS_Data_Tables/',current_folder, '/PPI/LMIC_breakdown.csv'), na = "NaN", row.names = FALSE)
  }
 # Briana's local paths 
@@ -1061,5 +1060,5 @@ if (USE_CASE == 'domino'){
   write.csv(test_scatterplot, paste0('/mnt/data/processed/', current_folder,'/test_data.csv'), na = "NaN", row.names = FALSE )
   write.csv(test_scatterplot_income_rmvd, paste0('/mnt/data/processed/', current_folder,'/test_data_SES.csv'), na = "NaN", row.names = FALSE )
   write.csv(LMIC_breakdown, '/mnt/data/processed/', current_folder, '/LMIC_breakdown.csv', na = "NaN", row.names = FALSE )
-  write.csv(SES_breakdown, paste0('/mnt/data/processed/', current_folder, '/SES_breakdown.csv'), na = "NaN", row.names = FALSE)
+  write.csv(SES_flourish, paste0('/mnt/data/processed/', current_folder, '/SES_breakdown.csv'), na = "NaN", row.names = FALSE)
 }
