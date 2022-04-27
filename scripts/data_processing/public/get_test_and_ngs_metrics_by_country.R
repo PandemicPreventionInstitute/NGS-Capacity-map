@@ -1014,19 +1014,19 @@ stopifnot('Percents dont add to 100' = LMIC_check[1,] == c(100,100,100,100))
 # -----------------------------------------------------------------------------------
  if (USE_CASE == 'local'){
    if(prev_month!= 'November' & prev_year != '2021'){
-     write.csv(find_changed_archetypes, paste0('../data/NGS_Data_Tables/', current_folder, '/PPI/find_changed_archetypes.csv'), row.names = F)
+     write.csv(find_changed_archetypes, paste0('../../../data/NGS_Data_Tables/', current_folder, '/PPI/find_changed_archetypes.csv'), row.names = F)
    }
-   write.csv(find_not_reported, paste0('../data/NGS_Data_Tables/', current_folder, '/PPI/find_delayed_test_reporting.csv'), row.names = F)
-   write.csv(full_dataset, paste0('../data/NGS_Data_Tables/', current_folder, '/public/full_dataset.csv'), na = "NaN", row.names = FALSE)
-   write.csv(find_map, paste0('../data/NGS_Data_Tables/', current_folder, '/PPI/find_map.csv'), na = "NaN", row.names = FALSE)
-   write.csv(clean_dataset, paste0('../data/NGS_Data_Tables/', current_folder, '/public/clean_dataset.csv'), na = "NaN", row.names = FALSE)
-   write.csv(find_TEST_countries, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/find_TEST_countries.csv'), na = "NaN", row.names = FALSE )
-   write.csv(seq_scatterplot, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/seq_data.csv'), na = "NaN", row.names = FALSE )
-   write.csv(seq_scatterplot_income_rmvd, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/seq_data_SES.csv'), na = "NaN", row.names = FALSE )
-   write.csv(test_scatterplot, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/test_data.csv'), na = "NaN", row.names = FALSE )
-   write.csv(test_scatterplot_income_rmvd, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/test_data_SES.csv'), na = "NaN", row.names = FALSE )
-   write.csv(SES_flourish, paste0('../data/NGS_Data_Tables/', current_folder,'/PPI/SES_breakdown.csv'), na = "NaN", row.names = FALSE)
-   write.csv(LMIC_breakdown, paste0('../data/NGS_Data_Tables/',current_folder, '/PPI/LMIC_breakdown.csv'), na = "NaN", row.names = FALSE)
+   write.csv(find_not_reported, paste0('../../../data/NGS_Data_Tables/', current_folder, '/PPI/find_delayed_test_reporting.csv'), row.names = F)
+   write.csv(full_dataset, paste0('../../../data/NGS_Data_Tables/', current_folder, '/public/full_dataset.csv'), na = "NaN", row.names = FALSE)
+   write.csv(find_map, paste0('../../../data/NGS_Data_Tables/', current_folder, '/PPI/find_map.csv'), na = "NaN", row.names = FALSE)
+   write.csv(clean_dataset, paste0('../../../data/NGS_Data_Tables/', current_folder, '/public/clean_dataset.csv'), na = "NaN", row.names = FALSE)
+   write.csv(find_TEST_countries, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/find_TEST_countries.csv'), na = "NaN", row.names = FALSE )
+   write.csv(seq_scatterplot, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/seq_data.csv'), na = "NaN", row.names = FALSE )
+   write.csv(seq_scatterplot_income_rmvd, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/seq_data_SES.csv'), na = "NaN", row.names = FALSE )
+   write.csv(test_scatterplot, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/test_data.csv'), na = "NaN", row.names = FALSE )
+   write.csv(test_scatterplot_income_rmvd, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/test_data_SES.csv'), na = "NaN", row.names = FALSE )
+   write.csv(SES_flourish, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/SES_breakdown.csv'), na = "NaN", row.names = FALSE)
+   write.csv(LMIC_breakdown, paste0('../../../data/NGS_Data_Tables/',current_folder, '/PPI/LMIC_breakdown.csv'), na = "NaN", row.names = FALSE)
  }
 # Briana's local paths 
 #if (USE_CASE == 'local'){
