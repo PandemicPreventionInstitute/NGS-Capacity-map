@@ -280,12 +280,12 @@ find_testing_last_year<- find_testing_t %>% filter(date>=(LAST_DATA_PULL_DATE -T
             # We calculate TPR as a cumulative of cases over tests in the past year 
             tpr_year_raw = cases_in_last_year_raw/tests_in_last_year_raw, # uses only raw data, overestimates because of delayed test reporting
             tpr_year_smoothed = cases_in_last_year_smoothed/tests_in_last_year_smoothed, # overestimates because doesn't account for truncation 
-            tpr_year_smoothed_truncated = cases_in_last_year_smoothed_truncated/tests_in_last_year_smoothed, # used for archetype definition
+            tpr_year_smoothed_truncated = round(cases_in_last_year_smoothed_truncated/tests_in_last_year_smoothed,4), # used for archetype definition
             #convert TPR to a percentage:
-            tpr = 100*tpr_year_smoothed_truncated,
+            tpr = round(100*tpr_year_smoothed_truncated,2),
             # Max(pop) used for deduplication
             avg_daily_test_per_1000_last_year_raw = 1000*mean(new_tests_orig/max(pop, na.rm = T), na.rm = TRUE),
-            avg_daily_tests_per_1000_last_year_smoothed = 1000*mean(new_tests_smoothed/max(pop, na.rm = T), na.rm = TRUE), # used for archetype definition
+            avg_daily_tests_per_1000_last_year_smoothed = round(1000*mean(new_tests_smoothed/max(pop, na.rm = T), na.rm = TRUE),2), # used for archetype definition
             population_size = max(pop)# pops should all be the same
             )%>%  # rename long columnn name to average daily test
   filter(!is.na(code))
