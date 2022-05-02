@@ -28,7 +28,6 @@ install.packages("readxl", dependencies=TRUE, repos='http://cran.us.r-project.or
 install.packages("zoo", dependencies=TRUE, repos='http://cran.us.r-project.org')
 install.packages("R.utils", dependencies=TRUE, repos='http://cran.us.r-project.org')
 install.packages("stringr", dependencies=TRUE, repos='http://cran.us.r-project.org')
-install.packages("tsoutliers", dependencies=TRUE, repos='http://cran.us.r-project.org')
 install.packages("dplyr", dependencies=TRUE, repos='http://cran.us.r-project.org')
 install.packages("scales", dependencies=TRUE, repos='http://cran.us.r-project.org')
 install.packages("readr", dependencies=TRUE, repos='http://cran.us.r-project.org')
@@ -43,14 +42,13 @@ library(readxl) # excel import
 library(zoo) # calculate rolling averages
 library(R.utils) # R utilities
 library(stringr) # to parse strings in R
-library(tsoutliers) # remove outliers
 library(dplyr) # data wrangling
 library(readr) # read_csv
 
 #-----Filepaths------------
 #local
 if (USE_CASE == 'local'){
-GISAID_METADATA_PATH<-"../data/raw/metadata.csv" # from extracted datastream
+GISAID_METADATA_PATH<-"../../../data/raw/metadata.csv" # from extracted datastream
 GISAID_METADATA_PATH_DWNLD<- "../../../data/raw/metadata.tsv" # from download 
 OWID_PATH<-url('https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv')
 #FUTURE_DATE_PATH<-'../../data/suspect_date.csv'
@@ -62,10 +60,10 @@ OWID_PATH<-url('https://raw.githubusercontent.com/owid/covid-19-data/master/publ
 #FUTURE_DATE_PATH<-'/mnt/data/suspect_date.csv'
 }
 FIRST_DATE<-"2019-12-01" # earliest date we want COVID cases for 
-
 today_date<-lubridate::today('EST')
 current_month<-month(today_date)
 current_year<-year(today_date)
+UPDATE_DATE<- paste0(current_year,'-',current_month, '-', 01)
 
 #-----Download and process------
 
