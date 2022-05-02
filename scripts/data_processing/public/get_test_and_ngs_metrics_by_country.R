@@ -719,22 +719,6 @@ LMICs_n_given_archetypes =  n_Sustain + n_Leverage + n_Connect
 stopifnot("Number given archetypes other than insufficient data is less than 90 (should be around 95)"= LMICs_n_given_archetypes>=90)
 
 
-# Push internal QA data sets, assessing Archetype changes
-
-# ------- @Kaitlyn, do we still need these QA datasets pushed to these repos? Suggest deleting...
-# K: I think these are helpful for us internally, for countries in test and countries that have changed archetypes
-
-if (USE_CASE == 'local') {
-  if (prev_month != "November" & prev_year!= "2021"){
-     write.csv(find_changed_archetypes, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/find_changed_archetypes', prev_month, '_to_', current_month, '.csv'))
-   }
- }
-
-if (USE_CASE == 'domino') {
- if (prev_month != "November" & prev_year!= "2021"){
-   write.csv(find_changed_archetypes, paste0('mnt/data/processed/NGS_Data_Tables/', current_folder,'/PPI/find_changed_archetypes', prev_month, '_to_', current_month, '.csv'))
-   }
-}
 
 # ------------------------------------------------------------------------------
 # ----------------------- Join shapefiles & lat/long coordinates
@@ -1013,8 +997,8 @@ stopifnot('Percents dont add to 100' = LMIC_check[1,] == c(100,100,100,100))
 # -----------------------    Exporting to .csv files for local and remote repos
 # -----------------------------------------------------------------------------------
  if (USE_CASE == 'local'){
-   if(prev_month!= 'November' & prev_year != '2021'){
-     write.csv(find_changed_archetypes, paste0('../../../data/NGS_Data_Tables/', current_folder, '/PPI/find_changed_archetypes.csv'), row.names = F)
+   if (prev_month != "November" & prev_year!= "2021"){
+     write.csv(find_changed_archetypes, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/find_changed_archetypes', prev_month, '_to_', current_month, '.csv'))
    }
    write.csv(find_not_reported, paste0('../../../data/NGS_Data_Tables/', current_folder, '/PPI/find_delayed_test_reporting.csv'), row.names = F)
    write.csv(full_dataset, paste0('../../../data/NGS_Data_Tables/', current_folder, '/public/full_dataset.csv'), na = "NaN", row.names = FALSE)
@@ -1047,8 +1031,8 @@ stopifnot('Percents dont add to 100' = LMIC_check[1,] == c(100,100,100,100))
 
 
 if (USE_CASE == 'domino'){
-  if(prev_month!= 'November' & prev_year != '2021'){
-      write.csv(find_changed_archetypes, paste0('/mnt/data/processed/', current_folder, '/find_changed_archetypes.csv'), row.names = F)
+  if (prev_month != "November" & prev_year!= "2021"){
+    write.csv(find_changed_archetypes, paste0('/mnt/data/NGS_Data_Tables/', current_folder,'/PPI/find_changed_archetypes', prev_month, '_to_', current_month, '.csv'))
   }
   write.csv(find_not_reported, paste0('/mnt/data/processed/', current_folder, '/find_delayed_test_reporting.csv'), row.names = F)
   write.csv(full_dataset, paste0('/mnt/data/processed/', current_folder, '/full_dataset.csv'), na = "NaN", row.names = FALSE)
