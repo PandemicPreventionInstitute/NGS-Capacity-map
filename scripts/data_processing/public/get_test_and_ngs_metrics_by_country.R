@@ -654,11 +654,11 @@ find_map_clean_titles <-find_map%>%
   `Sequencing Archetype` = sx_sequencing_rec,
   `Test Archetype` = dx_testing_rec,
   `Test positivity rate (%)` = TPR_pct,
-  `Average daily tests per 1,000` = daily_tests_per_1000,
+  `Average daily tests` = daily_tests_per_1000,
   `Date tests last reported` = date_tests_last_reported,
   `Days since tests were reported` = days_since_tests_reported,
   `% of cases sequenced` = pct_seq,
-  `Number of sequences per 100k` = seq_per_100k,
+  `Number of sequences` = seq_per_100k,
   `Cumulative number of sequences entire pandemic` = cum_seq)
 
 # -------------------- Validation test
@@ -822,9 +822,9 @@ clean_dataset<-find_map_clean_titles%>%filter(code %in% old_codes) %>%
     select(name, world_bank_economies,
            `Date tests last reported`, 
            `Test positivity rate (%)`,
-           `Average daily tests per 1,000`, 
+           `Average daily tests`, 
            `% of cases sequenced`,
-           `Number of sequences per 100k`, 
+           `Number of sequences`, 
            `Cumulative number of sequences entire pandemic`,
            `Test Archetype`,`Sequencing Archetype`)%>%
 rename(
