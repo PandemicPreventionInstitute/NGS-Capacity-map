@@ -611,8 +611,8 @@ find_clean<-find_clean%>% mutate(
   sx_sequencing_rec = case_when(
     sx_archetype == "Insufficient data" ~ "Insufficient data - Missing key diagnostic or case metrics",
     sx_archetype == "Sustain" ~ "Sustain - Sustain current sequencing levels",
-    sx_archetype == "Strengthen/Leverage" ~ "Strengthen/Leverage - Strengthen sequencing levels by leveraging existing NGS capacity",
-    sx_archetype == "Connect/Build" ~ "Connect/Build - Connect to countries with NGS capacity or build NGS capacity from scratch"),
+    sx_archetype == "Strengthen/Leverage" ~ "Strengthen / Leverage - Strengthen sequencing levels by leveraging existing NGS capacity",
+    sx_archetype == "Connect/Build" ~ "Connect / Build - Connect to countries with NGS capacity or build NGS capacity from scratch"),
   
   TPR_pct = paste0(round(100*tpr_year_smoothed_truncated, 1), ' %'),
   daily_tests_per_1000 = paste0(round(avg_daily_tests_per_1000_last_year_smoothed,2), ' per 1,000 persons'),
@@ -651,14 +651,14 @@ find_map<- find_clean %>%select(name, code, population_size, world_bank_economie
 # Make column headers look nice for a separate dataset
 find_map_clean_titles <-find_map%>%
     rename(
-  `Sequence Archetype` = sx_sequencing_rec,
+  `Sequencing Archetype` = sx_sequencing_rec,
   `Test Archetype` = dx_testing_rec,
-  `Test positivity rate (%) in past year` = TPR_pct,
-  `Average daily tests in past year` = daily_tests_per_1000,
+  `Test positivity rate (%)` = TPR_pct,
+  `Average daily tests per 1,000` = daily_tests_per_1000,
   `Date tests last reported` = date_tests_last_reported,
   `Days since tests were reported` = days_since_tests_reported,
-  `% of cases sequenced in past year` = pct_seq,
-  `Number of sequences in past year` = seq_per_100k,
+  `% of cases sequenced` = pct_seq,
+  `Number of sequences per 100k` = seq_per_100k,
   `Cumulative number of sequences entire pandemic` = cum_seq)
 
 # -------------------- Validation test
@@ -821,21 +821,19 @@ full_dataset<-find_map%>%select(
 clean_dataset<-find_map_clean_titles%>%filter(code %in% old_codes) %>%
     select(name, world_bank_economies,
            `Date tests last reported`, 
-           `Test positivity rate (%) in past year`,
-           `Average daily tests in past year`, 
-           `% of cases sequenced in past year`,
-           `Number of sequences in past year`, 
+           `Test positivity rate (%)`,
+           `Average daily tests per 1,000`, 
+           `% of cases sequenced`,
+           `Number of sequences per 100k`, 
            `Cumulative number of sequences entire pandemic`,
-           facility_access, dx_testing_binary,sars_cov_2_binary, 
-           `Test Archetype`,`Sequence Archetype`)%>%
+           `Test Archetype`,`Sequencing Archetype`)%>%
 rename(
-    `World Bank economic status` = world_bank_economies,
-    `COVID-19 diagnostic testing targets` = dx_testing_binary,
-    `SARS-CoV-2 sequencing targets` = sars_cov_2_binary,
-    `NGS facility access` = facility_access) %>% 
+  Country = name,
+    `Socioeconomic status` = world_bank_economies) %>% 
     unique()
 # if a country has NA for sequences, assume 0 sequences submitted in GISAID (and weren't in GISAID dataset)
 clean_dataset$`Cumulative number of sequences entire pandemic`[is.na(clean_dataset$`Cumulative number of sequences entire pandemic`)]<-0
+
 
 
 
