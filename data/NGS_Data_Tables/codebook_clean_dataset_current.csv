@@ -5,7 +5,7 @@ Date tests last reported,datetime,Date that COVID-19 tests were last reported to
 Test positivity rate (%) in past year,numerical,Test positivity rate (%),
 Average daily tests in past year,numerical,Average daily test per 1000 persons,
 % of cases sequenced in past year,numerical,Cases sequenced rate per 100 persons(%),
-Number of sequences in past year,numerical,Number of SARS-CoV-2 collected and submitted to GISAID per 100,000 persons in the past 12 months,
+Number of sequences in past year,numerical,Number of SARS-CoV-2 collected and submitted to GISAID per 100000 persons in the past 12 months,
 Cumulative number of sequences entire pandemic,numerical,Cumulative number of SARS-CoV-2 sequences collected and submitted submitted during the entire pandemic
 NGS facility access,character,Number of NGS sequencing facility identified in-country by WHO data source,
 COVID-19 diagnostic testing targets,character, Binary of if a country Meets testing targets,
