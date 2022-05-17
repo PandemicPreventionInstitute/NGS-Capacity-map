@@ -1,16 +1,18 @@
 ﻿metric,data_type,description,
-code,character,iso3 country code,
 name,character,country or terrirtory name,
-date_test_data_reported,datetime,Date COVID-19 tests were last reported to FIND data source,
-dx_testing_capacity,character,Diagnostic testing capacity,
-facility_access,character,NGS facility access,
-sequencing_facilities,character,Number of NGS sequencing facility in-country,
-sars_cov_2_sequencing,character,SARS-CoV-2 sequencing capacity,
-TPR_pct,numerical,Test positivity rate (%),
-daily_tests_per_1000,numerical,Average daily test per 1000 persons,
-pct_seq,numerical,Cases sequenced rate (%),
-seq_per_100k,numerical,"Number of sequences per 100,000 persons",
-cases_per_100k,numerical,"Number of cases per 100,000 persons",
-archetype,character,Country archetype based on LMIC metric thresholds,
-archetype_description,character,Description of country archetypes,
-cum_seq,numerical,Cumulative sequences submitted during the entire pandemic
+World Bank economic status, character, country economic status based on World Bank data source
+Date tests last reported,datetime,Date that COVID-19 tests were last reported to FIND data source,
+Test positivity rate (%) in past year,numerical,Test positivity rate (%),
+Average daily tests in past year,numerical,Average daily test per 1000 persons,
+% of cases sequenced in past year,numerical,Cases sequenced rate per 100 persons(%),
+Number of sequences in past year,numerical,Number of SARS-CoV-2 collected and submitted to GISAID per 100,000 persons in the past 12 months,
+Cumulative number of sequences entire pandemic,numerical,Cumulative number of SARS-CoV-2 sequences collected and submitted submitted during the entire pandemic
+NGS facility access,character,Number of NGS sequencing facility identified in-country by WHO data source,
+COVID-19 diagnostic testing targets,character, Binary of if a country "Meets testing targets,
+SARS-CoV-2 sequencing targets,character,Binary of if a country "Meets sequencing targets,
+Test Archetype,character,Category of country Test archetype, "Sustain" or "Test",
+Sequence Archetype,character,Category of country Sequence archetype, "Sustain" or "Strengthen/Leverage" or "Connect/Build",
+
+
+
+												
