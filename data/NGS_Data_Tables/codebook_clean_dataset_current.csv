@@ -11,4 +11,4 @@ NGS facility access,character,Number of NGS sequencing facility identified in-co
 COVID-19 diagnostic testing targets,character, Binary of if a country Meets testing targets,
 SARS-CoV-2 sequencing targets,character,Binary of if a country Meets sequencing targets,
 Test Archetype,character,Category of country Test archetype, Sustain or Test,
-Sequence Archetype,character,Category of country Sequence archetype, Sustain or Strengthen/Leverage or Connect/Build,								
+Sequence Archetype,character,Category of country Sequence archetype, Sustain or Strengthen/Leverage or Connect/Build
