@@ -1030,7 +1030,7 @@ stopifnot('Percents dont add to 100' = LMIC_check[1,] == c(100,100,100,100))
 
 if (USE_CASE == 'domino'){
   if (prev_month != "November" & prev_year!= "2021"){
-    write.csv(find_changed_archetypes, paset0('/mnt/data/processed/find_changed_archetypes', prev_month, '_to_', current_month, '.csv'))
+    write.csv(find_changed_archetypes, paste0('/mnt/data/processed/find_changed_archetypes', prev_month, '_to_', current_month, '.csv'))
   }
   write.csv(find_not_reported, '/mnt/data/processed/find_delayed_test_reporting.csv', row.names = F)
   write.csv(full_dataset, '/mnt/data/processed/full_dataset.csv', na = "NaN", row.names = FALSE)
