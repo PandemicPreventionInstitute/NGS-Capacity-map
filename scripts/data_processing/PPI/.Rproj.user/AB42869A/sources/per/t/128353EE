@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1654276902924.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "128353EE",
+    "lastKnownWriteTime" : 2314885436531750456,
+    "last_content_update" : 1654276902924,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "1E5811C3",
+        "caption" : "Geo_discrep",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=Geo_discrep&cache_key=1E5811C3",
+        "displayedObservations" : 35925,
+        "environment" : "",
+        "object" : "Geo_discrep",
+        "preview" : 0,
+        "totalObservations" : 35925,
+        "variables" : 9
+    },
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}
