@@ -1,0 +1,9 @@
+{
+    "path" : "~/GitHub/NGS-Capacity-map/data/raw",
+    "sortOrder" : [
+        {
+            "ascending" : true,
+            "columnIndex" : 2
+        }
+    ]
+}

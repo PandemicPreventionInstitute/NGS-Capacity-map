@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1654262440868.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "871871381",
+    "id" : "7AFE696E",
+    "lastKnownWriteTime" : 1654205452,
+    "last_content_update" : 1654205452,
+    "path" : "~/GitHub/NGS-Capacity-map/scripts/data_processing/PPI/gisaid_metadata_processing.R",
+    "project_path" : "gisaid_metadata_processing.R",
+    "properties" : {
+        "cursorPosition" : "51,0",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
