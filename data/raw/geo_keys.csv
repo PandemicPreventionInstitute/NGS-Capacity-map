@@ -14247,9 +14247,9 @@ loc_id,continent,country,geo_l3,geo_l4,geo_l5,geo_l6,geo_l7
 14246,North America,USA,New York,Putnam,NA,NA,NA
 14247,North America,USA,New York,Dutchess,NA,NA,NA
 14248,Europe,Spain,Catalunya,Caldes De Motbui,NA,NA,NA
-14249,North America,USA,Washington,Walla County,NA,NA,NA
-14250,Europe,Netherlands,Overijssel,Ijsselmuiden,NA,NA,NA
-14251,Europe,Netherlands,Zuid-Holland,Rijswijk,NA,NA,NA
+14249,Europe,Netherlands,Zuid-Holland,Rijswijk,NA,NA,NA
+14250,North America,USA,Washington,Walla County,NA,NA,NA
+14251,Europe,Netherlands,Overijssel,Ijsselmuiden,NA,NA,NA
 14252,South America,Brazil,Sao Paulo,Ilha Bela,NA,NA,NA
 14253,Europe,Spain,Catalunya,Pals,NA,NA,NA
 14254,Europe,Belgium,Kaster,NA,NA,NA,NA
@@ -24014,9 +24014,9 @@ loc_id,continent,country,geo_l3,geo_l4,geo_l5,geo_l6,geo_l7
 24013,Europe,Czech Republic,Moravian-Silesian Region,Hlucin,NA,NA,NA
 24014,Europe,Poland,Slaskie,Biala,NA,NA,NA
 24015,Europe,Czech Republic,Zlin Region,Korycany,NA,NA,NA
-24016,Europe,France,Auvergne-Rhone-Alpes,Rognonas,NA,NA,NA
-24017,Europe,France,Provence-Alpes-cote d'Azur,NA,NA,NA,NA
-24018,Europe,Austria,Upper Austria,Gmunden,Kirchham,NA,NA
+24016,Europe,Austria,Upper Austria,Gmunden,Kirchham,NA,NA
+24017,Europe,France,Auvergne-Rhone-Alpes,Rognonas,NA,NA,NA
+24018,Europe,France,Provence-Alpes-cote d'Azur,NA,NA,NA,NA
 24019,Europe,Austria,Upper Austria,Eferding,St. Marienkirchen an der Polsenz,NA,NA
 24020,Europe,Poland,Slaskie,Dziegielow,NA,NA,NA
 24021,Europe,Czech Republic,South Moravian Region,Rosice u Brna,NA,NA,NA
@@ -26001,10 +26001,10 @@ loc_id,continent,country,geo_l3,geo_l4,geo_l5,geo_l6,geo_l7
 26000,North America,Mexico,Nuevo Leon,Ciudad Sabinas Hidalgo,NA,NA,NA
 26001,North America,Mexico,Nuevo Leon,Montemorelos,NA,NA,NA
 26002,North America,Mexico,Nuevo Leon,San Nicolas de los Garza,NA,NA,NA
-26003,North America,Mexico,Nuevo Leon,Ciudad General Escobedo,NA,NA,NA
-26004,North America,Mexico,Nuevo Leon,Ciudad Santa Catarina,NA,NA,NA
-26005,North America,Mexico,Nuevo Leon,Ciudad De Allende,NA,NA,NA
-26006,North America,Mexico,Nuevo Leon,Jardines de La Silla (Jardines),NA,NA,NA
+26003,North America,Mexico,Nuevo Leon,Jardines de La Silla (Jardines),NA,NA,NA
+26004,North America,Mexico,Nuevo Leon,Ciudad General Escobedo,NA,NA,NA
+26005,North America,Mexico,Nuevo Leon,Ciudad Santa Catarina,NA,NA,NA
+26006,North America,Mexico,Nuevo Leon,Ciudad De Allende,NA,NA,NA
 26007,North America,Mexico,Nuevo Leon,Salinas Victoria,NA,NA,NA
 26008,North America,Mexico,Nuevo Leon,Ciudad Cerralvo,NA,NA,NA
 26009,North America,Mexico,Nuevo Leon,Localidad Sin Nombre,NA,NA,NA
@@ -34078,8 +34078,8 @@ loc_id,continent,country,geo_l3,geo_l4,geo_l5,geo_l6,geo_l7
 34077,Asia,China,Henan,Jiaozuo,NA,NA,NA
 34078,Europe,France,Bretagne,Pornichet,NA,NA,NA
 34079,Europe,Austria,Upper Austria,Scharding,Zell an der Pram,NA,NA
-34080,North America,USA,Missouri,St Louis County,NA,NA,NA
-34081,North America,USA,Wisconsin,Door,NA,NA,NA
+34080,North America,USA,Wisconsin,Door,NA,NA,NA
+34081,North America,USA,Missouri,St Louis County,NA,NA,NA
 34082,Europe,France,Bretagne,Melle,NA,NA,NA
 34083,Europe,Italy,Apulia,Morciano Di Leuca,NA,NA,NA
 34084,Europe,France,Bretagne,Dourdain,NA,NA,NA
@@ -34661,10 +34661,10 @@ loc_id,continent,country,geo_l3,geo_l4,geo_l5,geo_l6,geo_l7
 34660,Europe,France,Auvergne-Rhone-Alpes,ORCET,NA,NA,NA
 34661,Europe,France,Auvergne-Rhone-Alpes,CHANONAT,NA,NA,NA
 34662,Europe,France,Auvergne-Rhone-Alpes,CHANTENAY ST IMBERT,NA,NA,NA
-34663,Europe,France,Auvergne-Rhone-Alpes,BELLERIVE SUR ALLIER,NA,NA,NA
-34664,Europe,France,Auvergne-Rhone-Alpes,TEILHEDE,NA,NA,NA
-34665,Europe,France,Auvergne-Rhone-Alpes,AUZANCES,NA,NA,NA
-34666,Europe,Italy,Campania,Cercola,NA,NA,NA
+34663,Europe,Italy,Campania,Cercola,NA,NA,NA
+34664,Europe,France,Auvergne-Rhone-Alpes,BELLERIVE SUR ALLIER,NA,NA,NA
+34665,Europe,France,Auvergne-Rhone-Alpes,TEILHEDE,NA,NA,NA
+34666,Europe,France,Auvergne-Rhone-Alpes,AUZANCES,NA,NA,NA
 34667,Africa,Botswana,Good Hope,Mmathethe,NA,NA,NA
 34668,Europe,Montenegro,Plav,NA,NA,NA,NA
 34669,Africa,Botswana,Greater Gaborone,Lobatse,NA,NA,NA
@@ -35021,13 +35021,13 @@ loc_id,continent,country,geo_l3,geo_l4,geo_l5,geo_l6,geo_l7
 35020,North America,USA,Mississippi,Mc cool,NA,NA,NA
 35021,North America,USA,Mississippi,Water valley,NA,NA,NA
 35022,North America,USA,Mississippi,Aberdeen,NA,NA,NA
-35023,North America,USA,Mississippi,Pass christian,NA,NA,NA
-35024,North America,USA,Mississippi,New albany,NA,NA,NA
-35025,North America,USA,Mississippi,Mc call creek,NA,NA,NA
-35026,North America,USA,Mississippi,Lake cormorant,NA,NA,NA
-35027,North America,USA,Mississippi,Tishomingo,NA,NA,NA
-35028,North America,USA,Mississippi,Banner,NA,NA,NA
-35029,North America,USA,Mississippi,Fayette,NA,NA,NA
+35023,North America,USA,Mississippi,Fayette,NA,NA,NA
+35024,North America,USA,Mississippi,Pass christian,NA,NA,NA
+35025,North America,USA,Mississippi,New albany,NA,NA,NA
+35026,North America,USA,Mississippi,Mc call creek,NA,NA,NA
+35027,North America,USA,Mississippi,Lake cormorant,NA,NA,NA
+35028,North America,USA,Mississippi,Tishomingo,NA,NA,NA
+35029,North America,USA,Mississippi,Banner,NA,NA,NA
 35030,North America,USA,Mississippi,Rena lara,NA,NA,NA
 35031,North America,USA,Mississippi,Cedarbluff,NA,NA,NA
 35032,North America,USA,Mississippi,Calhoun city,NA,NA,NA
@@ -35802,29 +35802,29 @@ loc_id,continent,country,geo_l3,geo_l4,geo_l5,geo_l6,geo_l7
 35801,Europe,France,Bretagne,Gouarec,NA,NA,NA
 35802,North America,Mexico,Veracruz,Papantla,NA,NA,NA
 35803,North America,Mexico,Guanajuato,Cortazar,NA,NA,NA
-35804,North America,Mexico,Veracruz,Poza Rica de Hidalgo,NA,NA,NA
-35805,North America,Mexico,State of Mexico,Naucalpan de Juarez,NA,NA,NA
-35806,North America,Mexico,Veracruz,Minatitlan,NA,NA,NA
-35807,North America,Mexico,Mexico City,Tlalpan,NA,NA,NA
+35804,North America,Mexico,Mexico City,Tlalpan,NA,NA,NA
+35805,North America,Mexico,Veracruz,Minatitlan,NA,NA,NA
+35806,North America,Mexico,Veracruz,Poza Rica de Hidalgo,NA,NA,NA
+35807,North America,Mexico,State of Mexico,Naucalpan de Juarez,NA,NA,NA
 35808,North America,Mexico,Mexico City,Iztacalco,NA,NA,NA
-35809,North America,Mexico,Mexico City,Gustavo A. Madero,NA,NA,NA
-35810,North America,Mexico,Mexico City,Coyoacan,NA,NA,NA
-35811,South America,Brazil,Bahia,Tucano,NA,NA,NA
-35812,South America,Brazil,Bahia,Riacho de Santana,NA,NA,NA
-35813,South America,Brazil,Bahia,Camamu,NA,NA,NA
-35814,South America,Brazil,Bahia,Cipo,NA,NA,NA
-35815,North America,Mexico,Yucatan,Uman,NA,NA,NA
-35816,North America,Mexico,Mexico City,Miguel Hidalgo,NA,NA,NA
-35817,North America,Mexico,Mexico City,Alvaro Obregon,NA,NA,NA
-35818,North America,Mexico,State of Mexico,Atizapan de Zaragoza,NA,NA,NA
+35809,North America,Mexico,Mexico City,Coyoacan,NA,NA,NA
+35810,North America,Mexico,Mexico City,Gustavo A. Madero,NA,NA,NA
+35811,North America,Mexico,Mexico City,Alvaro Obregon,NA,NA,NA
+35812,North America,Mexico,Mexico City,Miguel Hidalgo,NA,NA,NA
+35813,North America,Mexico,Yucatan,Uman,NA,NA,NA
+35814,South America,Brazil,Bahia,Tucano,NA,NA,NA
+35815,South America,Brazil,Bahia,Riacho de Santana,NA,NA,NA
+35816,South America,Brazil,Bahia,Camamu,NA,NA,NA
+35817,South America,Brazil,Bahia,Cipo,NA,NA,NA
+35818,North America,Mexico,Mexico City,Cuauhtemoc,NA,NA,NA
 35819,North America,Mexico,Queretaro,Queretaro,NA,NA,NA
-35820,North America,Mexico,Mexico City,Cuauhtemoc,NA,NA,NA
-35821,North America,Mexico,Mexico City,Iztapalapa,NA,NA,NA
-35822,South America,Brazil,Bahia,Madre de Deus,NA,NA,NA
+35820,North America,Mexico,Mexico City,Iztapalapa,NA,NA,NA
+35821,North America,Mexico,State of Mexico,Atizapan de Zaragoza,NA,NA,NA
+35822,North America,Mexico,Nuevo Leon,General Escobedo,NA,NA,NA
 35823,South America,Brazil,Bahia,Novo Triunfo,NA,NA,NA
-35824,North America,Mexico,Nuevo Leon,General Escobedo,NA,NA,NA
-35825,South America,Brazil,Bahia,Adustina,NA,NA,NA
-35826,South America,Brazil,Bahia,Sitio do Quinto,NA,NA,NA
+35824,South America,Brazil,Bahia,Madre de Deus,NA,NA,NA
+35825,South America,Brazil,Bahia,Sitio do Quinto,NA,NA,NA
+35826,South America,Brazil,Bahia,Adustina,NA,NA,NA
 35827,Europe,France,Auvergne-Rhone-Alpes,Colombiers,NA,NA,NA
 35828,Europe,France,Auvergne-Rhone-Alpes,Domeyrat,NA,NA,NA
 35829,Europe,France,Auvergne-Rhone-Alpes,Raveau,NA,NA,NA
@@ -35850,14 +35850,14 @@ loc_id,continent,country,geo_l3,geo_l4,geo_l5,geo_l6,geo_l7
 35849,North America,USA,New York,Saratoga,NA,NA,NA
 35850,North America,USA,New York,Wayne,NA,NA,NA
 35851,North America,USA,New York,Chautauqua,NA,NA,NA
-35852,North America,USA,New York,Franklin,NA,NA,NA
-35853,North America,USA,New York,Chemung,NA,NA,NA
-35854,North America,USA,New York,Monroe,NA,NA,NA
-35855,North America,USA,New York,Genesee,NA,NA,NA
-35856,North America,USA,New York,Niagara,NA,NA,NA
-35857,Europe,Czech Republic,Liberec Region,Nove mesto pod smrkem,NA,NA,NA
-35858,North America,USA,New York,Herkimer,NA,NA,NA
-35859,Europe,Czech Republic,Usti nad Labem Region,Cerneves,NA,NA,NA
+35852,Europe,Czech Republic,Liberec Region,Nove mesto pod smrkem,NA,NA,NA
+35853,North America,USA,New York,Franklin,NA,NA,NA
+35854,North America,USA,New York,Chemung,NA,NA,NA
+35855,North America,USA,New York,Monroe,NA,NA,NA
+35856,North America,USA,New York,Genesee,NA,NA,NA
+35857,North America,USA,New York,Niagara,NA,NA,NA
+35858,Europe,Czech Republic,Usti nad Labem Region,Cerneves,NA,NA,NA
+35859,North America,USA,New York,Herkimer,NA,NA,NA
 35860,North America,USA,New York,Chenango,NA,NA,NA
 35861,North America,USA,New York,Broome,NA,NA,NA
 35862,North America,USA,New York,Washington,NA,NA,NA
@@ -35875,11 +35875,11 @@ loc_id,continent,country,geo_l3,geo_l4,geo_l5,geo_l6,geo_l7
 35874,South America,Argentina,Cordoba,Cruz del Eje,NA,NA,NA
 35875,Europe,Belgium,Esch-Sur-Alzette,NA,NA,NA,NA
 35876,North America,USA,California,City and County of San Francisco,NA,NA,NA
-35877,Europe,France,Bretagne,Hillion,NA,NA,NA
-35878,Europe,France,Bretagne,Rostrenen,NA,NA,NA
+35877,Europe,France,Bretagne,Rostrenen,NA,NA,NA
+35878,Europe,France,Bretagne,St Coulomb,NA,NA,NA
 35879,Europe,France,Bretagne,Parthenay de bretagne,NA,NA,NA
-35880,Europe,France,Bretagne,Cancale,NA,NA,NA
-35881,Europe,France,Bretagne,St Coulomb,NA,NA,NA
+35880,Europe,France,Bretagne,Hillion,NA,NA,NA
+35881,Europe,France,Bretagne,Cancale,NA,NA,NA
 35882,Europe,France,Bretagne,St symphorien,NA,NA,NA
 35883,Europe,France,Bretagne,Bains sur oust,NA,NA,NA
 35884,North America,USA,California,Alameda Coutny,NA,NA,NA
@@ -35917,10 +35917,38 @@ loc_id,continent,country,geo_l3,geo_l4,geo_l5,geo_l6,geo_l7
 35916,North America,USA,Wisconsin,Pepin,NA,NA,NA
 35917,Europe,Spain,Galicia,Santiago de Compostela,OLEIROS,NA,NA
 35918,Europe,Spain,Galicia,Santiago de Compostela,BOIMORTO,NA,NA
-35919,Asia,India,Maharashtra,AMRAVATI,NA,NA,NA
-35920,Asia,India,Telangana,Hyderabad,Khairathabad,NA,NA
+35919,Asia,India,Telangana,Hyderabad,Khairathabad,NA,NA
+35920,Asia,India,Maharashtra,AMRAVATI,NA,NA,NA
 35921,Asia,India,Maharashtra,PUNE,NA,NA,NA
 35922,North America,USA,Illinois,Chicago County,NA,NA,NA
 35923,North America,USA,Illinois,MAdison County,NA,NA,NA
 35924,North America,USA,Illinois,Mcdonough County,NA,NA,NA
 35925,North America,USA,Illinois,JoDaviess County,NA,NA,NA
+35926,South America,Brazil,Rondonia,Espigao do Oeste,NA,NA,NA
+35927,Africa,Uganda,Busia,NA,NA,NA,NA
+35928,Africa,Uganda,Bugiri,NA,NA,NA,NA
+35929,Africa,Uganda,Mbale,NA,NA,NA,NA
+35930,Africa,Uganda,Bududa,NA,NA,NA,NA
+35931,Africa,Uganda,Moroto,NA,NA,NA,NA
+35932,Africa,Uganda,Amuru,NA,NA,NA,NA
+35933,Africa,Uganda,Tororo,NA,NA,NA,NA
+35934,Africa,Uganda,Namisindwa,NA,NA,NA,NA
+35935,Africa,Uganda,Kalaki,NA,NA,NA,NA
+35936,Africa,Uganda,Bukwo,NA,NA,NA,NA
+35937,Africa,Uganda,Napak,NA,NA,NA,NA
+35938,Africa,Uganda,Kapchorwa,NA,NA,NA,NA
+35939,Africa,Uganda,Nabilatuku,NA,NA,NA,NA
+35940,Africa,Uganda,Pallisa,NA,NA,NA,NA
+35941,Africa,Uganda,Nakapiripirit,NA,NA,NA,NA
+35942,Africa,Uganda,Kumi,NA,NA,NA,NA
+35943,Africa,Uganda,Soroti,NA,NA,NA,NA
+35944,Africa,Uganda,Sironko,NA,NA,NA,NA
+35945,Africa,Uganda,Kampala,NA,NA,NA,NA
+35946,Africa,Uganda,Mityana,NA,NA,NA,NA
+35947,Africa,Uganda,Amuria,NA,NA,NA,NA
+35948,South America,Brazil,Rondonia,Santa Luzia do Oeste,NA,NA,NA
+35949,South America,Brazil,Rondonia,Alvorada D' Oeste,NA,NA,NA
+35950,South America,Brazil,Rondonia,Teixeiropolis,NA,NA,NA
+35951,South America,Brazil,Rondonia,Ji Parana,NA,NA,NA
+35952,North America,Guatemala,Ixil,NA,NA,NA,NA
+35953,North America,USA,Oregon,Wheeler County,NA,NA,NA

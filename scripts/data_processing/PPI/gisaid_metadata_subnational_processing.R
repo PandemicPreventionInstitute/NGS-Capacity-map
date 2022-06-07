@@ -23,7 +23,7 @@ library(readr) # read_csv
 rm(list = ls())
 Metadata_raw <- read_csv("../../../data/raw/metadata.csv") # from extracted datastream
 
-#### 2) Clean ####
+#### 2) Get set of unique geolocations present in the metadata ####
 #### Split location string into geographies at each level (up to 7)
 Locations_split <-  str_split(Metadata_raw$location, "  |/", simplify = T) %>% 
     as_tibble() %>%
@@ -50,19 +50,3 @@ Geo_keys <- select(Geo_keys, -geo_l2)
 
 #### Export Geo keys
 write_csv(Geo_keys, '../../../data/raw/geo_keys.csv')
-
-admin_1_unique <- select(Geo_keys, continent, country, geo_l3) %>% 
-    mutate(geo_l3 = str_to_lower(geo_l3) %>% 
-               str_replace_all("-", " ") %>% 
-               str_replace_all("_", " ") %>% 
-               str_replace_all("'", " ")) %>% 
-    unique()
-
-unique(select(Geo_keys, continent, country, geo_l3)) %>% View()
-
-
-table(unique(select(Geo_keys, continent, country, geo_l3))$country) %>% View()
-
-%>% 
-    table(.$country)
-
