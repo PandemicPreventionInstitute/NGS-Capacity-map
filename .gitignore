@@ -7,9 +7,12 @@
 gisaid_owid_merged.csv
 metadata.csv
 metadata.tsv
+gpw.csv.gz
 secrets_gisaid.csv
+gpw_credentials.csv
 
 .log
 .sql
 .sqlite
 .Rproj
+.Rproj.user
