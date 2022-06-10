@@ -1,4 +1,4 @@
-#### Process metadata from GISAID & aggregate by subnational administrative divisions ####
+#### Process metadata from GISAID & get unique set of geokeys ####
 #### Jordan Klein
 
 #### 1) Setup ####
@@ -18,6 +18,7 @@ library(R.utils) # R utilities
 library(stringr) # to parse strings in R
 library(dplyr) # data wrangling
 library(readr) # read_csv
+library(stringi)
 
 #### Clear environment & load metadata
 rm(list = ls())
