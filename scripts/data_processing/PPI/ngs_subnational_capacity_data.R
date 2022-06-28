@@ -70,8 +70,17 @@ NGS.map <- filter(Metadata, submission_date >= today()-365) %>%
     group_by(geoid) %>% 
     summarise(seqs = sum(seqs)) %>% 
     left_join(Geo.Pop, .) %>% 
-    mutate(seq_pc = 100000*seqs/pop)
+    mutate(seq_pc = 100000*seqs/pop) %>% 
+    # log transform since this is very skewed
+    mutate(log_seqpc = log(seq_pc)) %>% 
+    # change subnational location names to title case
+    mutate(macr_nm = str_to_title(macr_nm), micr_nm = str_to_title(micr_nm)) %>% 
+    # rounding
+    mutate(seq_pc = round(seq_pc, digits = 1), log_seqpc = round(log_seqpc, digits = 2))
 
 #### 3) Export data ####
 #### As csv by saving the geometry as wellknown text
 st_write(NGS.map, "../../../data/raw/NGS_subnational_capacity.csv", layer_options = "GEOMETRY=AS_WKT", append = F)
+
+#### Geoson w/ geometries & geoids
+st_write(select(NGS.map, geoid), "../../../data/raw/NGS_subnational_capacity.geojson", append = F)
