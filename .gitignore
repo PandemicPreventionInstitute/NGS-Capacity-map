@@ -10,6 +10,7 @@ metadata.tsv
 gpw.csv.gz
 secrets_gisaid.csv
 gpw_credentials.csv
+data/
 
 .log
 .sql
