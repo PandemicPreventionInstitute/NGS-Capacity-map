@@ -7,7 +7,7 @@ Relevant for all subnational NGS capacity mapping, not just 26-country MVP.
 Extracts and stores all sequencing metadata from the gisaaid api.
 
 ### gisaid_metadata_geokeys_processing.R
-Runs auto_extract_gisaid_metadata.R and saves a key of the unique locations contained in the gisaid metadata- geo_keys.csv.
+Runs auto_extract_gisaid_metadata.R and saves a key of the unique locations contained in the gisaid metadata- geo_keys.csv. geo_keys.csv has 7 variables for administrative division levels: continent, country, geo_l3- 1st level subnational administrative division (ie state), geo_l4- 2nd level subnational administrative division (ie county), geo_l5- 3rd level subnational administrative division (ie municipality), geo_l6- 4th level subnational administrative division, geo_l7- 5th level subnational administrative division.
 
 ### geokeys_cleaning.R
 Imports, cleans, and standardizes geo_keys.csv.
@@ -34,7 +34,7 @@ Pulls in existing geo_keys_ids.csv file and updates if it there are new geokeys 
 Runs gisaid_metadata_geokeys_processing.R and geokey_id_update.R and imports gisaid metadata.csv, GeoPop.shp, and geo_keys_ids.csv to create an up to date geospatially explicit datafile of subnational NGS capacity- NGS_subnational_capacity.csv.
 
 ### subnational_mapping.R
-Used to generate the maps for the MVP (does not save the files, this was done manually).
+Used to generate static maps for the MVP. The maps are not saved by the script, they are generated one by one and are meant to be spot checked and then saved by the user.
 
 ## Miscellaneous scripts
 These scripts are not used in current workflows.

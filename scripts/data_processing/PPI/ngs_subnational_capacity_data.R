@@ -34,6 +34,9 @@ gc()
 #### Load packages
 library("devtools")
 library("subregionalcovid19")
+library(geojsonR)
+library(geojsonsf)
+library(geojsonio)
 
 #### Read in joined Pop-Geo file & IDed unique geokeys in metadata
 Geo.Pop <- st_read("../../../data/raw/GeoPop.shp")
@@ -79,8 +82,17 @@ NGS.map <- filter(Metadata, submission_date >= today()-365) %>%
     mutate(seq_pc = round(seq_pc, digits = 1), log_seqpc = round(log_seqpc, digits = 2))
 
 #### 3) Export data ####
+#### Get shapefiles for all countries
+## Import shapefile for country borders from repo & save as a csv
+SHAPEFILES_FOR_FLOURISH_PATH <- url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/Geospatial_Data/geometric_polygons_country.txt') # shapefiles for mapping
+shapefile <- read_delim(SHAPEFILES_FOR_FLOURISH_PATH, delim = "\t", show_col_types = FALSE) 
+
+## Before exporting filter out countries in the NGS map data
+filter(shapefile, !c(code %in% unique(NGS.map$iso3))) %>% 
+    write_csv("../../../data/raw/shapefile.csv")
+
 #### As csv by saving the geometry as wellknown text
 st_write(NGS.map, "../../../data/raw/NGS_subnational_capacity.csv", layer_options = "GEOMETRY=AS_WKT", append = F)
 
-#### Geoson w/ geometries & geoids
+#### Geojson w/ geometries & geoids
 st_write(select(NGS.map, geoid), "../../../data/raw/NGS_subnational_capacity.geojson", append = F)
