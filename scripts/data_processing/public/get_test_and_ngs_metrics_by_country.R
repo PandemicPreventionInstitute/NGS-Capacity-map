@@ -738,7 +738,8 @@ find_rec_test<-find_map%>%
   filter(dx_testing_binary == "Does not meet testing target")
 
 # Join for lat/long coordinates
-find_TEST_countries <-left_join(find_rec_test, lat_long, by = "code")
+find_TEST_countries <-left_join(find_rec_test, lat_long, by = "code") %>% 
+  mutate(col_for_points =1)
 
 # Join Shapefiles dataframe to find_map template
 find_map<-left_join (shapefile, find_map, by = "code") 
