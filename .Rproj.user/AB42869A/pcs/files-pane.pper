@@ -1,0 +1,9 @@
+{
+    "path" : "~/GitHub/NGS-Capacity-map/scripts/data_processing/PPI",
+    "sortOrder" : [
+        {
+            "ascending" : true,
+            "columnIndex" : 2
+        }
+    ]
+}
