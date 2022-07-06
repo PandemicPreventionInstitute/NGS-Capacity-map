@@ -111,7 +111,9 @@ SHAPEFILES_FOR_FLOURISH_PATH <- url('https://raw.githubusercontent.com/PandemicP
 WHO_REGIONS_PATH<- url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/additional_sources/WHO_region_data.csv') # WHO country list
 ECONOMY_PATH<- url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/additional_sources/WB_class_data.csv')
 FIND_TESTING_SEQ_RAW_PATH<- url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/additional_sources/Sequencing_labs_data.csv')
-LAT_LONG_DATA <- url ('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/Geospatial_Data/iso_3_centroids.csv')
+LAT_LONG_DATA <- url ('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/Geospatial_Data/igeography.csv')
+
+
 
 # Out-dated FIND NGS map methodologies that were lives/updated in November.
 # K: I delted the lines that duplicate this later in the code
@@ -727,10 +729,16 @@ stopifnot("Number given archetypes other than insufficient data is less than 90 
 shapefile <- read_delim(SHAPEFILES_FOR_FLOURISH_PATH, delim = "\t", show_col_types = FALSE) %>%
   select(geometry, code, country)
 
-lat_long<-read.csv(LAT_LONG_DATA)%>%clean_names()%>%
-  select(alpha_3_code, latitude, longitude)%>%
-  rename(code = alpha_3_code)%>%
-  mutate(code = trim_ws(as.character(code)))
+# lat_long<-read.csv(LAT_LONG_DATA)%>%clean_names()%>%
+#   select(alpha_3_code, latitude, longitude)%>%
+#   rename(code = alpha_3_code)%>%
+#   mutate(code = trim_ws(as.character(code)))
+
+# new centroids from Google
+centroids<-read.csv(LAT_LONG_DATA) %>% 
+  filter(str_length(location_key)==2) %>% 
+  mutate(code = countrycode(location_key, origin = 'iso2c', destination = 'iso3c')) %>% 
+  select(code, latitude, longitude)
 
 # Join dataset with lat/long coordinates to visualize dots on countries
 # that do not meet testing targets
@@ -738,7 +746,7 @@ find_rec_test<-find_map%>%
   filter(dx_testing_binary == "Does not meet testing target")
 
 # Join for lat/long coordinates
-find_TEST_countries <-left_join(find_rec_test, lat_long, by = "code") %>% 
+find_TEST_countries <-left_join(find_rec_test, centroids, by = "code") %>% 
   mutate(col_for_points =1)
 
 # Join Shapefiles dataframe to find_map template
