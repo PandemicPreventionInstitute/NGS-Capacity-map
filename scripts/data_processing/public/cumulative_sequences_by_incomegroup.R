@@ -58,5 +58,11 @@ global_sequencing <- gisaid_t %>%
   summarise(sequences = sum(n_new_sequences)) %>% 
   mutate(cum_seq = cumsum(sequences))
 
+### Pivot to wider so usable with flourish
+global_sequencing_wide <- select(global_sequencing, -sequences) %>% 
+  pivot_wider(names_from = world_bank_economies, values_from = cum_seq) %>% 
+  clean_names()
+
 #### 3) Export ####
-write_csv(global_sequencing, "../../../data/processed/cumulative_sequences.csv")
+write_csv(global_sequencing_wide, "../../../data/processed/cumulative_sequences.csv")
+
