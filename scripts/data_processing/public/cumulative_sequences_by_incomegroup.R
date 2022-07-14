@@ -2,32 +2,44 @@
 #### Jordan Klein
 
 #### 1) Setup ####
-rm(list = ls())
+#### Run GISAID metadata extracting script
+source("auto_extract_gisaid_metadata.R")
+
 #### Load packages
-library(tidyverse) # Data wrangling
-library(tibble) # Data wrangling
-library(janitor) # Column naming
-library(countrycode) # Country codes
-library(lubridate) # Date times
-library(readxl) # Excel import
-library(zoo) # Calculate rolling averages
+library(tidyverse) # data wrangling
+library(tibble) # data wrangling
+library(janitor) # column naming
+library(countrycode) # country c?des
+library(lubridate) # date times
+library(readxl) # excel import
+library(zoo) # calculate rolling averages
 library(R.utils) # R utilities
-library(stringr) # To parse strings in R
-library(magrittr) # Needs to be run every time you start R and want to use %>%
-library(dplyr) # Data wrangling
-library(scales) # Comma formatting
-library(bpa) # To get the trim_ws working, which will allow you to join the lat and long files
-library(reshape2) # melt function for wrangling
+library(stringr) # to parse strings in R
+library(dplyr) # data wrangling
+library(readr) # read_csv
+library(stringi)
 
-#### Load raw gisaid-owid merged data
-gisaid_raw <- read_csv('../../../data/processed/gisaid_owid_merged.csv')
+#### Clear environment & load metadata
+rm(list = ls())
+Metadata_raw <- read_csv("../../../data/raw/metadata.csv") # from extracted datastream
 
-# Select important columns: collection date, country name, number of new sequences, OWID
-# covid-19 case data, OWID population data, country code, OWID location
-gisaid_t <- gisaid_raw%>%
-  select(collection_date = gisaid_collect_date, gisaid_country, n_new_sequences,
-         owid_new_cases, owid_population, country_code, owid_location)
+#### 2) Clean data gisaid metadata ####
+#### Exclude collections/submissions before 2019-12-01, after 2022-06-30
+gisaid_t <- filter(Metadata_raw, submission_date >= ymd("2019-12-01") & collection_date >= ymd("2019-12-01") & 
+                     submission_date < ymd("2022-07-01") & collection_date < ymd("2022-07-01")) %>% 
+  # only keep variables I need
+  select(country, submission_date)
 
+### Add iso3 country codes
+gisaid_t <- mutate(gisaid_t, country_code = countrycode(country, "country.name", "iso3c"))
+## Manually add codes for countries that didn't match (https://laendercode.net/en/countries.html)
+gisaid_t <- gisaid_t %>% 
+  mutate(country_code = case_when(grepl("Kosovo", country) ~ "XKX", 
+                                     grepl("Saint Martin", country) ~ "MAF", 
+                                     grepl("Bonaire|Sint Eustatius", country) ~ "BES", 
+                                     !grepl("Kosovo|Saint Martin|Bonaire|Sint Eustatius", country) ~ country_code))
+
+#### 3) Import & clean WB data ####
 #### Get World Bank SES groups
 world_bank_background_raw <- read_csv('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/additional_sources/WB_class_data.csv') %>%
   # Standardize names with this janitor function
@@ -44,19 +56,34 @@ colnames(world_bank_background_clean) <- c("code", "world_bank_economies")
 #replace missing values with 'No income data' in world_bank_economies column
 world_bank_background_clean$world_bank_economies <- world_bank_background_clean$world_bank_economies %>% replace_na('No income data')
 
-#### 2) Get timeseries of cumulative sequences submitted over time ####
+#### 4) Get timeseries of cumulative sequences submitted over time ####
 #### Gisaid data- add WB income group & month
 gisaid_t <- left_join(gisaid_t, world_bank_background_clean, 
                       by = c("country_code" = "code")) %>% 
-  filter(collection_date > ymd("2019-12-31")) %>%
-  mutate(month = as.yearmon(collection_date))
+  mutate(month = as.yearmon(submission_date))
+## Check remaining unmatched countries in gisaid data
+filter(gisaid_t, is.na(world_bank_economies)) %>% 
+  select(country) %>% 
+  unique
+### These are all British, French, or Dutch dependencies, so classify as high income
+gisaid_t <- gisaid_t %>% 
+  mutate(world_bank_economies = case_when(is.na(world_bank_economies) ~ "High income", 
+                                          !is.na(world_bank_economies) ~ world_bank_economies))
 
 #### Calculate monthly sum of sequences by income group
 global_sequencing <- gisaid_t %>% 
-  filter(!is.na(world_bank_economies)) %>%
   group_by(world_bank_economies, month) %>% 
-  summarise(sequences = sum(n_new_sequences)) %>% 
+  summarise(sequences = n())
+## Expand grid to fill in missing income level-month combinations
+global_sequencing <- expand_grid(global_sequencing$world_bank_economies, global_sequencing$month) %>% unique %>% 
+  full_join(global_sequencing, ., by = c("world_bank_economies" = "global_sequencing$world_bank_economies", 
+                                         "month" = "global_sequencing$month"))
+global_sequencing$sequences[is.na(global_sequencing$sequences)] <- 0
+
+### Calculate cumulative sum of sequences by income group
+global_sequencing <- group_by(global_sequencing, world_bank_economies) %>%
   mutate(cum_seq = cumsum(sequences))
+global_sequencing$cum_seq[global_sequencing$sequences == 0] <- 0
 
 ### Pivot to wider so usable with flourish
 global_sequencing_wide <- select(global_sequencing, -sequences) %>% 
