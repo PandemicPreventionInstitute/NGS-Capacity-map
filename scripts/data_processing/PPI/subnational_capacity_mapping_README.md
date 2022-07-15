@@ -16,7 +16,7 @@ Imports, cleans, and standardizes geo_keys.csv.
 Geocodes unmatched/not already-geocoded geokeys. To be run within other scripts which give it an object To.geocode. The output is an object Geocoded.
 
 ## Scripts for MVP
-These scripts are specific for building the 26-country MVP. These 26 countries are those that sjbeckett/subregionalcovid19 has subnational population data for.
+These scripts are specific for building the 26-country subnational NGS capacity map MVP. These 26 countries are those that sjbeckett/subregionalcovid19 has subnational population data for.
 
 ### subregionalcovid19_processing.R
 Processes data from the sjbeckett/subregionalcovid19 github repo and creates a shapefile with populations of subnational divisions for 26 MVP countries- GeoPop.shp.
