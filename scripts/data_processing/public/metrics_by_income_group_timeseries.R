@@ -157,9 +157,15 @@ IG_metrics <- filter(metrics_full, !is.na(cases_30days) & !is.na(seqs_n)) %>%
   left_join(IG_metrics, .)
 
 ### Pivot to wider so usable with flourish
-IG_metrics_wide <- pivot_wider(IG_metrics, names_from = world_bank_economies, values_from = cases_per_1000:pct_seq, 
-                               names_glue = "{world_bank_economies}.{.value}") %>% 
-  clean_names()
+IG_metrics_wide <- pivot_longer(IG_metrics, cases_per_1000:pct_seq, names_to = "metric", 
+                                values_to = "value", values_drop_na = F) %>% 
+  pivot_wider(names_from = world_bank_economies, values_from = value) %>% 
+  select(date, metric, `High income`, `Upper middle income`, `Lower middle income`, `Low income`) %>% 
+  mutate(metric = case_when(metric == "cases_per_1000" ~ "Cases per 1,000", 
+                            metric == "tests_per_1000" ~ "Tests per 1,000", 
+                            metric == "sequences_per_1000" ~ "Sequences per 1,000", 
+                            metric == "tpr" ~ "Test positivity (%)", 
+                            metric == "pct_seq" ~ "Cases sequenced (%)"))
 
 #### 7) Export data ####
 write_csv(IG_metrics_wide, "../../../data/processed/metrics_timeseries.csv")
