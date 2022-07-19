@@ -2,8 +2,9 @@
 #### Jordan Klein
 
 #### 1) Setup ####
-#### Run GISAID metadata extracting script
-source("../PPI/auto_extract_gisaid_metadata.R")
+#### Clear environment
+rm(list = ls())
+gc()
 
 #### Load packages
 library(tidyverse) # data wrangling
@@ -19,9 +20,6 @@ library(dplyr) # data wrangling
 library(readr) # read_csv
 library(stringi)
 
-#### Clear environment & load metadata
-rm(list = ls())
-gc()
 ### Load country codes-world bank dictionary
 dictionary <- read_csv("../../../data/processed/gisaid_countries.csv")
 
@@ -165,7 +163,9 @@ IG_metrics_wide <- pivot_longer(IG_metrics, cases_per_1000:pct_seq, names_to = "
                             metric == "tests_per_1000" ~ "Tests per 1,000", 
                             metric == "sequences_per_1000" ~ "Sequences per 1,000", 
                             metric == "tpr" ~ "Test positivity (%)", 
-                            metric == "pct_seq" ~ "Cases sequenced (%)"))
+                            metric == "pct_seq" ~ "Cases sequenced (%)")) %>% 
+  ## Cut off dates before 5/1/2020
+  filter(date >= ymd("2020-05-01"))
 
 #### 7) Export data ####
 write_csv(IG_metrics_wide, "../../../data/processed/metrics_timeseries.csv")
