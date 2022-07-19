@@ -1,4 +1,4 @@
-#### GISAID countries dictionary- country names, codes, & world bank income groups for countries that have submitted samples to GISAID ####
+#### Countries dictionary- country names, codes, & world bank income groups for countries that have submitted samples to GISAID/have testing data from FIND ####
 #### Jordan Klein
 
 #### 1) Setup ####
@@ -19,10 +19,13 @@ library(dplyr) # data wrangling
 library(readr) # read_csv
 library(stringi)
 
-#### Clear environment & load metadata
+#### Clear environment & load data
 rm(list = ls())
 gc()
+# GISAID
 Metadata_raw <- read_csv("../../../data/raw/metadata.csv") # from extracted datastream
+# FIND
+find_raw <- read_csv("https://raw.githubusercontent.com/dsbbfinddx/FINDCov19TrackerData/master/processed/data_all.csv")
 
 #### 2) Import & clean WB data ####
 #### Get World Bank SES groups
@@ -46,24 +49,53 @@ world_bank_background_clean$world_bank_economies <- world_bank_background_clean$
 gisaid_countries <- select(Metadata_raw, country) %>% unique %>% 
   filter(!is.na(country))
 
+#### List of countries in FIND data
+find_countries <- find_raw %>%
+  filter(set == "country") %>%
+  select(country = name) %>% unique %>% 
+  filter(!is.na(country))
+
 #### Get World Bank codes for these countries
-# Identical to ISO 3166-1 alpha-3 codes, except identifies Kosovo & doesn't identify small dependencies of UK, Netherlands, & France
+## Identical to ISO 3166-1 alpha-3 codes, except identifies Kosovo & doesn't identify small dependencies of UK, Netherlands, & France
+# GISAID
 gisaid_countries <- mutate(gisaid_countries, country_code = countrycode(country, "country.name", "wb"))
-## For remaining uncoded countries (small dependencies)- manually assign to the countries they are dependencies of
-# Lists of dependencies
+# FIND 
+find_countries <- mutate(find_countries, country_code = countrycode(country, "country.name", "wb"))
+## Combine countries
+all_countries <- filter(find_countries, !(country_code %in% gisaid_countries$country_code) | is.na(country_code)) %>% 
+  bind_rows(gisaid_countries, .)
+
+### Combine countries & World Bank
+all_countries <- left_join(all_countries, world_bank_background_clean, 
+                           by = c("country_code" = "code"))
+
+#### Deal with remaining uncoded
+## List dependencies not in world bank data
 FRA.dep <- c("Reunion", "Saint Barthelemy", "Guadeloupe", "Mayotte", "French Guiana", "Martinique", "Wallis and Futuna Islands", "Saint Martin")
 NLD.dep <- c("Sint Eustatius", "Bonaire")
 GBR.dep <- c("Anguilla", "Montserrat")
-# Assign codes
-gisaid_countries <- mutate(gisaid_countries, country_code = 
-                             case_when(grepl(paste0(FRA.dep, collapse = "|"), country) ~ "FRA",
-                                       grepl(paste0(NLD.dep, collapse = "|"), country) ~ "NLD", 
-                                       grepl(paste0(GBR.dep, collapse = "|"), country) ~ "GBR", 
-                                       !grepl(paste0(c(FRA.dep,NLD.dep,GBR.dep), collapse = "|"), country) ~ country_code))
 
-### Combine GISAID & World Bank
-gisaid_countries <- left_join(gisaid_countries, world_bank_background_clean, 
-                      by = c("country_code" = "code"))
+## Use ISO 3166-1 alpha-3 codes for countries w/o a world bank code
+all_countries <- mutate(all_countries, country_code = 
+                          case_when(is.na(country_code) ~ countrycode(country, "country.name", "iso3c"), 
+                                    !is.na(country_code) ~ country_code))
+
+## 3 remaining uncoded countries
+# Dutch dependencies
+all_countries <- mutate(all_countries, country_code = 
+                          case_when(grepl(paste0(NLD.dep, collapse = "|"), country) ~ "BES", 
+                                    !grepl(paste0(NLD.dep, collapse = "|"), country) ~ country_code))
+# Saint Martin
+all_countries <- mutate(all_countries, country_code = 
+                          case_when(country == "Saint Martin" ~ "MAF", country != "Saint Martin" ~ country_code))
+
+### Assign British, French, & Dutch dependencies to high income
+all_countries <- mutate(all_countries, world_bank_economies = 
+                             case_when(grepl(paste0(c(FRA.dep,NLD.dep,GBR.dep), collapse = "|"), country) ~ "High income", 
+                                       !grepl(paste0(c(FRA.dep,NLD.dep,GBR.dep), collapse = "|"), country) ~ world_bank_economies))
+
+#### Manually add Western Sahara- it has its own ISO 3166-1 alpha-3 code but its economy is integrated w/ Morocco's
+all_countries$world_bank_economies[all_countries$country == "Western Sahara"] <- all_countries$world_bank_economies[all_countries$country == "Morocco"]
 
 #### Export
-write_csv(gisaid_countries, "../../../data/processed/gisaid_countries.csv")
+write_csv(all_countries, "../../../data/processed/gisaid_countries.csv")

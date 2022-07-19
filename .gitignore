@@ -34,3 +34,5 @@ GeoPop.prj
 GeoPop.shp
 GeoPop.shx
 figures/
+scripts/.DS_Store
+scripts/data_processing/.DS_Store
