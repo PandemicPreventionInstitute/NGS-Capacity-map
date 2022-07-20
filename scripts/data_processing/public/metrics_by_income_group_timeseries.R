@@ -128,20 +128,20 @@ IG_metrics <- select(metrics_full, world_bank_economies, date) %>%
   unique() %>% 
   arrange(date)
 
-#### Get per capita cases in the last 30 days
+#### Get mean per capita cases in the last 30 days
 IG_metrics <- filter(metrics_full, !is.na(cases_30days)) %>% 
   group_by(world_bank_economies, date) %>% 
-  summarise(cases_per_1000 = sum(cases_30days)/sum(population/1000)) %>% 
+  summarise(cases_per_1000 = (sum(cases_30days)/sum(population/1000))/30) %>% 
   left_join(IG_metrics, .)
-#### Get per capita tests in the last 30 days
+#### Get mean per capita tests in the last 30 days
 IG_metrics <- filter(metrics_full, !is.na(tests_30days)) %>% 
   group_by(world_bank_economies, date) %>% 
-  summarise(tests_per_1000 = sum(tests_30days)/sum(population/1000)) %>% 
+  summarise(tests_per_1000 = (sum(tests_30days)/sum(population/1000))/30) %>% 
   left_join(IG_metrics, .)
-#### Get per capita sequences in the last 30 days
+#### Get mean per capita sequences in the last 30 days
 IG_metrics <- filter(metrics_full, !is.na(seqs_n)) %>% 
   group_by(world_bank_economies, date) %>% 
-  summarise(sequences_per_1000 = sum(seqs_n)/sum(population/1000)) %>% 
+  summarise(sequences_per_100k = (sum(seqs_n)/sum(population/100000))/30) %>% 
   left_join(IG_metrics, .)
 #### Get positivity rate
 IG_metrics <- filter(metrics_full, !is.na(cases_30days) & !is.na(tests_30days)) %>% 
@@ -159,13 +159,15 @@ IG_metrics_wide <- pivot_longer(IG_metrics, cases_per_1000:pct_seq, names_to = "
                                 values_to = "value", values_drop_na = F) %>% 
   pivot_wider(names_from = world_bank_economies, values_from = value) %>% 
   select(date, metric, `High income`, `Upper middle income`, `Lower middle income`, `Low income`) %>% 
-  mutate(metric = case_when(metric == "cases_per_1000" ~ "Cases per 1,000", 
-                            metric == "tests_per_1000" ~ "Tests per 1,000", 
-                            metric == "sequences_per_1000" ~ "Sequences per 1,000", 
+  mutate(metric = case_when(metric == "cases_per_1000" ~ "Daily cases per 1,000", 
+                            metric == "tests_per_1000" ~ "Daily tests per 1,000", 
+                            metric == "sequences_per_100k" ~ "Daily sequences per 100,000", 
                             metric == "tpr" ~ "Test positivity (%)", 
                             metric == "pct_seq" ~ "Cases sequenced (%)")) %>% 
   ## Cut off dates before 5/1/2020
-  filter(date >= ymd("2020-05-01"))
+  filter(date >= ymd("2020-05-01")) %>% 
+  ## Add date as character variable for popups
+  mutate(date_popup = as.character(date))
 
 #### 7) Export data ####
 write_csv(IG_metrics_wide, "../../../data/processed/metrics_timeseries.csv")
