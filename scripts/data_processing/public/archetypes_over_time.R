@@ -255,13 +255,16 @@ Archetypes <- Metrics_full %>%
                               (pct_seq < .5 | sequences_per_100k < 10) & facility_access == F ~ "Connect/Build"), 
          test_arch = case_when(tpr < 20 & tests_per_1000 >= .5 ~ "Sustain", 
                                tpr >= 20 | tests_per_1000 < .5 ~ "Test")) %>% 
-  select(-c(cases_total:tpr))
+  select(-c(cases_total:tpr)) %>% 
+  mutate(seq_arch = case_when(is.na(seq_arch) ~ "Insufficient data", !is.na(seq_arch) ~ seq_arch), 
+         test_arch = case_when(is.na(test_arch) ~ "Insufficient data", !is.na(test_arch) ~ test_arch)) %>% 
+  mutate(seq_arch = as.factor(seq_arch), test_arch = as.factor(test_arch))
 
 #### 8) Format for Flourish ####
-#### Tabulate archetypes by income group by date
+##### Tabulate archetypes by income group by date
+#### Count n countries in each archetype
 ## Sequencing archetypes
-Arch_seqtab <- mutate(Archetypes, seq_arch = case_when(is.na(seq_arch) ~ "Insufficient data", !is.na(seq_arch) ~ seq_arch)) %>%
-  mutate(seq_arch = as.factor(seq_arch)) %>%
+Arch_seqtab <- Archetypes %>% 
   group_by(date, world_bank_economies, seq_arch, .drop = F) %>% 
   summarise(number = n()) %>% 
   pivot_wider(names_from = seq_arch, values_from = number)
@@ -278,8 +281,7 @@ Arch_seqtab <- Arch_seqtab[order(match(Arch_seqtab$world_bank_economies, c("All"
   arrange(date)
 
 ## Testing archetypes
-Arch_testtab <- mutate(Archetypes, test_arch = case_when(is.na(test_arch) ~ "Insufficient data", !is.na(test_arch) ~ test_arch)) %>%
-  mutate(test_arch = as.factor(test_arch)) %>%
+Arch_testtab <- Archetypes %>%
   group_by(date, world_bank_economies, test_arch, .drop = F) %>% 
   summarise(number = n()) %>% 
   pivot_wider(names_from = test_arch, values_from = number)
@@ -294,9 +296,49 @@ Arch_testtab <- ungroup(Arch_testtab) %>%
 Arch_testtab <- Arch_testtab[order(match(Arch_testtab$world_bank_economies, c("All", "High income", "Upper middle income", "Lower middle income", "Low income"))), ] %>% 
   arrange(date)
 
+#### Count population in each archetype
+## Sequencing archetypes
+Arch_seqtab_pop <- Archetypes %>% 
+  group_by(date, world_bank_economies, seq_arch, .drop = F) %>% 
+  summarise(population = sum(population)) %>% 
+  pivot_wider(names_from = seq_arch, values_from = population)
+# Add table of all income groups
+Arch_seqtab_pop <- ungroup(Arch_seqtab_pop) %>% 
+  group_by(date) %>% 
+  summarise(`Insufficient data` = sum(`Insufficient data`), 
+            `Connect/Build` = sum(`Connect/Build`), 
+            `Strengthen/Leverage` = sum(`Strengthen/Leverage`), 
+            Sustain = sum(Sustain)) %>% 
+  add_column(world_bank_economies = "All", .after = "date") %>% 
+  bind_rows(Arch_seqtab_pop)
+Arch_seqtab_pop <- Arch_seqtab_pop[order(match(Arch_seqtab_pop$world_bank_economies, c("All", "High income", "Upper middle income", "Lower middle income", "Low income"))), ] %>% 
+  arrange(date)
+
+## Testing archetypes
+Arch_testtab_pop <- Archetypes %>%
+  group_by(date, world_bank_economies, test_arch, .drop = F) %>% 
+  summarise(population = sum(population)) %>% 
+  pivot_wider(names_from = test_arch, values_from = population)
+# Add table of all income groups
+Arch_testtab_pop <- ungroup(Arch_testtab_pop) %>% 
+  group_by(date) %>% 
+  summarise(`Insufficient data` = sum(`Insufficient data`), 
+            Test = sum(Test), 
+            Sustain = sum(Sustain)) %>% 
+  add_column(world_bank_economies = "All", .after = "date") %>% 
+  bind_rows(Arch_testtab_pop)
+Arch_testtab_pop <- Arch_testtab_pop[order(match(Arch_testtab_pop$world_bank_economies, c("All", "High income", "Upper middle income", "Lower middle income", "Low income"))), ] %>% 
+  arrange(date)
+
 #### 9) Export ####
+#### Archetypes by N(countries)
 ### NGS 
 write_csv(Arch_seqtab, "../../../data/processed/sequencing_archetypes.csv")
-
 ### Testing
 write_csv(Arch_testtab, "../../../data/processed/testing_archetypes.csv")
+
+#### Archetypes by population
+### NGS 
+write_csv(Arch_seqtab_pop, "../../../data/processed/sequencing_archetypes_pop.csv")
+### Testing
+write_csv(Arch_testtab_pop, "../../../data/processed/testing_archetypes_pop.csv")
