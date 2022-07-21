@@ -111,8 +111,8 @@ SHAPEFILES_FOR_FLOURISH_PATH <- url('https://raw.githubusercontent.com/PandemicP
 WHO_REGIONS_PATH<- url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/additional_sources/WHO_region_data.csv') # WHO country list
 ECONOMY_PATH<- url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/additional_sources/WB_class_data.csv')
 FIND_TESTING_SEQ_RAW_PATH<- url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/additional_sources/Sequencing_labs_data.csv')
-LAT_LONG_DATA <- url ('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/Geospatial_Data/igeography.csv')
-
+LAT_LONG_DATA <- url ('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/Geospatial_Data/geography.csv')
+INVESTMENT_DATA <- url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/FIND_partner_support_maps/FIND_partner_maps_May2022.csv')
 
 
 # Out-dated FIND NGS map methodologies that were lives/updated in November.
@@ -791,6 +791,8 @@ test_scatterplot<-find_map%>%mutate(
 test_scatterplot_income_rmvd<-test_scatterplot %>%
     filter(world_bank_economies != "No income data")
 
+# 
+
 
 
 
@@ -872,10 +874,16 @@ find_map<-find_map%>%mutate(
     (ngs_capacity == 0 | is.na(ngs_capacity)), "No", "Yes"))
 
 
-
-
-
-
+# Combine with investment data
+investment_df_raw <-read.csv(INVESTMENT_DATA) 
+investment_df<- investment_df_raw%>% 
+  select( -X, -sx_archetype,-dx_archetype, -pct_seq, -sequences_per_100k_last_year,
+          -TPR_pct, - avg_daily_tests_per_1000_last_year_smoothed, - code_y) %>% 
+  rename(code = code_x) %>% 
+  left_join(full_dataset %>% 
+              select(code, sx_archetype), by = "code") %>% 
+  distinct() %>% 
+  filter(N_projects >0)
 
 
 
@@ -1010,6 +1018,7 @@ stopifnot('Percents dont add to 100' = LMIC_check[1,] == c(100,100,100,100))
    write.csv(find_not_reported, paste0('../../../data/NGS_Data_Tables/', current_folder, '/PPI/find_delayed_test_reporting.csv'), row.names = F)
    write.csv(full_dataset, paste0('../../../data/NGS_Data_Tables/', current_folder, '/public/full_dataset.csv'), na = "NaN", row.names = FALSE)
    write.csv(find_map, paste0('../../../data/NGS_Data_Tables/', current_folder, '/PPI/find_map.csv'), na = "NaN", row.names = FALSE)
+   write.csv(investment_df, paste0('../../../data/NGS_Data_Tables/', current_folder, '/PPI/find_projects.csv'), na = "NaN", row.names = FALSE)
    write.csv(clean_dataset, paste0('../../../data/NGS_Data_Tables/', current_folder, '/public/clean_dataset.csv'), na = "NaN", row.names = FALSE)
    write.csv(find_TEST_countries, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/find_TEST_countries.csv'), na = "NaN", row.names = FALSE )
    write.csv(seq_scatterplot, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/seq_data.csv'), na = "NaN", row.names = FALSE )
@@ -1044,6 +1053,7 @@ if (USE_CASE == 'domino'){
   write.csv(find_not_reported, '/mnt/data/processed/find_delayed_test_reporting.csv', row.names = F)
   write.csv(full_dataset, '/mnt/data/processed/full_dataset.csv', na = "NaN", row.names = FALSE)
   write.csv(find_map, '/mnt/data/processed/find_map.csv', na = "NaN", row.names = FALSE)
+  write.csv(investment_df, paste0('/mnt/data/NGS_Data_Tables/', current_folder, '/PPI/find_projects.csv'), na = "NaN", row.names = FALSE)
   write.csv(clean_dataset, '/mnt/data/processed/clean_dataset.csv', na = "NaN", row.names = FALSE)
   write.csv(find_TEST_countries, '/mnt/data/processed/find_TEST_countries.csv', na = "NaN", row.names = FALSE )
   write.csv(seq_scatterplot, '/mnt/data/processed/seq_data.csv', na = "NaN", row.names = FALSE )
