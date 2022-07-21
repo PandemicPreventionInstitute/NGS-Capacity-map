@@ -876,14 +876,14 @@ find_map<-find_map%>%mutate(
 
 # Combine with investment data
 investment_df_raw <-read.csv(INVESTMENT_DATA) 
-investment_df<- investment_df_raw%>% 
+investment_df_full<- investment_df_raw%>% 
   select( -X, -sx_archetype,-dx_archetype, -pct_seq, -sequences_per_100k_last_year,
           -TPR_pct, - avg_daily_tests_per_1000_last_year_smoothed, - code_y) %>% 
   rename(code = code_x) %>% 
   left_join(full_dataset %>% 
               select(code, sx_archetype), by = "code") %>% 
-  distinct() %>% 
-  filter(N_projects >0)
+  distinct() 
+investment_df <-investment_df %>% filter(N_projects >0)
 
 
 
@@ -1019,6 +1019,7 @@ stopifnot('Percents dont add to 100' = LMIC_check[1,] == c(100,100,100,100))
    write.csv(full_dataset, paste0('../../../data/NGS_Data_Tables/', current_folder, '/public/full_dataset.csv'), na = "NaN", row.names = FALSE)
    write.csv(find_map, paste0('../../../data/NGS_Data_Tables/', current_folder, '/PPI/find_map.csv'), na = "NaN", row.names = FALSE)
    write.csv(investment_df, paste0('../../../data/NGS_Data_Tables/', current_folder, '/PPI/find_projects.csv'), na = "NaN", row.names = FALSE)
+   write.csv(investment_df_full, paste0('../../../data/NGS_Data_Tables/', current_folder, '/PPI/find_projects_full.csv'), na = "NaN", row.names = FALSE)
    write.csv(clean_dataset, paste0('../../../data/NGS_Data_Tables/', current_folder, '/public/clean_dataset.csv'), na = "NaN", row.names = FALSE)
    write.csv(find_TEST_countries, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/find_TEST_countries.csv'), na = "NaN", row.names = FALSE )
    write.csv(seq_scatterplot, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/seq_data.csv'), na = "NaN", row.names = FALSE )
@@ -1054,6 +1055,7 @@ if (USE_CASE == 'domino'){
   write.csv(full_dataset, '/mnt/data/processed/full_dataset.csv', na = "NaN", row.names = FALSE)
   write.csv(find_map, '/mnt/data/processed/find_map.csv', na = "NaN", row.names = FALSE)
   write.csv(investment_df, paste0('/mnt/data/NGS_Data_Tables/', current_folder, '/PPI/find_projects.csv'), na = "NaN", row.names = FALSE)
+  write.csv(investment_df_full, paste0('/mnt/data/NGS_Data_Tables/', current_folder, '/PPI/find_projects_full.csv'), na = "NaN", row.names = FALSE)
   write.csv(clean_dataset, '/mnt/data/processed/clean_dataset.csv', na = "NaN", row.names = FALSE)
   write.csv(find_TEST_countries, '/mnt/data/processed/find_TEST_countries.csv', na = "NaN", row.names = FALSE )
   write.csv(seq_scatterplot, '/mnt/data/processed/seq_data.csv', na = "NaN", row.names = FALSE )
