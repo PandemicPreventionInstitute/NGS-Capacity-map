@@ -387,7 +387,7 @@ gisaid_t <- gisaid_raw%>%
 # ----------- Validation Testing ---------------------------------
 
 # Unit test: Make sure that the most recent date is yesterday (only relevant if we are updating)
-if (ymd(max(gisaid_t$collection_date)) != ymd(LAST_DATA_PULL_DATE)-days(1)){
+if (ymd(max(gisaid_t$collection_date[gisaid_t$n_new_sequences>0])) != ymd(LAST_DATA_PULL_DATE)-days(4)){
   warning("GISAID metadata not updated")
 }
 
@@ -883,7 +883,7 @@ investment_df_full<- investment_df_raw%>%
   left_join(full_dataset %>% 
               select(code, sx_archetype), by = "code") %>% 
   distinct() 
-investment_df <-investment_df %>% filter(N_projects >0)
+investment_df <-investment_df_full %>% filter(N_projects >0)
 
 
 
