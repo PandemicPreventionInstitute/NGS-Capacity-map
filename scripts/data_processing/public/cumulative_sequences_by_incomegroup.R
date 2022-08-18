@@ -28,9 +28,9 @@ Metadata_raw <- read_csv("../../../data/raw/metadata.csv") # from extracted data
 dictionary <- read_csv("../../../data/processed/gisaid_countries.csv")
 
 #### 2) Clean data gisaid metadata ####
-#### Exclude collections/submissions before 2019-12-01, after 2022-06-30
+#### Exclude collections/submissions before 2019-12-01, after the last day of the previous month
 gisaid_t <- filter(Metadata_raw, submission_date >= ymd("2019-12-01") & collection_date >= ymd("2019-12-01") & 
-                     submission_date < ymd("2022-07-01") & collection_date < ymd("2022-07-01")) %>% 
+                     submission_date < floor_date(today(), "month") & collection_date < floor_date(today(), "month")) %>% 
   # only keep variables I need
   select(country, submission_date)
 
@@ -56,9 +56,17 @@ global_sequencing <- group_by(global_sequencing, world_bank_economies) %>%
   mutate(cum_seq = cumsum(sequences))
 
 ### Pivot to wider so usable with flourish
-global_sequencing_wide <- select(global_sequencing, -sequences) %>% 
-  pivot_wider(names_from = world_bank_economies, values_from = cum_seq) %>% 
-  clean_names()
+# By month
+global_sequencing_wide <- select(global_sequencing, -cum_seq) %>% 
+  pivot_wider(names_from = world_bank_economies, values_from = sequences)
+
+# Cumulative
+global_sequencing_wide_cum <- select(global_sequencing, -sequences) %>% 
+  pivot_wider(names_from = world_bank_economies, values_from = cum_seq)
 
 #### 3) Export ####
-write_csv(global_sequencing_wide, "../../../data/processed/cumulative_sequences.csv")
+# By month
+write_csv(global_sequencing_wide, "../../../data/processed/sequences_by_month.csv")
+
+# Cumulative
+write_csv(global_sequencing_wide_cum, "../../../data/processed/cumulative_sequences.csv")

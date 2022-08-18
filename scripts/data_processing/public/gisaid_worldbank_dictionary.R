@@ -80,7 +80,10 @@ all_countries <- mutate(all_countries, country_code =
                           case_when(is.na(country_code) ~ countrycode(country, "country.name", "iso3c"), 
                                     !is.na(country_code) ~ country_code))
 
-## 3 remaining uncoded countries
+## remaining uncoded countries
+# manually assign micronesia -> fsm
+all_countries  <- mutate(all_countries, country_code = 
+                           case_when(country == "Micronesia" ~ "FSM", country != "Micronesia" ~ country_code))
 # Dutch dependencies
 all_countries <- mutate(all_countries, country_code = 
                           case_when(grepl(paste0(NLD.dep, collapse = "|"), country) ~ "BES", 
@@ -96,6 +99,12 @@ all_countries <- mutate(all_countries, world_bank_economies =
 
 #### Manually add Western Sahara- it has its own ISO 3166-1 alpha-3 code but its economy is integrated w/ Morocco's
 all_countries$world_bank_economies[all_countries$country == "Western Sahara"] <- all_countries$world_bank_economies[all_countries$country == "Morocco"]
+
+#### Add world bank income groups for any countries still missing that were coded manually
+all_countries <- filter(all_countries, is.na(world_bank_economies)) %>% 
+  select(-world_bank_economies) %>%
+  left_join(world_bank_background_clean, by = c("country_code" = "code")) %>% 
+  bind_rows(filter(all_countries, !is.na(world_bank_economies)))
 
 #### Export
 write_csv(all_countries, "../../../data/processed/gisaid_countries.csv")
