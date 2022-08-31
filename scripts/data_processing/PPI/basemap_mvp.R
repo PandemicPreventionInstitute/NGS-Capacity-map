@@ -25,6 +25,7 @@ library("subregionalcovid19")
 googledrive::drive_auth(email = T)
 library(httr)
 library(vietnameseConverter)
+library(sf)
 
 #### Read in Pop-Geo file
 Geo.Pop <- st_read("../../../data/raw/GeoPop.shp")
@@ -266,7 +267,10 @@ ADM1 <- filter(Geo.Pop_subdivs, iso3 != "BRA") %>%
 ADM1 <- filter(Geo.Pop, iso3 == "BRA") %>% 
     select(iso3, cntry_n, adm1_id = micr_nm, pop) %>% 
     bind_rows(ADM1, .) %>% 
-    add_column(adm1_name = str_to_title(.$adm1_id), .after = "adm1_id")
+    add_column(adm1_name = str_replace_all(.$adm1_id, "_", " "), .after = "adm1_id") %>% 
+    mutate(adm1_name = str_squish(adm1_name)) %>%
+    mutate(adm1_name = case_when(str_count(adm1_name, "[:alpha:]") <= 2 ~ adm1_name, 
+                         str_count(adm1_name, "[:alpha:]") > 2 ~ str_to_title(adm1_name)))
 
 # Check to make sure nrows of adm1 keys in data = rows in adm1 table
 select(Geo.Pop_subdivs, iso3, adm1_id) %>% st_drop_geometry %>% 
@@ -274,8 +278,14 @@ select(Geo.Pop_subdivs, iso3, adm1_id) %>% st_drop_geometry %>%
 
 #### 6) Get ADM2 table ####
 ADM2 <- filter(Geo.Pop_subdivs, max_lvl == 2) %>% 
-    mutate(adm1_name = str_to_title(adm1_id)) %>% 
-    select(iso3, cntry_n, adm1_id, adm1_name, adm2_id, adm2_name = micr_nm, pop)
+    mutate(adm1_name = str_replace_all(adm1_id, "_", " ") %>% 
+               str_squish) %>%
+    mutate(adm1_name = case_when(str_count(adm1_name, "[:alpha:]") <= 2 ~ adm1_name, 
+                                 str_count(adm1_name, "[:alpha:]") > 2 ~ str_to_title(adm1_name))) %>% 
+    select(iso3, cntry_n, adm1_id, adm1_name, adm2_id, adm2_name = micr_nm, pop) %>% 
+    mutate(adm2_name = case_when(str_detect(adm2_name, "[:lower:]", negate = T) ~ str_to_title(adm2_name), 
+                                 str_detect(adm2_name, "[:lower:]") ~ adm2_name) %>% 
+               str_squish())
 
 # Check to make sure nrows of adm2 keys in data = rows in adm2 table
 filter(Geo.Pop_subdivs, max_lvl == 2) %>% 
@@ -286,7 +296,7 @@ filter(Geo.Pop_subdivs, max_lvl == 2) %>%
 Keys <- st_drop_geometry(Geo.Pop_subdivs) %>% 
     select(geoid, iso3, adm1_id, adm2_id)
 
-#### 8) Save files ####
+#### 9) Save files ####
 #### Keys
 write_csv(Keys, "../../../data/raw/basemap/keys.csv")
 
