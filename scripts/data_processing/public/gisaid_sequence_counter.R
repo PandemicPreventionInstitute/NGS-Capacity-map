@@ -2,9 +2,6 @@
 #### Jordan Klein
 
 #### 1) Setup ####
-#### Run GISAID metadata extracting script
-source("../PPI/auto_extract_gisaid_metadata.R")
-
 #### Load packages
 library(tidyverse) # data wrangling
 library(tibble) # data wrangling
@@ -63,4 +60,4 @@ country_seqs_df <- bind_rows(country_seqs, .id = "country") %>%
   rename(seqs_n = n)
 
 #### Export dataframe
-write_csv(country_seqs_df, "../../../data/processed/countries_seqs.csv")
+write_csv(country_seqs_df, "../../../data/NGS_Data_Tables/Timeseries/countries_seqs.csv")
