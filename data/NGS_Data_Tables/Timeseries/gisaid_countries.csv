@@ -1,0 +1,222 @@
+country,country_code,world_bank_economies
+Micronesia,FSM,Lower middle income
+China,CHN,Upper middle income
+Japan,JPN,High income
+Thailand,THA,Upper middle income
+USA,USA,High income
+Taiwan,TWN,High income
+France,FRA,High income
+Italy,ITA,High income
+Australia,AUS,High income
+Germany,DEU,High income
+Singapore,SGP,High income
+United Kingdom,GBR,High income
+Finland,FIN,High income
+South Korea,KOR,High income
+Philippines,PHL,Lower middle income
+Belgium,BEL,High income
+Vietnam,VNM,Lower middle income
+Hong Kong,HKG,High income
+Nepal,NPL,Lower middle income
+Malaysia,MYS,Upper middle income
+Sweden,SWE,High income
+Cambodia,KHM,Lower middle income
+Brazil,BRA,Upper middle income
+Canada,CAN,High income
+Mexico,MEX,Upper middle income
+Switzerland,CHE,High income
+Iran,IRN,Upper middle income
+India,IND,Lower middle income
+Indonesia,IDN,Upper middle income
+New Zealand,NZL,High income
+Nigeria,NGA,Lower middle income
+Netherlands,NLD,High income
+Luxembourg,LUX,High income
+Portugal,PRT,High income
+Czech Republic,CZE,High income
+Spain,ESP,High income
+Ireland,IRL,High income
+Chile,CHL,High income
+Democratic Republic of the Congo,COD,Low income
+Panama,PAN,High income
+Georgia,GEO,Upper middle income
+Denmark,DNK,High income
+Saudi Arabia,SAU,High income
+Peru,PER,Upper middle income
+Russia,RUS,Upper middle income
+Hungary,HUN,High income
+Kuwait,KWT,High income
+Poland,POL,High income
+Lithuania,LTU,High income
+South Africa,ZAF,Upper middle income
+Pakistan,PAK,Lower middle income
+Turkey,TUR,Upper middle income
+Norway,NOR,High income
+Ecuador,ECU,Upper middle income
+Iceland,ISL,High income
+Slovakia,SVK,High income
+Colombia,COL,Upper middle income
+Senegal,SEN,Lower middle income
+Algeria,DZA,Lower middle income
+Greece,GRC,High income
+Israel,ISR,High income
+Austria,AUT,High income
+Latvia,LVA,High income
+Belarus,BLR,Upper middle income
+Estonia,EST,High income
+Slovenia,SVN,High income
+Argentina,ARG,Upper middle income
+Tunisia,TUN,Lower middle income
+Ghana,GHA,Lower middle income
+Uruguay,URY,High income
+Qatar,QAT,High income
+Serbia,SRB,Upper middle income
+Sri Lanka,LKA,Lower middle income
+Gambia,GMB,Low income
+Ukraine,UKR,Lower middle income
+Croatia,HRV,High income
+Jordan,JOR,Upper middle income
+Egypt,EGY,Lower middle income
+Costa Rica,CRI,Upper middle income
+Puerto Rico,PRI,High income
+Myanmar,MMR,Lower middle income
+Kazakhstan,KAZ,Upper middle income
+United Arab Emirates,ARE,High income
+Brunei,BRN,High income
+U.S. Virgin Islands,VIR,High income
+Uzbekistan,UZB,Lower middle income
+Bangladesh,BGD,Lower middle income
+Guam,GUM,High income
+Romania,ROU,High income
+Lebanon,LBN,Upper middle income
+Jamaica,JAM,Upper middle income
+Uganda,UGA,Low income
+Morocco,MAR,Lower middle income
+Oman,OMN,High income
+Kenya,KEN,Lower middle income
+Timor-Leste,TLS,Lower middle income
+Bosnia and Herzegovina,BIH,Upper middle income
+Cyprus,CYP,High income
+Mongolia,MNG,Lower middle income
+Venezuela,VEN,Upper middle income
+Benin,BEN,Lower middle income
+Bulgaria,BGR,Upper middle income
+Bahrain,BHR,High income
+Mali,MLI,Low income
+North Macedonia,MKD,Upper middle income
+Zambia,ZMB,Lower middle income
+Madagascar,MDG,Low income
+Belize,BLZ,Upper middle income
+Guatemala,GTM,Upper middle income
+Cuba,CUB,Upper middle income
+Sierra Leone,SLE,Low income
+Cameroon,CMR,Lower middle income
+Iraq,IRQ,Upper middle income
+Montenegro,MNE,Upper middle income
+Suriname,SUR,Upper middle income
+Moldova,MDA,Lower middle income
+Dominican Republic,DOM,Upper middle income
+Reunion,REU,High income
+Faroe Islands,FRO,High income
+Libya,LBY,Upper middle income
+Kosovo,XKX,Upper middle income
+Andorra,AND,High income
+Gabon,GAB,Upper middle income
+Curacao,CUW,High income
+Aruba,ABW,High income
+Gibraltar,GIB,High income
+Botswana,BWA,Upper middle income
+Malta,MLT,High income
+Republic of the Congo,COG,Lower middle income
+Palestine,PSE,Lower middle income
+Saint Barthelemy,BLM,High income
+Guadeloupe,GLP,High income
+Saint Martin,MAF,High income
+Cote d'Ivoire,CIV,Lower middle income
+Rwanda,RWA,Low income
+Sint Eustatius,BES,High income
+Mozambique,MOZ,Low income
+Zimbabwe,ZWE,Lower middle income
+Equatorial Guinea,GNQ,Upper middle income
+Burkina Faso,BFA,Low income
+El Salvador,SLV,Lower middle income
+Armenia,ARM,Upper middle income
+Papua New Guinea,PNG,Lower middle income
+Trinidad and Tobago,TTO,High income
+Saint Kitts and Nevis,KNA,High income
+Antigua and Barbuda,ATG,High income
+Saint Vincent and the Grenadines,VCT,Upper middle income
+Guinea,GIN,Low income
+Bermuda,BMU,High income
+Albania,ALB,Upper middle income
+Bolivia,BOL,Lower middle income
+Mayotte,MYT,High income
+Saint Lucia,LCA,Upper middle income
+French Guiana,GUF,High income
+Azerbaijan,AZE,Upper middle income
+Barbados,BRB,High income
+Togo,TGO,Low income
+Cayman Islands,CYM,High income
+British Virgin Islands,VGB,High income
+Afghanistan,AFG,Low income
+Liechtenstein,LIE,High income
+Sint Maarten,SXM,High income
+Cabo Verde,CPV,Lower middle income
+Monaco,MCO,High income
+Northern Mariana Islands,MNP,High income
+Ethiopia,ETH,Low income
+Mauritius,MUS,High income
+Martinique,MTQ,High income
+Eswatini,SWZ,Lower middle income
+Namibia,"NAM",Upper middle income
+Bonaire,BES,High income
+Lesotho,LSO,Lower middle income
+Comoros,COM,Lower middle income
+Paraguay,PRY,Upper middle income
+Angola,AGO,Lower middle income
+French Polynesia,PYF,High income
+The Bahamas,BHS,High income
+Malawi,MWI,Low income
+Central African Republic,CAF,Low income
+Somalia,SOM,Low income
+Guinea-Bissau,GNB,Low income
+Haiti,HTI,Low income
+Honduras,HND,Lower middle income
+Niger,NER,Low income
+Guyana,GUY,Upper middle income
+Grenada,GRD,Upper middle income
+Anguilla,AIA,High income
+South Sudan,SSD,Low income
+Wallis and Futuna Islands,WLF,High income
+Djibouti,DJI,Lower middle income
+Montserrat,MSR,High income
+Turks and Caicos Islands,TCA,High income
+Dominica,DMA,Upper middle income
+Burundi,BDI,Low income
+Chad,TCD,Low income
+Maldives,MDV,Upper middle income
+Laos,LAO,Lower middle income
+Liberia,LBR,Low income
+Sudan,SDN,Low income
+Fiji,FJI,Upper middle income
+Solomon Islands,SLB,Lower middle income
+Vanuatu,VUT,Lower middle income
+Seychelles,SYC,High income
+Kyrgyzstan,KGZ,Lower middle income
+Palau,PLW,High income
+Syria,SYR,Low income
+American Samoa,ASM,Upper middle income
+Tanzania,TZA,Lower middle income
+Nicaragua,NIC,Lower middle income
+Macao,MAC,High income
+Sao Tome and Principe,STP,Lower middle income
+New Caledonia,NCL,High income
+Mauritania,MRT,Lower middle income
+Marshall Islands,MHL,Upper middle income
+Kiribati,KIR,Lower middle income
+Bhutan,BTN,Lower middle income
+Eritrea,ERI,Low income
+San Marino,SMR,High income
+Tajikistan,TJK,Low income
+Greenland,GRL,High income
+Western Sahara,ESH,Lower middle income
