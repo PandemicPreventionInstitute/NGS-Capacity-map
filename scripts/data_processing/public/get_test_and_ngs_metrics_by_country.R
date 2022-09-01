@@ -387,9 +387,10 @@ gisaid_t <- gisaid_raw%>%
 # ----------- Validation Testing ---------------------------------
 
 # Unit test: Make sure that the most recent date is yesterday (only relevant if we are updating)
-if (ymd(max(gisaid_t$collection_date[gisaid_t$n_new_sequences>0])) != ymd(LAST_DATA_PULL_DATE)-days(4)){
+if (ymd(max(gisaid_t$collection_date[gisaid_t$n_new_sequences>0])) < ymd(LAST_DATA_PULL_DATE)-days(4)){
   warning("GISAID metadata not updated")
 }
+print(paste0('GISAID metadata most recent collection date: ', max(gisaid_t$collection_date[gisaid_t$n_new_sequences>0])))
 
 # ----------- Data Processing  ---------------------------------
 
@@ -687,7 +688,7 @@ stopifnot('More than 3 countries missing archetype at final step' = sum(find_map
  if (prev_month != "November" & prev_year != "2021")
   {
  find_changed_archetypes <-find_map%>%
-   filter (prev_sequ != sx_archetype, prev_dx != dx_archetype)
+   filter (prev_sequ != sx_archetype | prev_dx != dx_archetype)
 }
 
  find_changed_archetypes<-find_changed_archetypes%>%
@@ -696,7 +697,7 @@ stopifnot('More than 3 countries missing archetype at final step' = sum(find_map
           tpr_year_smoothed_truncated, avg_daily_tests_per_1000_last_year_smoothed,
           pct_cases_sequenced_in_last_year,
           sequences_per_100k_last_year,
-          ngs_capacity, ngs_facility)
+          ngs_capacity, ngs_facility) %>% distinct()
 
 
 # ---------------------------------------------------------------------------
@@ -945,7 +946,7 @@ SES_check<-SES_breakdown%>%summarise(
   sequ_sum = sum(SES_sequ_rate)
 )
 # Unit test to make sure that all of the percents add to 100!
-stopifnot('Percents dont add to 100' = SES_check[1,] == c(100,100,100,100))
+stopifnot('Percents dont add to 100' = round(SES_check[1,]) == c(100,100,100,100))
               
               
 SES_breakdown<- SES_breakdown%>%
@@ -1005,7 +1006,7 @@ LMIC_check<-LMIC_breakdown%>%summarise(
     sequ_sum = sum(LMIC_sequ_rate)
 )
 # Unit test to make sure that all of the percents add to 100!
-stopifnot('Percents dont add to 100' = LMIC_check[1,] == c(100,100,100,100))
+stopifnot('Percents dont add to 100' = round(LMIC_check[1,]) == c(100,100,100,100))
 
 
 # -----------------------------------------------------------------------------------
