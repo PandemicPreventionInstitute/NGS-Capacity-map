@@ -21,7 +21,7 @@ library(readr) # read_csv
 library(stringi)
 
 ### Load country codes-world bank dictionary
-dictionary <- read_csv("../../../data/processed/gisaid_countries.csv")
+dictionary <- read_csv("../../../data/NGS_Data_Tables/Timeseries/gisaid_countries.csv")
 
 ### Load OWID
 owid_raw <- read_csv('https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv')
@@ -30,7 +30,7 @@ owid_raw <- read_csv('https://raw.githubusercontent.com/owid/covid-19-data/maste
 find_raw <- read_csv("https://raw.githubusercontent.com/dsbbfinddx/FINDCov19TrackerData/master/processed/data_all.csv")
 
 ### Load processed data- countries n sequences past 30 days
-gisaid_nseqs <- read_csv("../../../data/processed/countries_seqs.csv")
+gisaid_nseqs <- read_csv("../../../data/NGS_Data_Tables/Timeseries/countries_seqs.csv")
 
 #### 2) Combine country dictionary & population data ####
 #### Get population data from OWID
@@ -170,4 +170,4 @@ IG_metrics_wide <- pivot_longer(IG_metrics, cases_per_1000:pct_seq, names_to = "
   mutate(date_popup = as.character(date))
 
 #### 7) Export data ####
-write_csv(IG_metrics_wide, "../../../data/processed/metrics_timeseries.csv")
+write_csv(IG_metrics_wide, "../../../data/NGS_Data_Tables/Timeseries/metrics_timeseries.csv")

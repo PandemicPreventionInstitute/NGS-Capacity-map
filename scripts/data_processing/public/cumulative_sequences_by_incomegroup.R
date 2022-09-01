@@ -2,9 +2,6 @@
 #### Jordan Klein
 
 #### 1) Setup ####
-#### Run GISAID metadata extracting script
-source("../PPI/auto_extract_gisaid_metadata.R")
-
 #### Load packages
 library(tidyverse) # data wrangling
 library(tibble) # data wrangling
@@ -25,7 +22,7 @@ gc()
 Metadata_raw <- read_csv("../../../data/raw/metadata.csv") # from extracted datastream
 
 ### Load country codes-world bank dictionary
-dictionary <- read_csv("../../../data/processed/gisaid_countries.csv")
+dictionary <- read_csv("../../../data/NGS_Data_Tables/Timeseries/gisaid_countries.csv")
 
 #### 2) Clean data gisaid metadata ####
 #### Exclude collections/submissions before 2019-12-01, after the last day of the previous month
@@ -66,7 +63,7 @@ global_sequencing_wide_cum <- select(global_sequencing, -sequences) %>%
 
 #### 3) Export ####
 # By month
-write_csv(global_sequencing_wide, "../../../data/processed/sequences_by_month.csv")
+write_csv(global_sequencing_wide, "../../../data/NGS_Data_Tables/Timeseries/sequences_by_month.csv")
 
 # Cumulative
-write_csv(global_sequencing_wide_cum, "../../../data/processed/cumulative_sequences.csv")
+write_csv(global_sequencing_wide_cum, "../../../data/NGS_Data_Tables/Timeseries/cumulative_sequences.csv")
