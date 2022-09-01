@@ -2,9 +2,6 @@
 #### Jordan Klein
 
 #### 1) Setup ####
-#### Run GISAID metadata extracting script
-source("../PPI/auto_extract_gisaid_metadata.R")
-
 #### Load packages
 library(tidyverse) # data wrangling
 library(tibble) # data wrangling
@@ -107,4 +104,4 @@ all_countries <- filter(all_countries, is.na(world_bank_economies)) %>%
   bind_rows(filter(all_countries, !is.na(world_bank_economies)))
 
 #### Export
-write_csv(all_countries, "../../../data/processed/gisaid_countries.csv")
+write_csv(all_countries, "../../../data/NGS_Data_Tables/Timeseries/gisaid_countries.csv")

@@ -2,9 +2,6 @@
 #### Jordan Klein
 
 #### 1) Setup ####
-#### Run GISAID metadata extracting script
-source("../PPI/auto_extract_gisaid_metadata.R")
-
 #### Load packages
 library(tidyverse) # data wrangling
 library(tibble) # data wrangling
@@ -24,7 +21,7 @@ rm(list = ls())
 gc()
 
 ### Load country codes-world bank dictionary
-dictionary <- read_csv("../../../data/processed/gisaid_countries.csv")
+dictionary <- read_csv("../../../data/NGS_Data_Tables/Timeseries/gisaid_countries.csv")
 
 ### Load OWID
 owid_raw <- read_csv('https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv')
@@ -333,20 +330,20 @@ Arch_testtab_pop <- Arch_testtab_pop[order(match(Arch_testtab_pop$world_bank_eco
 #### 9) Export ####
 #### Archetypes by N(countries)
 ### NGS 
-write_csv(Arch_seqtab, "../../../data/processed/sequencing_archetypes.csv")
+write_csv(Arch_seqtab, "../../../data/NGS_Data_Tables/Timeseries/sequencing_archetypes.csv")
 ### Testing
-write_csv(Arch_testtab, "../../../data/processed/testing_archetypes.csv")
+write_csv(Arch_testtab, "../../../data/NGS_Data_Tables/Timeseries/testing_archetypes.csv")
 
 #### Archetypes by population
 ### NGS 
-write_csv(Arch_seqtab_pop, "../../../data/processed/sequencing_archetypes_pop.csv")
+write_csv(Arch_seqtab_pop, "../../../data/NGS_Data_Tables/Timeseries/sequencing_archetypes_pop.csv")
 ### Testing
-write_csv(Arch_testtab_pop, "../../../data/processed/testing_archetypes_pop.csv")
+write_csv(Arch_testtab_pop, "../../../data/NGS_Data_Tables/Timeseries/testing_archetypes_pop.csv")
 
 #### Alternate versions of datasets excluding category with "All" countries
 ### NGS
 filter(Arch_seqtab_pop, world_bank_economies != "All") %>% 
-  write_csv("../../../data/processed/sequencing_archetypes_byincome.csv")
+  write_csv("../../../data/NGS_Data_Tables/Timeseries/sequencing_archetypes_byincome.csv")
 ### Testing
 filter(Arch_testtab_pop, world_bank_economies != "All") %>% 
-  write_csv("../../../data/processed/testing_archetypes_byincome.csv")
+  write_csv("../../../data/NGS_Data_Tables/Timeseries/testing_archetypes_byincome.csv")
