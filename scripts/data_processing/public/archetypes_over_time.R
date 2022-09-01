@@ -342,3 +342,11 @@ write_csv(Arch_testtab, "../../../data/processed/testing_archetypes.csv")
 write_csv(Arch_seqtab_pop, "../../../data/processed/sequencing_archetypes_pop.csv")
 ### Testing
 write_csv(Arch_testtab_pop, "../../../data/processed/testing_archetypes_pop.csv")
+
+#### Alternate versions of datasets excluding category with "All" countries
+### NGS
+filter(Arch_seqtab_pop, world_bank_economies != "All") %>% 
+  write_csv("../../../data/processed/sequencing_archetypes_byincome.csv")
+### Testing
+filter(Arch_testtab_pop, world_bank_economies != "All") %>% 
+  write_csv("../../../data/processed/testing_archetypes_byincome.csv")
