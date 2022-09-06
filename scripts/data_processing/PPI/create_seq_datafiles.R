@@ -71,7 +71,9 @@ Countries_locs <- filter(Countries_locs, !is.na(adm1))
 
 #### 3) Process & match subnational division fields ####
 #### Try to match w/ already IDed geokeys
-Countries_locs <- select(Geokeys_IDed, cntry_n = country, adm1 = geo_l3, adm2 = geo_l4, adm3 = geo_l5, adm4 = geo_l6, adm5 = geo_l7, geoid) %>% 
+Countries_locs <- filter(Geokeys_IDed, !is.na(geoid)) %>%
+    select(cntry_n = country, adm1 = geo_l3, adm2 = geo_l4, adm3 = geo_l5, adm4 = geo_l6, adm5 = geo_l7, geoid) %>% 
+    unique() %>% 
     mutate(cntry_n = countrycode(cntry_n, "country.name", "country.name")) %>% 
     left_join(Countries_locs, .)
 
