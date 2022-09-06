@@ -2,6 +2,8 @@
 /Users/jdklein/Library/CloudStorage/Box-Box/JKlein Personal Folder/NGS-Capacity-map/.gitignore="B02FD445"
 /Users/jdklein/Library/CloudStorage/Box-Box/JKlein Personal Folder/NGS-Capacity-map/scripts/data_processing/PPI/auto_extract_gisaid_metadata.R="E963BFCB"
 /Users/jdklein/Library/CloudStorage/Box-Box/JKlein Personal Folder/NGS-Capacity-map/scripts/data_processing/PPI/basemap_mvp.R="45182E08"
+/Users/jdklein/Library/CloudStorage/Box-Box/JKlein Personal Folder/NGS-Capacity-map/scripts/data_processing/PPI/countries_locations_seqs_tabulate.R="9167DCFA"
+/Users/jdklein/Library/CloudStorage/Box-Box/JKlein Personal Folder/NGS-Capacity-map/scripts/data_processing/PPI/create_seq_datafiles.R="799B2F4F"
 /Users/jdklein/Library/CloudStorage/Box-Box/JKlein Personal Folder/NGS-Capacity-map/scripts/data_processing/PPI/find_map_add_totalseqs.R="22DC4A26"
 /Users/jdklein/Library/CloudStorage/Box-Box/JKlein Personal Folder/NGS-Capacity-map/scripts/data_processing/PPI/geokey_id_update.R="3CFBFF94"
 /Users/jdklein/Library/CloudStorage/Box-Box/JKlein Personal Folder/NGS-Capacity-map/scripts/data_processing/PPI/geokey_popgeo_join.R="535404FD"
