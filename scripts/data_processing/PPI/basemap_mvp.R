@@ -65,11 +65,11 @@ gc()
 #### 3) Get get level 1 & 2 subnational divisions for each country ####
 ##### AUS- only 1st level
 
-##### BEL- have 3rd level, aggregate up to 2nd (treat as 1st)
+##### BEL- have 3rd level, aggregate up to 2nd & 1st
 ### Run script to extract raw data for belgium
 source("belgium_rawdata.R")
-### Get keys linking Arrondissements (districts, 3rd level) to provinces (2nd level)
-BEL_provs <- select(latest_data, TX_ADM_DSTR_DESCR_NL, PROVINCE) %>% 
+### Get keys linking Arrondissements (districts, 3rd level) to provinces (2nd level) & regions (1st level)
+BEL_provs <- select(latest_data, TX_ADM_DSTR_DESCR_NL, PROVINCE, REGION) %>% 
     filter(!is.na(PROVINCE)) %>% 
     unique() %>% 
     mutate(iso3 = "BEL", micr_nm = str_remove_all(TX_ADM_DSTR_DESCR_NL, "Arrondissement ") %>% 
@@ -77,11 +77,13 @@ BEL_provs <- select(latest_data, TX_ADM_DSTR_DESCR_NL, PROVINCE) %>%
                stri_trans_general(id = "Latin-ASCII")) %>% 
     select(-TX_ADM_DSTR_DESCR_NL)
 
-#### Combine belgium province data with arrondissements- get belgium level 1 divisions
+#### Combine belgium province & region data with arrondissements- get belgium level 1/2 divisions
 Geo.Pop_subdivs <- left_join(Geo.Pop, BEL_provs) %>% 
-    mutate(macr_nm = case_when(iso3 == "BEL" ~ PROVINCE, 
+    mutate(macr_nm = case_when(iso3 == "BEL" ~ REGION, 
                                iso3 != "BEL" ~ macr_nm)) %>% 
-    select(-PROVINCE)
+    mutate(micr_nm = case_when(iso3 == "BEL" ~ PROVINCE, 
+                               iso3 != "BEL" ~ micr_nm)) %>%
+    select(-PROVINCE, -REGION)
 ### Free memory
 rm(list = c("aa", "flag", "STRING", "latest_data", "getDate", "BEL_provs"))
 gc()
@@ -253,11 +255,32 @@ Geo.Pop_subdivs <- Geo.Pop_subdivs %>%
     mutate(micr_cd = ifelse(max_lvl == 1, NA, micr_cd), 
            micr_nm = ifelse(max_lvl == 1, NA, micr_nm))
 
+#### Consolidate belgium (data at level 3-> up to level 2)
+### Belgium consolidated
+BEL_consol <- filter(Geo.Pop_subdivs, iso3 == "BEL") %>% 
+    group_by(iso3, cntry_n, macr_cd, macr_nm, micr_nm) %>% 
+    summarise(pop = sum(pop, na.rm = T))
+
+### Put back into main data
+Geo.Pop_subdivs <- filter(Geo.Pop_subdivs, iso3 == "BEL") %>% 
+    group_by(iso3, cntry_n, macr_cd, macr_nm, micr_nm) %>% 
+    slice_head() %>% 
+    st_drop_geometry() %>% 
+    select(geoid, iso3, cntry_n, macr_cd, macr_nm, micr_nm) %>% 
+    left_join(BEL_consol) %>% 
+    st_set_geometry(.$geometry) %>% 
+    add_column(micr_cd = NA, .before = "micr_nm") %>% 
+    add_column(max_lvl = 2, .after = "geometry") %>% 
+    bind_rows(filter(Geo.Pop_subdivs, iso3 != "BEL"))
+    
 ### Get subdivision level 1 & 2 identifiers w/in each country
 Geo.Pop_subdivs <- Geo.Pop_subdivs %>% 
     mutate(adm1_id = case_when(!is.na(macr_nm) ~ macr_nm, is.na(macr_nm) ~ macr_cd) %>% 
                str_replace_all("[:punct:]| ", "_")) %>%
-    mutate(adm2_id = micr_cd)
+    mutate(adm2_id = micr_cd) %>% 
+    # For belgium adm2 = micr_nm
+    mutate(adm2_id = case_when(iso3 == "BEL" ~ micr_nm, 
+                               iso3 != "BEL" ~ adm2_id))
 
 #### 5) Get ADM1 table ####
 ADM1 <- filter(Geo.Pop_subdivs, iso3 != "BRA") %>%
