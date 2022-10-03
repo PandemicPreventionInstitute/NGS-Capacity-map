@@ -11,6 +11,7 @@ Since May 2021, FIND & PPI have maintained the NGS Capacity map and continus to 
 To get started with the NGS Capacity project, review the NGS methodologies. A deep-dive of the NGS Capacity map methodologies can be found under the ```methods``` repository. A more concise version of the methodologies can be found at the following links:
 - [Overview of NGS Capacity concepts, data, methods, and metrics](https://public.flourish.studio/visualisation/8647680/)
 - [Classification Scheme](https://public.flourish.studio/visualisation/8604436/)
+- [Readme specific to data pipeline](https://github.com/PandemicPreventionInstitute/NGS-Capacity-map/blob/main/scripts/data_processing/NGS_pipeline_README.md)
 
 #### Data
 The NGS Capacity project integrated COVID-19 case data from [FIND github](https://github.com/dsbbfinddx/FINDCov19TrackerData/blob/master/processed/data_all.csv) and [Our World in Data (OWID) github](https://github.com/owid/covid-19-data/blob/master/public/data/owid-covid-data.csv), SARS-CoV-2 RNA genomic sequencing data from [GISAID](gisaid.org), and sequencing labs data from WHO. 
