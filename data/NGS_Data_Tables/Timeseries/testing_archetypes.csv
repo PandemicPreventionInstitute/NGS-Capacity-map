@@ -49,14 +49,14 @@ date,world_bank_economies,Insufficient data,Test,Sustain
 2021-10-01,Upper middle income,12,13,27
 2021-10-01,Lower middle income,15,29,7
 2021-10-01,Low income,4,23,0
-2021-11-01,All,60,64,90
-2021-11-01,High income,30,2,52
+2021-11-01,All,60,63,91
+2021-11-01,High income,30,1,53
 2021-11-01,Upper middle income,11,12,29
 2021-11-01,Lower middle income,15,28,8
 2021-11-01,Low income,4,22,1
-2021-12-01,All,60,61,93
+2021-12-01,All,60,62,92
 2021-12-01,High income,30,1,53
-2021-12-01,Upper middle income,11,10,31
+2021-12-01,Upper middle income,11,11,30
 2021-12-01,Lower middle income,15,28,8
 2021-12-01,Low income,4,22,1
 2022-01-01,All,63,58,93
@@ -84,9 +84,9 @@ date,world_bank_economies,Insufficient data,Test,Sustain
 2022-05-01,Upper middle income,14,12,26
 2022-05-01,Lower middle income,18,27,6
 2022-05-01,Low income,6,20,1
-2022-06-01,All,77,67,70
+2022-06-01,All,77,68,69
 2022-06-01,High income,36,10,38
-2022-06-01,Upper middle income,16,11,25
+2022-06-01,Upper middle income,16,12,24
 2022-06-01,Lower middle income,19,26,6
 2022-06-01,Low income,6,20,1
 2022-07-01,All,82,67,65
@@ -104,8 +104,13 @@ date,world_bank_economies,Insufficient data,Test,Sustain
 2022-09-01,Upper middle income,20,12,20
 2022-09-01,Lower middle income,20,27,4
 2022-09-01,Low income,8,18,1
-2022-10-01,All,98,75,41
+2022-10-01,All,98,76,40
 2022-10-01,High income,45,19,20
-2022-10-01,Upper middle income,23,12,17
+2022-10-01,Upper middle income,23,13,16
 2022-10-01,Lower middle income,22,26,3
 2022-10-01,Low income,8,18,1
+2022-11-01,All,106,74,34
+2022-11-01,High income,46,21,17
+2022-11-01,Upper middle income,25,14,13
+2022-11-01,Lower middle income,24,24,3
+2022-11-01,Low income,11,15,1

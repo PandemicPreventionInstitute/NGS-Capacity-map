@@ -79,10 +79,10 @@ date,world_bank_economies,Insufficient data,Connect/Build,Strengthen/Leverage,Su
 2022-04-01,Upper middle income,8,11,18,15
 2022-04-01,Lower middle income,6,22,17,6
 2022-04-01,Low income,2,18,6,1
-2022-05-01,All,51,52,48,63
+2022-05-01,All,51,52,49,62
 2022-05-01,High income,33,4,8,39
 2022-05-01,Upper middle income,9,9,18,16
-2022-05-01,Lower middle income,7,21,16,7
+2022-05-01,Lower middle income,7,21,17,6
 2022-05-01,Low income,2,18,6,1
 2022-06-01,All,51,53,48,62
 2022-06-01,High income,32,4,9,39
@@ -109,3 +109,8 @@ date,world_bank_economies,Insufficient data,Connect/Build,Strengthen/Leverage,Su
 2022-10-01,Upper middle income,18,7,15,12
 2022-10-01,Lower middle income,8,20,18,5
 2022-10-01,Low income,2,18,6,1
+2022-11-01,All,65,53,48,48
+2022-11-01,High income,38,7,9,30
+2022-11-01,Upper middle income,18,7,15,12
+2022-11-01,Lower middle income,7,21,18,5
+2022-11-01,Low income,2,18,6,1
