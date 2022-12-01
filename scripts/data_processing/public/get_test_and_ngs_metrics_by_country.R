@@ -107,6 +107,7 @@ TIME_WINDOW_WEEK<- 6
 
 # Load in all the datasets available on public githubs (FINDS and ours)
 ALL_DATA_PATH<- url("https://raw.githubusercontent.com/dsbbfinddx/FINDCov19TrackerData/master/processed/data_all.csv")
+ALL_DATA_PATH <- url("https://raw.githubusercontent.com/finddx/FINDCov19TrackerData/master/processed/data_all.csv")
 SHAPEFILES_FOR_FLOURISH_PATH <- url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/Geospatial_Data/geometric_polygons_country.txt') # shapefiles for mapping+
 WHO_REGIONS_PATH<- url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/additional_sources/WHO_region_data.csv') # WHO country list
 ECONOMY_PATH<- url('https://raw.githubusercontent.com/PandemicPreventionInstitute/NGS-Capacity-map/main/data/additional_sources/WB_class_data.csv')
@@ -288,9 +289,9 @@ find_testing_last_year<- find_testing_t %>% filter(date>=(LAST_DATA_PULL_DATE -T
             # Max(pop) used for deduplication
             avg_daily_test_per_1000_last_year_raw = 1000*mean(new_tests_orig/max(pop, na.rm = T), na.rm = TRUE),
             avg_daily_tests_per_1000_last_year_smoothed = round(1000*mean(new_tests_smoothed/max(pop, na.rm = T), na.rm = TRUE),2), # used for archetype definition
-            population_size = max(pop)# pops should all be the same
+            population_size = max(pop, na.rm = T)# pops should all be the same
             )%>%  # rename long columnn name to average daily test
-  filter(!is.na(code))
+  filter(!is.na(code)) 
 
 
 # ----------- Validation Testing ---------------------------------
@@ -685,7 +686,7 @@ stopifnot('More than 3 countries missing archetype at final step' = sum(find_map
 # }
   
 # Find the countries with new archetypes
- if (prev_month != "November" & prev_year != "2021")
+ if (prev_folder != "November_2021")
   {
  find_changed_archetypes <-find_map%>%
    filter (prev_sequ != sx_archetype | prev_dx != dx_archetype)
@@ -1013,7 +1014,7 @@ stopifnot('Percents dont add to 100' = round(LMIC_check[1,]) == c(100,100,100,10
 # -----------------------    Exporting to .csv files for local and remote repos
 # -----------------------------------------------------------------------------------
  if (USE_CASE == 'local'){
-   if (prev_month != "November" & prev_year!= "2021"){
+   if (prev_folder != "November_2021"){
      write.csv(find_changed_archetypes, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/find_changed_archetypes', prev_month, '_to_', current_month, '.csv'))
    }
    write.csv(find_not_reported, paste0('../../../data/NGS_Data_Tables/', current_folder, '/PPI/find_delayed_test_reporting.csv'), row.names = F)
