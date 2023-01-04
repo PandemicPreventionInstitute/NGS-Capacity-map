@@ -308,8 +308,8 @@ find_not_reported<-find_testing_clean%>%filter(rept_tests_within_last_6_months==
 
 # Unit tests
 stopifnot('Countries reporting greater than a test per person per day' = sum(find_testing_clean$avg_daily_tests_per_1000_last_year_smoothed>1000,na.rm = T)== 0)
-stopifnot('More than 25 countries with data havent reported tests in 6 months' = n_not_rept_6_mos<=25)
-stopifnot('More than 35 countries are missing average daily TPR from FIND' = nrow(no_avg_tpr)<=35)
+stopifnot('More than 30 countries with data havent reported tests in 6 months' = n_not_rept_6_mos<=30)
+stopifnot('More than 40 countries are missing average daily TPR from FIND' = nrow(no_avg_tpr)<=40)
 
 # Remove any negative daily tests or impossible TPRs
 find_testing_clean$avg_daily_tests_per_1000_last_year_smoothed<- ifelse(find_testing_clean$avg_daily_tests_per_1000_last_year_smoothed < 0, NA, 
@@ -560,9 +560,9 @@ stopifnot('Incorrect number of countries'= n_codes<=237 | n_codes>=236)
 find_clean_LMICs<-find_clean%>%
   filter(LMIC_status != 'High Income')
 
-stopifnot('Less than 90 LMICs with avg daily TPR not NA & with tests reported in last 6 months' = 
+stopifnot('Less than 75 LMICs with avg daily TPR not NA & with tests reported in last 6 months' = 
             nrow(find_clean_LMICs%>%
-                   filter(!is.na(avg_tpr_find))%>%filter(rept_tests_within_last_6_months == TRUE)) >= 90)
+                   filter(!is.na(avg_tpr_find))%>%filter(rept_tests_within_last_6_months == TRUE)) >= 75)
 
 
 

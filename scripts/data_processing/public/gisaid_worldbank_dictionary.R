@@ -22,7 +22,7 @@ gc()
 # GISAID
 Metadata_raw <- read_csv("../../../data/raw/metadata.csv") # from extracted datastream
 # FIND
-find_raw <- read_csv("https://raw.githubusercontent.com/dsbbfinddx/FINDCov19TrackerData/master/processed/data_all.csv")
+find_raw <- read_csv("https://raw.githubusercontent.com/finddx/FINDCov19TrackerData/master/processed/data_all.csv")
 
 #### 2) Import & clean WB data ####
 #### Get World Bank SES groups
