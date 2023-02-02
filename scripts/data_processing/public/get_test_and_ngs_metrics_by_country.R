@@ -491,7 +491,7 @@ if (prev_folder == "March_2022"){
 
 if (prev_folder != "March_2022" & prev_folder != "November_2021"){
     old_find <-read.csv(OLD_FIND_MAP_PATH) %>% clean_names() %>%
-        select(code, country, ngs_capacity, dx_archetype, sx_archetype, sars_cov_2_binary)
+        select(code, country, ngs_capacity, dx_archetype, sx_archetype, sars_cov_2_binary) %>% distinct()
 }
 
 old_find_df <- old_find %>% 
