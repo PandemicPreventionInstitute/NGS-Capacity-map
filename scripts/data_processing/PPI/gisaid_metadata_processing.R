@@ -9,11 +9,9 @@
 
 # Jan 3rd 2022
 rm(list = ls())
-USE_CASE = Sys.getenv("USE_CASE")
-if(USE_CASE == ""){
-  USE_CASE<-'local'
-}
-# USE_CASE = 'domino' # 'domino' or 'local'
+#USE_CASE = Sys.getenv("USE_CASE")
+USE_CASE<-'local'
+
 
 FROM_FEED <- TRUE
 

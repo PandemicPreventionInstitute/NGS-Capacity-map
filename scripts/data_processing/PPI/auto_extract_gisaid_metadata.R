@@ -55,7 +55,8 @@ gisaid_metadata_xz <- GET("https://www.epicov.org/epi3/3p/rockfeed/export/GISAID
 gisaid_metadata_GET_content<- content(gisaid_metadata_xz)
 
 #3. Decompress the raw data
-gisaid_metadata_raw_text <- memDecompress(gisaid_metadata_GET_content, type = "xz", asChar = TRUE)
+gisaid_metadata_raw <- memDecompress(gisaid_metadata_GET_content, type = "xz", asChar = F)
+gisaid_metadata_raw_text <- as.character(gisaid_metadata_raw)
 
 #4. It's formated as a csv file. Use "text" instead of "file" because we don't want to open a new connection, just "translate" the existing plain text data.
 gisaid_metadata <- read.csv(text = gisaid_metadata_raw_text)
