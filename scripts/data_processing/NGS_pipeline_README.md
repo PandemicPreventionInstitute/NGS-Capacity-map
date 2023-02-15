@@ -1,7 +1,7 @@
 # Description of pipeline to update NGS Capacity map (static outputs)
 
-### `PPI/auto_extract_gisaid_metadata.R` 
-Imports GISAID credentials and exports `data/raw/metadata.csv`. This isn't currently working (because of size of metadata it appears, so manyally upload the metadata.csv to the `data/raw/` folder. 
+###  Update GISAID metadata
+Manually upload the metadata.csv to the `data/raw/` folder. 
 
 ### `PPI/gisaid_metadata_processing.R` 
 Imports `data/raw/metadata.csv` and exports `data/processed/gisaid_owid_merged.csv`
