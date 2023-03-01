@@ -113,14 +113,17 @@ ngs_clean <- test_seq_raw %>%
 ngs_capacity_column <- colnames(ngs_clean)[max(ncol(ngs_clean))]
 
 # New variable is ngs_capacity, and writing this function on ngs_capacity_column
-ngs_clean$ngs_capacity <- case_when(
-  ngs_clean[ , ngs_capacity_column] == 0 ~ 0,
-  ngs_clean[ , ngs_capacity_column] == "0 - No NGS facilities" ~ 0,
-  ngs_clean[ , ngs_capacity_column] == 1 ~ 1,
-  ngs_clean[ , ngs_capacity_column] == "1 - 1-3 NGS facilities or equivalent" ~ 1,
-  ngs_clean[ , ngs_capacity_column] == 2 ~ 2,
-  ngs_clean[ , ngs_capacity_column] == "2 - >3 NGS facilities or equivalent" ~ 2
-)
+
+ngs_clean <- ngs_clean %>% 
+  mutate( ngs_capacity= case_when( 
+    ngs_capacity_last_updated_feb_21 == 0 ~ 0,
+    ngs_capacity_last_updated_feb_21 == "0 - No NGS facilities" ~ 0,
+    ngs_capacity_last_updated_feb_21 == 1 ~ 1,
+    ngs_capacity_last_updated_feb_21 == "1 - 1-3 NGS facilities or equivalent" ~ 1,
+    ngs_capacity_last_updated_feb_21 == 2~ 2,
+    ngs_capacity_last_updated_feb_21 == "2 - >3 NGS facilities or equivalent" ~ 2,
+))
+
 # Make a new binary facility access variable
 ngs_clean<-ngs_clean%>%mutate(
   facility_access = case_when(

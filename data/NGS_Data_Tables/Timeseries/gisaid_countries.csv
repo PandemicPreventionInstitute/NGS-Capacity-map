@@ -1,5 +1,4 @@
 country,country_code,world_bank_economies
-unknown,NA,NA
 Micronesia,FSM,Lower middle income
 China,CHN,Upper middle income
 Japan,JPN,High income
@@ -35,8 +34,8 @@ Netherlands,NLD,High income
 Luxembourg,LUX,High income
 Portugal,PRT,High income
 Czech Republic,CZE,High income
-Spain,ESP,High income
 Ireland,IRL,High income
+Spain,ESP,High income
 Chile,CHL,High income
 Democratic Republic of the Congo,COD,Low income
 Panama,PAN,High income
@@ -62,8 +61,8 @@ Algeria,DZA,Lower middle income
 Greece,GRC,High income
 Israel,ISR,High income
 Austria,AUT,High income
-Belarus,BLR,Upper middle income
 Latvia,LVA,High income
+Belarus,BLR,Upper middle income
 Estonia,EST,High income
 Slovenia,SVN,High income
 Argentina,ARG,Upper middle income
@@ -169,7 +168,7 @@ Ethiopia,ETH,Low income
 Mauritius,MUS,High income
 Martinique,MTQ,High income
 Eswatini,SWZ,Lower middle income
-Namibia,"NAM",Upper middle income
+Namibia,NAM,Upper middle income
 Bonaire,BES,High income
 Lesotho,LSO,Lower middle income
 Comoros,COM,Lower middle income
