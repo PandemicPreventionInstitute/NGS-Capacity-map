@@ -205,7 +205,7 @@ stopifnot('GISAID has more data than OWID'= length(n_gisaid_codes)<length(n_owid
 date<-gisaid_collect_date
 iso_code <-unique(owid$iso_code)
 date_codes_owid<-expand_grid(date, iso_code)
-owid<-left_join(date_codes_owid,owid, by = c("iso_code", "date"))
+owid_test<-date_codes_owid %>% left_join(owid, by = c("iso_code" = "iso_code", "date" = "date"))
 owid<-owid%>%mutate(continent =  countrycode(iso_code, origin = 'iso3c', destination = 'continent'))
 
 

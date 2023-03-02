@@ -400,10 +400,10 @@ gisaid_last_year<-gisaid_t%>%filter(collection_date>=(LAST_DATA_PULL_DATE - TIME
                                       collection_date<= LAST_DATA_PULL_DATE)%>%
   group_by(country_code)%>%
   summarise(cases_in_last_year = sum(owid_new_cases), # total cases in past year from OWID
-            cases_per_100k_last_year = round(100000 *cases_in_last_year/max(owid_population),3), # total cases per capita
+            cases_per_100k_last_year = round(100000 *cases_in_last_year/max(owid_population, na.rm = T),3), # total cases per capita
             sequences_in_last_year= sum(n_new_sequences), # total sequences collected and submitted to GISAID in past year 
             pct_cases_sequenced_in_last_year = round(100*(sequences_in_last_year/cases_in_last_year),2), # pct cases sequenced
-            sequences_per_100k_last_year = round(100000*sequences_in_last_year/max(owid_population),3) # total sequences per capita
+            sequences_per_100k_last_year = round(100000*sequences_in_last_year/max(owid_population, na.rm = T),3) # total sequences per capita
             )
 
 gisaid_last_year$pct_cases_sequenced_in_last_year[is.infinite(gisaid_last_year$pct_cases_sequenced_in_last_year)]<-NA
@@ -1031,22 +1031,7 @@ stopifnot('Percents dont add to 100' = round(LMIC_check[1,]) == c(100,100,100,10
    write.csv(SES_flourish, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/SES_breakdown.csv'), na = "NaN", row.names = FALSE)
    write.csv(LMIC_breakdown, paste0('../../../data/NGS_Data_Tables/',current_folder, '/PPI/LMIC_breakdown.csv'), na = "NaN", row.names = FALSE)
  }
-# Briana's local paths 
-#if (USE_CASE == 'local'){
-  #if(prev_month!= 'November' & prev_year != '2021')
-  #{
-    #write.csv(find_map, paste0('/Users/bthrift/Documents/ppi-output/ngs_find_map/find_map.csv'), row.names = FALSE)
-    
-   # write.csv(full_dataset, paste0('/Users/bthrift/Documents/NGS-Capacity-map/data/NGS_Data_Tables/April_2022/public/full_dataset.csv'), na = "NaN", row.names = FALSE)
-   # write.csv(clean_dataset, paste0('/Users/bthrift/Documents/NGS-Capacity-map/data/NGS_Data_Tables/April_2022/public/clean_dataset.csv'), na = "NaN", row.names = FALSE)
-   # write.csv(find_rec_test, paste0('/Users/bthrift/Documents/NGS-Capacity-map/data/NGS_Data_Tables/April_2022/PPI/find_rec_test.csv'), na = "NaN", row.names = FALSE)
-   # write.csv(seq_scatterplot, paste0('/Users/bthrift/Documents/NGS-Capacity-map/data/NGS_Data_Tables/April_2022/PPI/seq_scatterplot.csv'), na = "NaN", row.names = FALSE)
-   # write.csv(test_scatterplot, paste0('/Users/bthrift/Documents/NGS-Capacity-map/data/NGS_Data_Tables/April_2022/PPI/test_scatterplot.csv'), na = "NaN", row.names = FALSE)
-   # write.csv(find_changed_archetypes, paste0('/Users/bthrift/Documents/NGS-Capacity-map/data/NGS_Data_Tables/April_2022/PPI/find_changed_archetypes.csv'), na = "NaN", row.names = FALSE)
-   # write.csv(SES_breakdown, paste0('/Users/bthrift/Documents/NGS-Capacity-map/data/NGS_Data_Tables/April_2022/PPI/SES_breakdown.csv'), na = "NaN", row.names = FALSE)
-   # write.csv(LMIC_breakdown, paste0('/Users/bthrift/Documents/NGS-Capacity-map/data/NGS_Data_Tables/April_2022/PPI/LMIC_breakdown.csv'), na = "NaN", row.names = FALSE)
-   # }
-#}
+
 
 
 if (USE_CASE == 'domino'){
