@@ -1030,6 +1030,24 @@ stopifnot('Percents dont add to 100' = round(LMIC_check[1,]) == c(100,100,100,10
    write.csv(test_scatterplot_income_rmvd, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/test_data_SES.csv'), na = "NaN", row.names = FALSE )
    write.csv(SES_flourish, paste0('../../../data/NGS_Data_Tables/', current_folder,'/PPI/SES_breakdown.csv'), na = "NaN", row.names = FALSE)
    write.csv(LMIC_breakdown, paste0('../../../data/NGS_Data_Tables/',current_folder, '/PPI/LMIC_breakdown.csv'), na = "NaN", row.names = FALSE)
+   
+   # Also put data into the latest data folder!
+   if (prev_folder != "November_2021"){
+     write.csv(find_changed_archetypes, paste0('../../../data/NGS_Data_Tables/latest_data/find_changed_archetypes', prev_month, '_to_', current_month, '.csv'))
+   }
+   write.csv(find_not_reported, '../../../data/NGS_Data_Tables/latest_data/find_delayed_test_reporting.csv', row.names = F)
+   write.csv(full_dataset, '../../../data/NGS_Data_Tables/latest_data/full_dataset.csv', na = "NaN", row.names = FALSE)
+   write.csv(find_map, '../../../data/NGS_Data_Tables/latest_data/find_map.csv', na = "NaN", row.names = FALSE)
+   write.csv(investment_df, '../../../data/NGS_Data_Tables/latest_data/find_projects.csv', na = "NaN", row.names = FALSE)
+   write.csv(investment_df_full, '../../../data/NGS_Data_Tables/latest_data/find_projects_full.csv', na = "NaN", row.names = FALSE)
+   write.csv(clean_dataset, '../../../data/NGS_Data_Tables/latest_data/clean_dataset.csv', na = "NaN", row.names = FALSE)
+   write.csv(find_TEST_countries, '../../../data/NGS_Data_Tables/latest_data/find_TEST_countries.csv', na = "NaN", row.names = FALSE )
+   write.csv(seq_scatterplot, '../../../data/NGS_Data_Tables/latest_data/seq_data.csv', na = "NaN", row.names = FALSE )
+   write.csv(seq_scatterplot_income_rmvd, '../../../data/NGS_Data_Tables/latest_data/seq_data_SES.csv', na = "NaN", row.names = FALSE )
+   write.csv(test_scatterplot, '../../../data/NGS_Data_Tables/latest_data/test_data.csv', na = "NaN", row.names = FALSE )
+   write.csv(test_scatterplot_income_rmvd, '../../../data/NGS_Data_Tables/latest_data/test_data_SES.csv', na = "NaN", row.names = FALSE )
+   write.csv(SES_flourish, '../../../data/NGS_Data_Tables/latest_data/SES_breakdown.csv', na = "NaN", row.names = FALSE)
+   write.csv(LMIC_breakdown, '../../../data/NGS_Data_Tables/latest_data/LMIC_breakdown.csv', na = "NaN", row.names = FALSE)
  }
 
 
@@ -1052,3 +1070,4 @@ if (USE_CASE == 'domino'){
   write.csv(LMIC_breakdown, '/mnt/data/processed/LMIC_breakdown.csv', na = "NaN", row.names = FALSE )
   write.csv(SES_flourish, '/mnt/data/processed/SES_breakdown.csv', na = "NaN", row.names = FALSE)
 }
+
