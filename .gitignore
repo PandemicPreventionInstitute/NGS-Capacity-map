@@ -13,3 +13,4 @@ secrets_gisaid.csv
 .sql
 .sqlite
 .Rproj
+.Rproj.user
